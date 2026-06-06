@@ -325,8 +325,9 @@
       flex-shrink: 0;
     }
 
-    .quest-pill .pip.amber { background: var(--amber); }
-    .quest-pill .pip.coral { background: var(--coral); }
+    .quest-pill .pip.amber  { background: var(--amber); }
+    .quest-pill .pip.coral  { background: var(--coral); }
+    .quest-pill .pip.forest { background: var(--forest); }
 
     /* ─── CARD GRID: OBSERVATIONS ─── */
     .obs-section {
@@ -780,8 +781,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
+      width: 60px;
+      height: 60px;
       border-radius: 10px;
       background: var(--cream);
       border: 1.5px solid var(--card-border);
@@ -789,12 +790,13 @@
     }
 
     .tagline-icon svg {
-      width: 22px;
-      height: 22px;
+      width: 30px;
+      height: 30px;
     }
 
     .tagline-icon.green  { background: rgba(74,124,89,0.1);  border-color: rgba(74,124,89,0.25); }
     .tagline-icon.amber  { background: rgba(201,125,34,0.1); border-color: rgba(201,125,34,0.25); }
+    .tagline-icon.sage   { background: rgba(122,171,136,0.1); border-color: rgba(122,171,136,0.3); }
     .tagline-icon.coral  { background: rgba(212,98,42,0.1);  border-color: rgba(212,98,42,0.25); }
 
     .tagline-text {
@@ -808,6 +810,7 @@
 
     .tagline-text .accent-green { color: var(--fern); }
     .tagline-text .accent-amber { color: var(--amber); }
+    .tagline-text .accent-sage  { color: var(--sage); }
     .tagline-text .accent-coral { color: var(--coral); }
 
     /* ─── RESPONSIVE ─── */
@@ -876,13 +879,25 @@
       </div>
 
       <div class="tagline-row">
+        <div class="tagline-icon sage" aria-hidden="true">
+          <!-- Tree / habitat icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7aab88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12,2 6,10 9,10 4,18 20,18 15,10 18,10"/>
+            <line x1="12" y1="18" x2="12" y2="22"/>
+          </svg>
+        </div>
+        <span class="tagline-text"><span class="accent-sage">Protect</span> them.</span>
+      </div>
+
+      <div class="tagline-row">
         <div class="tagline-icon coral" aria-hidden="true">
-          <!-- Person with speech bubble / sharing icon -->
+          <!-- Camera with bird in flight icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="#d4622a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="7" r="3"/>
-            <path d="M3 21v-2a5 5 0 0 1 5-5h2"/>
-            <path d="M17 11l2 2 4-4"/>
-            <rect x="13" y="14" width="9" height="7" rx="1.5"/>
+            <path d="M9 4.5c-.8-1-1.5-1.5-3-1 .5.8 1 1.5 2 1.5" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M15 4.5c.8-1 1.5-1.5 3-1-.5.8-1 1.5-2 1.5" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="2" y="11" width="20" height="11" rx="2"/>
+            <path d="M8 11V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+            <circle cx="12" cy="16.5" r="2.5"/>
           </svg>
         </div>
         <span class="tagline-text"><span class="accent-coral">Share</span> your journey.</span>
@@ -903,9 +918,10 @@
     </div>
 
     <div class="quest-pills" aria-label="Example quests">
-      <span class="quest-pill"><span class="pip"></span> Robin in every OR county</span>
-      <span class="quest-pill"><span class="pip amber"></span> 10 species in one day</span>
-      <span class="quest-pill"><span class="pip coral"></span> First winter wren</span>
+      <span class="quest-pill"><span class="pip"></span> Forest Ranger — 300 species in the PNW</span>
+      <span class="quest-pill"><span class="pip amber"></span> Desert Wanderer — 300 species in arid environments</span>
+      <span class="quest-pill"><span class="pip forest"></span> Local Guardian — 100+ checklists in one location</span>
+      <span class="quest-pill"><span class="pip coral"></span> Big Day Birder — 100 species in a day</span>
     </div>
   </div>
 
