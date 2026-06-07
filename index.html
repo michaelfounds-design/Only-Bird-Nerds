@@ -813,39 +813,28 @@
     .tagline-text .accent-sage  { color: var(--sage); }
     .tagline-text .accent-coral { color: var(--coral); }
 
-    /* ─── POPUP PREVIEW ─── */
-    .popup-section {
-      padding: 5.5rem 2.5rem;
-      background: var(--cream);
-      border-top: 1px solid var(--card-border);
-    }
-
-    .popup-inner {
-      max-width: 1000px;
-      margin: 0 auto;
+    /* ─── MAP SPLIT ─── */
+    .map-split {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4rem;
-      align-items: center;
+      gap: 1.5rem;
+      align-items: start;
     }
 
-    .popup-text .section-tag { margin-bottom: 0.6rem; }
-
-    .popup-desc {
-      font-size: 1rem;
-      line-height: 1.78;
-      color: var(--warm-gray);
-      margin-top: 1rem;
+    .map-split .map-frame-wrap {
+      aspect-ratio: unset;
+      height: 540px;
+      min-height: unset;
     }
 
-    .popup-img-wrap {
-      border-radius: 14px;
+    .map-popup-preview {
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 8px 36px rgba(27,58,45,0.15);
-      border: 1px solid var(--card-border);
+      border: 1px solid rgba(122,171,136,0.25);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.35);
     }
 
-    .popup-img-wrap img {
+    .map-popup-preview img {
       width: 100%;
       display: block;
     }
@@ -864,8 +853,9 @@
       .hero-left { padding: 2.5rem 1.25rem; }
       nav { padding: 0.9rem 1.25rem; }
       .nav-links a:not(.nav-cta) { display: none; }
-      .obs-section, .map-section, .quests-section, .email-section, .popup-section { padding: 4rem 1.25rem; }
-      .popup-inner { grid-template-columns: 1fr; gap: 2rem; }
+      .obs-section, .map-section, .quests-section, .email-section { padding: 4rem 1.25rem; }
+      .map-split { grid-template-columns: 1fr; }
+      .map-split .map-frame-wrap { height: 300px; }
       footer { padding: 1.5rem 1.25rem; }
     }
   </style>
@@ -989,45 +979,28 @@
     <div class="map-header">
       <div>
         <p class="map-tag">Interactive map</p>
-        <h2>Turn your sightings into an <em>interactive map.</em></h2>
+        <h2>Track lifetime observations <em>spatially.</em></h2>
       </div>
-      <!-- UPDATE: replace href below with your live server URL -->
       <a class="btn-map-open" href="map.html" target="_blank" rel="noopener">
         Open full map ↗
       </a>
     </div>
 
-    <div class="map-frame-wrap">
-      <!--
-        UPDATE: Replace the src below with your live server URL once deployed.
-        e.g. src="https://map.onlybirdnerds.com" or src="https://your-server.fly.dev"
-        The iframe will embed your running Flask/Python map directly.
-      -->
-      <iframe
-        src="map.html"
-        title="Live bird observation map"
-        loading="lazy"
-        allow="geolocation"
-      ></iframe>
+    <div class="map-split">
+      <div class="map-frame-wrap">
+        <iframe
+          src="map.html"
+          title="Live bird observation map"
+          loading="lazy"
+          allow="geolocation"
+        ></iframe>
+      </div>
+      <div class="map-popup-preview">
+        <img src="Popup-preview.png" alt="Map popup showing lifer photos and species list for Smith and Bybee Lakes" loading="lazy" />
+      </div>
     </div>
 
-    <p class="map-caption">Example map — Michael's personal sightings · Upload your own eBird data to generate your own · Built with Folium / Leaflet.js</p>
-  </div>
-</section>
-
-<!-- ─── POPUP PREVIEW ─── -->
-<section class="popup-section">
-  <div class="popup-inner">
-    <div class="popup-text">
-      <p class="section-tag">What you get</p>
-      <h2>Click any location.<br/><em>See every bird.</em></h2>
-      <p class="popup-desc">
-        Every marker on your map is clickable. Tap a location and see every species you've logged there — lifer photos front and center, observation counts, and direct links to eBird for each bird.
-      </p>
-    </div>
-    <div class="popup-img-wrap">
-      <img src="popup-preview.png" alt="Map popup showing species list and lifer photos for Smith and Bybee Lakes" loading="lazy" />
-    </div>
+    <p class="map-caption">Example map — Michael's personal sightings · Click any marker to see your full species list · Built with Folium / Leaflet.js</p>
   </div>
 </section>
 
