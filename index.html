@@ -1048,6 +1048,7 @@
       <input
         type="email"
         id="emailInput"
+        name="email"
         placeholder="your@email.com"
         required
         autocomplete="email"
@@ -1072,11 +1073,16 @@
   function handleSubmit(e) {
     e.preventDefault();
     const email = document.getElementById('emailInput').value;
-    // TODO: wire to Formspree, Netlify Forms, or your own backend
-    // Formspree example: change form action to https://formspree.io/f/YOUR_ID
-    document.getElementById('notifyForm').style.display = 'none';
-    document.getElementById('successMsg').style.display = 'block';
-    console.log('Email collected:', email);
+    fetch('https://formspree.io/f/mrevppro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    }).then(function(r) {
+      if (r.ok) {
+        document.getElementById('notifyForm').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+      }
+    });
   }
 
   // smooth scroll
