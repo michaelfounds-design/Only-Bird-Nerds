@@ -813,6 +813,43 @@
     .tagline-text .accent-sage  { color: var(--sage); }
     .tagline-text .accent-coral { color: var(--coral); }
 
+    /* ─── POPUP PREVIEW ─── */
+    .popup-section {
+      padding: 5.5rem 2.5rem;
+      background: var(--cream);
+      border-top: 1px solid var(--card-border);
+    }
+
+    .popup-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .popup-text .section-tag { margin-bottom: 0.6rem; }
+
+    .popup-desc {
+      font-size: 1rem;
+      line-height: 1.78;
+      color: var(--warm-gray);
+      margin-top: 1rem;
+    }
+
+    .popup-img-wrap {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 36px rgba(27,58,45,0.15);
+      border: 1px solid var(--card-border);
+    }
+
+    .popup-img-wrap img {
+      width: 100%;
+      display: block;
+    }
+
     /* ─── RESPONSIVE ─── */
     @media (max-width: 700px) {
       .hero {
@@ -827,7 +864,8 @@
       .hero-left { padding: 2.5rem 1.25rem; }
       nav { padding: 0.9rem 1.25rem; }
       .nav-links a:not(.nav-cta) { display: none; }
-      .obs-section, .map-section, .quests-section, .email-section { padding: 4rem 1.25rem; }
+      .obs-section, .map-section, .quests-section, .email-section, .popup-section { padding: 4rem 1.25rem; }
+      .popup-inner { grid-template-columns: 1fr; gap: 2rem; }
       footer { padding: 1.5rem 1.25rem; }
     }
   </style>
@@ -951,7 +989,7 @@
     <div class="map-header">
       <div>
         <p class="map-tag">Interactive map</p>
-        <h2>Every pin is a <em>story.</em></h2>
+        <h2>Turn your sightings into an <em>interactive map.</em></h2>
       </div>
       <!-- UPDATE: replace href below with your live server URL -->
       <a class="btn-map-open" href="map.html" target="_blank" rel="noopener">
@@ -974,6 +1012,22 @@
     </div>
 
     <p class="map-caption">Example map — Michael's personal sightings · Upload your own eBird data to generate your own · Built with Folium / Leaflet.js</p>
+  </div>
+</section>
+
+<!-- ─── POPUP PREVIEW ─── -->
+<section class="popup-section">
+  <div class="popup-inner">
+    <div class="popup-text">
+      <p class="section-tag">What you get</p>
+      <h2>Click any location.<br/><em>See every bird.</em></h2>
+      <p class="popup-desc">
+        Every marker on your map is clickable. Tap a location and see every species you've logged there — lifer photos front and center, observation counts, and direct links to eBird for each bird.
+      </p>
+    </div>
+    <div class="popup-img-wrap">
+      <img src="popup-preview.png" alt="Map popup showing species list and lifer photos for Smith and Bybee Lakes" loading="lazy" />
+    </div>
   </div>
 </section>
 
