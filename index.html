@@ -61,13 +61,11 @@
       gap: 0.4rem;
     }
 
-    .logo-egg {
-      display: inline-block;
-      width: 22px; height: 26px;
-      background: var(--fern);
-      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-      position: relative;
-      top: -1px;
+    .nav-logo img {
+      height: 36px;
+      width: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
     .nav-links { display: flex; gap: 1.8rem; align-items: center; }
@@ -798,6 +796,7 @@
     .tagline-icon.amber  { background: rgba(201,125,34,0.1); border-color: rgba(201,125,34,0.25); }
     .tagline-icon.sage   { background: rgba(122,171,136,0.1); border-color: rgba(122,171,136,0.3); }
     .tagline-icon.coral  { background: rgba(212,98,42,0.1);  border-color: rgba(212,98,42,0.25); }
+    .tagline-icon.sun    { background: rgba(240,180,41,0.1); border-color: rgba(240,180,41,0.25); }
 
     .tagline-text {
       font-family: 'Syne', sans-serif;
@@ -812,6 +811,7 @@
     .tagline-text .accent-amber { color: var(--amber); }
     .tagline-text .accent-sage  { color: var(--sage); }
     .tagline-text .accent-coral { color: var(--coral); }
+    .tagline-text .accent-sun   { color: var(--sun); }
 
     /* ─── MAP SPLIT ─── */
     .map-split {
@@ -875,7 +875,7 @@
 <!-- ─── NAV ─── -->
 <nav>
   <a class="nav-logo" href="#">
-    <span class="logo-egg" aria-hidden="true"></span>
+    <img src="onlybirdnerds-logo-v4.svg" alt="Only Bird Nerds owl logo" />
     Only Bird Nerds
   </a>
   <div class="nav-links">
@@ -924,6 +924,20 @@
           </svg>
         </div>
         <span class="tagline-text"><span class="accent-sage">Protect</span> them.</span>
+      </div>
+
+      <div class="tagline-row">
+        <div class="tagline-icon sun" aria-hidden="true">
+          <!-- Trophy / quest icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/>
+            <path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/>
+            <path d="M12 17c-3.3 0-6-2.7-6-6V5h12v6c0 3.3-2.7 6-6 6z"/>
+            <path d="M12 17v4"/>
+            <path d="M8 21h8"/>
+          </svg>
+        </div>
+        <span class="tagline-text"><span class="accent-sun">Join</span> your next Quest.</span>
       </div>
 
       <div class="tagline-row">

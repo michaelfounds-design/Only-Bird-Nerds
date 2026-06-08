@@ -1,0 +1,165 @@
+<svg viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Only Bird Nerds logo">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;display=swap');
+      .wm { font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif; }
+    </style>
+
+    <linearGradient id="oRing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#16887C"/>
+      <stop offset="100%" stop-color="#0A4F47"/>
+    </linearGradient>
+    <radialGradient id="disc" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#FBF6EA"/>
+      <stop offset="100%" stop-color="#EEE0C2"/>
+    </radialGradient>
+    <linearGradient id="owlBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B98E5C"/>
+      <stop offset="100%" stop-color="#8A6438"/>
+    </linearGradient>
+    <linearGradient id="owlWing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9A7144"/>
+      <stop offset="100%" stop-color="#6E4E2C"/>
+    </linearGradient>
+    <radialGradient id="iris" cx="42%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#F8C84E"/>
+      <stop offset="60%" stop-color="#E89E22"/>
+      <stop offset="100%" stop-color="#BB7510"/>
+    </radialGradient>
+    <linearGradient id="branch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7A5634"/>
+      <stop offset="100%" stop-color="#523823"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="38%" cy="34%" r="70%">
+      <stop offset="0%" stop-color="#BFE9DD"/>
+      <stop offset="50%" stop-color="#3F9C8C"/>
+      <stop offset="100%" stop-color="#0D2E2A"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#06322D" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- ===== RING + CURVED WORDMARK ===== -->
+  <g filter="url(#soft)">
+    <circle cx="220" cy="220" r="200" fill="url(#oRing)"/>
+  </g>
+  <circle cx="220" cy="220" r="191" fill="none" stroke="#F2C84E" stroke-width="2" opacity="0.7"/>
+  <circle cx="220" cy="220" r="135" fill="url(#disc)"/>
+  <circle cx="220" cy="220" r="135" fill="none" stroke="#F2C84E" stroke-width="2" opacity="0.7"/>
+
+  <defs>
+    <path id="topArc" d="M54,220 A166,166 0 0,1 386,220"/>
+    <path id="botArc" d="M55,220 A165,165 0 0,0 385,220"/>
+  </defs>
+  <text class="wm" font-size="27" font-weight="600" letter-spacing="5" fill="#FBF4E4">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">ONLY BIRD NERDS</textPath>
+  </text>
+  <text class="wm" font-size="15" font-weight="500" letter-spacing="3" fill="#F2C84E">
+    <textPath href="#botArc" startOffset="50%" text-anchor="middle">onlybirdnerds.com</textPath>
+  </text>
+  <g fill="#F2C84E">
+    <path d="M53,220 l5,-6 5,6 -5,6 Z"/>
+    <path d="M387,220 l-5,-6 -5,6 5,6 Z"/>
+  </g>
+
+  <!-- ===== OWL ===== -->
+  <g>
+    <!-- branch -->
+    <path d="M108,348 Q220,358 332,348" fill="none" stroke="url(#branch)" stroke-width="13" stroke-linecap="round"/>
+    <ellipse cx="298" cy="344" rx="8" ry="4" fill="#6E8049" opacity="0.8"/>
+
+    <!-- talons -->
+    <g stroke="#46423B" stroke-width="5" stroke-linecap="round" fill="none">
+      <path d="M204,326 L202,344 M202,344 q-8,2 -12,7 M202,344 q4,4 4,9 M202,344 q9,2 12,7"/>
+      <path d="M236,326 L238,344 M238,344 q-9,2 -12,7 M238,344 q-4,4 -4,9 M238,344 q8,2 12,7"/>
+    </g>
+
+    <!-- body -->
+    <path d="M220,126 C166,126 138,166 138,216 C138,286 172,330 220,330 C268,330 302,286 302,216 C302,166 274,126 220,126 Z" fill="url(#owlBody)"/>
+
+    <!-- ear tufts (planted on head) -->
+    <g fill="url(#owlWing)">
+      <path d="M160,150 C156,114 162,94 175,98 C185,110 187,136 183,152 Z"/>
+      <path d="M280,150 C284,114 278,94 265,98 C255,110 253,136 257,152 Z"/>
+    </g>
+
+    <!-- wing-arms -->
+    <path d="M148,196 C122,216 122,260 150,284 C162,292 178,290 186,280 C180,264 180,244 184,228 C180,210 166,198 148,196 Z" fill="url(#owlWing)"/>
+    <path d="M292,196 C318,216 318,260 290,284 C278,292 262,290 254,280 C260,264 260,244 256,228 C260,210 274,198 292,196 Z" fill="url(#owlWing)"/>
+    <!-- light wing feather hints -->
+    <g fill="#C6A574" opacity="0.5">
+      <path d="M150,214 q9,6 18,0 q-2,7 -9,8 q-7,-1 -9,-8 Z"/>
+      <path d="M150,242 q9,6 18,0 q-2,7 -9,8 q-7,-1 -9,-8 Z"/>
+      <path d="M272,214 q9,6 18,0 q-2,7 -9,8 q-7,-1 -9,-8 Z"/>
+      <path d="M272,242 q9,6 18,0 q-2,7 -9,8 q-7,-1 -9,-8 Z"/>
+    </g>
+
+    <!-- belly -->
+    <path d="M220,210 C199,210 187,244 189,278 C191,308 205,322 220,322 C235,322 249,308 251,278 C253,244 241,210 220,210 Z" fill="#F3E6C8"/>
+    <g stroke="#B89160" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7">
+      <path d="M203,250 q17,8 34,0"/>
+      <path d="M201,272 q19,8 38,0"/>
+      <path d="M203,294 q17,7 34,0"/>
+    </g>
+
+    <!-- facial disc -->
+    <path d="M220,146 C194,130 162,138 154,168 C148,194 156,220 178,232 C192,240 206,242 220,242 C234,242 248,240 262,232 C284,220 292,194 286,168 C278,138 246,130 220,146 Z" fill="#F3E6C8"/>
+
+    <!-- eyes -->
+    <circle cx="188" cy="184" r="28" fill="#FFFBF0"/>
+    <circle cx="252" cy="184" r="28" fill="#FFFBF0"/>
+    <circle cx="189" cy="185" r="21" fill="url(#iris)"/>
+    <circle cx="251" cy="185" r="21" fill="url(#iris)"/>
+    <circle cx="189" cy="187" r="11" fill="#161310"/>
+    <circle cx="251" cy="187" r="11" fill="#161310"/>
+    <circle cx="184" cy="181" r="4" fill="#FFFFFF"/>
+    <circle cx="246" cy="181" r="4" fill="#FFFFFF"/>
+
+    <!-- glasses -->
+    <g fill="none" stroke="#2A2824" stroke-width="6" stroke-linecap="round">
+      <circle cx="188" cy="184" r="31"/>
+      <circle cx="252" cy="184" r="31"/>
+      <path d="M216,180 Q220,173 224,180"/>
+      <path d="M157,180 L143,175"/>
+      <path d="M283,180 L297,175"/>
+    </g>
+
+    <!-- beak -->
+    <path d="M210,202 L230,202 L220,224 Z" fill="#E8932B"/>
+    <path d="M220,202 L220,222" stroke="#C9781F" stroke-width="1.6"/>
+
+    <!-- ===== FIELD GUIDE (left hand) ===== -->
+    <g transform="rotate(-12 172 284)">
+      <rect x="154" y="260" width="40" height="52" rx="4" fill="#E2D2AC"/>
+      <rect x="150" y="258" width="40" height="52" rx="5" fill="#0E6E63"/>
+      <rect x="150" y="258" width="7" height="52" rx="2" fill="#E8B23E"/>
+      <circle cx="173" cy="280" r="10" fill="#FBF1DC"/>
+      <path d="M168,282 q5,-8 11,-3 q-6,1 -11,3 Z" fill="#0E6E63"/>
+      <rect x="163" y="297" width="20" height="3.5" rx="2" fill="#FBF1DC" opacity="0.9"/>
+    </g>
+    <!-- left hand -->
+    <path d="M156,300 q6,9 14,4 q5,8 13,2 q1,9 -12,11 q-15,1 -19,-10 q-1,-7 4,-7 Z" fill="url(#owlWing)"/>
+
+    <!-- ===== BINOCULARS (right hand) ===== -->
+    <g transform="rotate(7 264 278)">
+      <rect x="246" y="262" width="20" height="40" rx="9" fill="#2C2C2A"/>
+      <rect x="266" y="262" width="20" height="40" rx="9" fill="#2C2C2A"/>
+      <rect x="261" y="270" width="10" height="20" rx="3" fill="#5b5b54"/>
+      <g stroke="#33332e" stroke-width="1.2"><path d="M263,272 v16 M266,272 v16 M269,272 v16"/></g>
+      <circle cx="256" cy="262" r="8" fill="#222"/>
+      <circle cx="276" cy="262" r="8" fill="#222"/>
+      <circle cx="256" cy="262" r="4.5" fill="#3a3a35"/>
+      <circle cx="276" cy="262" r="4.5" fill="#3a3a35"/>
+      <rect x="246" y="278" width="40" height="4" fill="#16887C"/>
+      <circle cx="256" cy="300" r="10" fill="#0d0d0c"/>
+      <circle cx="276" cy="300" r="10" fill="#0d0d0c"/>
+      <circle cx="256" cy="300" r="7.5" fill="url(#glass)"/>
+      <circle cx="276" cy="300" r="7.5" fill="url(#glass)"/>
+      <path d="M251,296 q5,-3 9,-1" stroke="#DFF4EC" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.85"/>
+      <path d="M271,296 q5,-3 9,-1" stroke="#DFF4EC" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.85"/>
+    </g>
+    <!-- right hand -->
+    <path d="M284,300 q-6,9 -14,4 q-5,8 -13,2 q-1,9 12,11 q15,1 19,-10 q1,-7 -4,-7 Z" fill="url(#owlWing)"/>
+  </g>
+</svg>
