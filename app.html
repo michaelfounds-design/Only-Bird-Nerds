@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Bird Map — Only Bird Nerds</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    :root {
+      --forest:    #1b3a2d;
+      --moss:      #2d5a3d;
+      --fern:      #4a7c59;
+      --sage:      #7aab88;
+      --mist:      #c8ddd0;
+      --cream:     #f7f3ec;
+      --ink:       #1a1814;
+      --amber:     #c97d22;
+      --sun:       #f0b429;
+      --warm-gray: #8a8070;
+      --panel:     rgba(12, 19, 14, 0.97);
+    }
+
+    /* ── Upload screen ── */
+    #upload-screen {
+      height: 100vh;
+      background: var(--forest);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* subtle texture */
+    #upload-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 60% 40%, rgba(74,124,89,0.18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .upload-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2rem;
+      background: rgba(15,26,18,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(122,171,136,0.15);
+      z-index: 100;
+    }
+
+    .upload-nav img   { height: 38px; width: 38px; border-radius: 50%; }
+    .upload-nav a     { display: flex; align-items: center; gap: 0.55rem; text-decoration: none; }
+    .upload-nav span  {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 800;
+      color: var(--cream); letter-spacing: -0.02em;
+    }
+
+    .upload-hero {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      max-width: 520px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .upload-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 1.1rem;
+    }
+
+    .upload-hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: var(--cream);
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.9rem;
+    }
+
+    .upload-hero h1 em {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--sage);
+    }
+
+    .upload-hero p {
+      font-family: 'Lora', serif;
+      color: rgba(200,221,208,0.65);
+      font-size: 0.95rem;
+      line-height: 1.78;
+      margin-bottom: 2.2rem;
+    }
+
+    .drop-zone {
+      border: 2px dashed rgba(122,171,136,0.35);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: rgba(74,124,89,0.06);
+      margin-bottom: 1rem;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--sage);
+      background: rgba(74,124,89,0.14);
+    }
+
+    .drop-icon  { font-size: 2.4rem; margin-bottom: 0.7rem; }
+    .drop-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.76rem;
+      letter-spacing: 0.07em;
+      color: var(--sage);
+      text-transform: uppercase;
+    }
+    .drop-sub {
+      font-family: 'Lora', serif;
+      font-size: 0.85rem;
+      color: rgba(122,171,136,0.55);
+      margin-top: 0.3rem;
+    }
+
+    #csv-input { display: none; }
+
+    .upload-note {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      color: rgba(122,171,136,0.4);
+    }
+
+    /* ── App screen ── */
+    #app-screen {
+      display: none;
+    }
+
+    /* ── Side panel ── */
+    #side-panel {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 272px;
+      z-index: 500;
+      background: var(--panel);
+      border-right: 1px solid rgba(122,171,136,0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid rgba(122,171,136,0.12);
+      flex-shrink: 0;
+    }
+
+    .panel-header img { height: 34px; width: 34px; border-radius: 50%; flex-shrink: 0; }
+    .panel-site {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.8rem; font-weight: 800;
+      color: var(--cream); line-height: 1; letter-spacing: -0.01em;
+    }
+    .panel-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.56rem; letter-spacing: 0.09em;
+      color: var(--sage); text-transform: uppercase; margin-top: 0.15rem;
+    }
+
+    /* Stats */
+    #stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid rgba(122,171,136,0.12);
+      flex-shrink: 0;
+    }
+
+    .stat-cell { padding: 0.7rem 0.5rem; text-align: center; }
+    .stat-cell + .stat-cell { border-left: 1px solid rgba(122,171,136,0.1); }
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem; font-weight: 800;
+      color: var(--cream); line-height: 1;
+    }
+    .stat-lbl {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.52rem; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--sage); margin-top: 0.2rem;
+    }
+
+    /* Scrollable filter area */
+    .panel-scroll {
+      flex: 1; overflow-y: auto;
+      padding: 0.7rem 0.9rem 1rem;
+    }
+
+    .panel-scroll::-webkit-scrollbar { width: 4px; }
+    .panel-scroll::-webkit-scrollbar-thumb { background: rgba(122,171,136,0.2); border-radius: 2px; }
+
+    .sec-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.57rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--sage);
+      margin: 0.85rem 0 0.38rem;
+    }
+    .sec-label:first-child { margin-top: 0; }
+
+    .search-wrap { position: relative; }
+
+    #species-input {
+      width: 100%; padding: 0.48rem 0.7rem;
+      background: rgba(74,124,89,0.1);
+      border: 1px solid rgba(122,171,136,0.22);
+      border-radius: 6px;
+      color: var(--cream);
+      font-family: 'DM Mono', monospace; font-size: 0.7rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    #species-input::placeholder { color: rgba(122,171,136,0.45); }
+    #species-input:focus { border-color: var(--sage); }
+
+    #species-dropdown {
+      display: none;
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: rgba(16,26,18,0.98);
+      border: 1px solid rgba(122,171,136,0.22);
+      border-top: none; border-radius: 0 0 6px 6px;
+      max-height: 160px; overflow-y: auto; z-index: 9999;
+    }
+    #species-dropdown div {
+      padding: 0.38rem 0.7rem;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      color: var(--mist); cursor: pointer;
+    }
+    #species-dropdown div:hover { background: rgba(74,124,89,0.2); }
+
+    #selected-tags { margin-top: 0.4rem; min-height: 4px; }
+
+    .stag {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      background: rgba(74,124,89,0.15);
+      border: 1px solid rgba(74,124,89,0.35);
+      color: var(--sage); border-radius: 4px;
+      padding: 2px 7px;
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      cursor: pointer; margin: 2px 2px 0 0;
+    }
+    .stag:hover { background: rgba(74,124,89,0.28); }
+
+    .filter-check {
+      display: flex; align-items: center; gap: 0.5rem;
+      cursor: pointer; margin-bottom: 0.45rem;
+      font-family: 'DM Mono', monospace; font-size: 0.67rem;
+      color: var(--mist); user-select: none;
+    }
+    .filter-check input { cursor: pointer; accent-color: var(--fern); }
+
+    .filter-select {
+      width: 100%; padding: 0.44rem 0.65rem;
+      background: rgba(74,124,89,0.1);
+      border: 1px solid rgba(122,171,136,0.22);
+      border-radius: 6px; color: var(--cream);
+      font-family: 'DM Mono', monospace; font-size: 0.67rem;
+      outline: none; cursor: pointer; margin-bottom: 0.45rem;
+    }
+    .filter-select option { background: #101a12; }
+
+    .clear-btn {
+      width: 100%; padding: 0.48rem;
+      background: transparent;
+      border: 1px solid rgba(122,171,136,0.18);
+      border-radius: 6px; color: var(--sage);
+      font-family: 'DM Mono', monospace; font-size: 0.62rem;
+      letter-spacing: 0.06em; cursor: pointer;
+      text-transform: uppercase; transition: background 0.15s;
+      margin-top: 0.4rem;
+    }
+    .clear-btn:hover { background: rgba(74,124,89,0.14); }
+
+    #photo-progress {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.57rem; color: rgba(122,171,136,0.5);
+      letter-spacing: 0.05em; margin-top: 0.65rem;
+      min-height: 14px;
+    }
+
+    /* ── Map ── */
+    #map {
+      position: fixed;
+      top: 0; left: 272px; right: 0; bottom: 0;
+    }
+
+    /* ── Layer bar ── */
+    #layer-bar {
+      position: fixed;
+      top: 12px; left: 50%;
+      transform: translateX(calc(-50% + 136px));
+      z-index: 1000;
+      display: none;
+      gap: 5px;
+      background: rgba(10,16,11,0.92);
+      padding: 5px 8px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .lbtn {
+      padding: 4px 11px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.05em;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 5px;
+      background: rgba(255,255,255,0.05); color: rgba(200,221,208,0.55);
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .lbtn.on  { background: rgba(74,124,89,0.28); color: var(--sage); border-color: rgba(74,124,89,0.5); }
+    .lbtn:hover { background: rgba(255,255,255,0.1); color: var(--mist); }
+
+    /* ── Photo override dialog ── */
+    #photo-dialog-bg {
+      display: none; position: fixed; inset: 0;
+      z-index: 3999; background: rgba(0,0,0,0.52);
+    }
+
+    #photo-dialog {
+      display: none;
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4000;
+      background: var(--cream); border-radius: 14px;
+      padding: 1.5rem 1.6rem 1.3rem; width: 360px;
+      box-shadow: 0 10px 48px rgba(0,0,0,0.55);
+    }
+
+    #photo-dialog h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700; color: var(--forest);
+    }
+    #photo-dialog-sp {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem; color: var(--warm-gray);
+      letter-spacing: 0.04em; margin-bottom: 0.9rem;
+    }
+
+    .dlg-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--warm-gray);
+      margin: 0.85rem 0 0.3rem;
+    }
+    .dlg-row { display: flex; gap: 0.45rem; align-items: center; }
+
+    .dlg-input {
+      flex: 1; padding: 0.48rem 0.65rem;
+      border: 1.5px solid rgba(74,124,89,0.28); border-radius: 6px;
+      font-family: 'DM Mono', monospace; font-size: 0.7rem;
+      color: var(--ink); background: var(--cream); outline: none;
+    }
+    .dlg-input:focus { border-color: var(--fern); }
+
+    .dlg-btn {
+      padding: 0.48rem 0.9rem;
+      border: none; border-radius: 6px;
+      background: var(--forest); color: var(--cream);
+      font-family: 'DM Mono', monospace; font-size: 0.63rem;
+      letter-spacing: 0.05em; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .dlg-btn:hover { background: var(--moss); }
+    .dlg-btn.ghost {
+      background: transparent; color: var(--forest);
+      border: 1px solid rgba(74,124,89,0.3);
+    }
+    .dlg-btn.ghost:hover { background: rgba(74,124,89,0.1); }
+
+    #photo-preview-wrap { text-align: center; margin: 0.8rem 0 0.2rem; }
+    #photo-preview {
+      width: 90px; height: 90px; border-radius: 50%;
+      object-fit: cover; border: 2px solid rgba(74,124,89,0.3);
+      display: none;
+    }
+
+    .dlg-footer {
+      display: flex; justify-content: flex-end; gap: 0.45rem;
+      margin-top: 1.1rem; padding-top: 0.9rem;
+      border-top: 1px solid rgba(74,124,89,0.15);
+    }
+
+    /* ── Lightbox ── */
+    #photo-lb {
+      display: none; position: fixed; inset: 0;
+      z-index: 5000; background: rgba(0,0,0,0.93);
+      align-items: center; justify-content: center; cursor: pointer;
+    }
+    #photo-lb img { max-width: 92vw; max-height: 92vh; object-fit: contain; border-radius: 4px; }
+    .lb-close { position: absolute; top: 16px; right: 22px; color: #fff; font-size: 26px; user-select: none; }
+
+    /* ── Cluster overrides ── */
+    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+      background-color: rgba(27,58,45,0.85) !important;
+    }
+    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+      background-color: rgba(45,90,61,0.9) !important;
+      color: #7aab88 !important; font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Upload screen ── -->
+<div id="upload-screen">
+  <nav class="upload-nav">
+    <a href="index.html">
+      <img src="onlybirdnerds-logo-v4.svg" alt="Only Bird Nerds" />
+      <span>Only Bird Nerds</span>
+    </a>
+  </nav>
+
+  <div class="upload-hero">
+    <p class="upload-eyebrow">Your personal map</p>
+    <h1>Upload your data.<br/><em>Watch it come alive.</em></h1>
+    <p>Drop your <code style="font-family:'DM Mono',monospace;color:var(--mist)">MyEBirdData.csv</code> below.
+       It never leaves your device — everything runs in your browser.</p>
+
+    <div class="drop-zone" id="drop-zone">
+      <div class="drop-icon">🦅</div>
+      <div class="drop-label">Drop your CSV here</div>
+      <div class="drop-sub">or click to browse</div>
+    </div>
+
+    <input type="file" id="csv-input" accept=".csv" />
+    <p class="upload-note">In eBird: My eBird → Download My Data → MyEBirdData.csv</p>
+  </div>
+</div>
+
+<!-- ── App screen ── -->
+<div id="app-screen">
+
+  <div id="side-panel">
+    <div class="panel-header">
+      <img src="onlybirdnerds-logo-v4.svg" alt="" />
+      <div>
+        <div class="panel-site">Only Bird Nerds</div>
+        <div class="panel-sub">My Map</div>
+      </div>
+    </div>
+
+    <div id="stats-row">
+      <div class="stat-cell">
+        <div class="stat-val" id="stat-species">—</div>
+        <div class="stat-lbl">Species</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="stat-lifers">—</div>
+        <div class="stat-lbl">Lifers</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="stat-lists">—</div>
+        <div class="stat-lbl">Lists</div>
+      </div>
+    </div>
+
+    <div class="panel-scroll">
+      <div class="sec-label">Species Search</div>
+      <div class="search-wrap">
+        <input id="species-input" type="text" placeholder="Type to search…" autocomplete="off" />
+        <div id="species-dropdown"></div>
+      </div>
+      <div id="selected-tags"></div>
+
+      <div class="sec-label">Filter</div>
+      <label class="filter-check">
+        <input type="checkbox" id="chk-lifers" /> Lifers only ⭐
+      </label>
+
+      <div class="sec-label">State / Province</div>
+      <select id="state-select" class="filter-select">
+        <option value="">All regions</option>
+      </select>
+
+      <div class="sec-label">County</div>
+      <select id="county-select" class="filter-select">
+        <option value="">All counties</option>
+      </select>
+
+      <button class="clear-btn" id="clear-btn">Clear all filters</button>
+      <div id="photo-progress"></div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<!-- ── Layer bar ── -->
+<div id="layer-bar">
+  <button class="lbtn on" id="btn-hotspots">📍 Locations</button>
+  <button class="lbtn on" id="btn-regions">🗺 Regions</button>
+</div>
+
+<!-- ── Photo override dialog ── -->
+<div id="photo-dialog-bg"></div>
+<div id="photo-dialog">
+  <h3>Set photo</h3>
+  <div id="photo-dialog-sp"></div>
+
+  <div id="photo-preview-wrap">
+    <img id="photo-preview" src="" alt="preview" />
+  </div>
+
+  <div class="dlg-label">Macaulay Library asset ID</div>
+  <div class="dlg-row">
+    <input class="dlg-input" id="dlg-asset-id" type="text" placeholder="e.g. 630168151"
+           oninput="photoDialog.previewAsset(this.value)" />
+    <button class="dlg-btn" onclick="photoDialog.applyAsset()">Use</button>
+  </div>
+
+  <div class="dlg-label">Or paste any image URL</div>
+  <div class="dlg-row">
+    <input class="dlg-input" id="dlg-url" type="text" placeholder="https://…"
+           oninput="photoDialog.previewUrl(this.value)" />
+    <button class="dlg-btn" onclick="photoDialog.applyUrl()">Apply</button>
+  </div>
+
+  <div class="dlg-footer">
+    <button class="dlg-btn ghost" onclick="photoDialog.reset()">Reset to iNat</button>
+    <button class="dlg-btn ghost" onclick="photoDialog.close()">Close</button>
+  </div>
+</div>
+
+<!-- ── Lightbox ── -->
+<div id="photo-lb" onclick="closeLightbox()">
+  <span class="lb-close">✕</span>
+  <img id="photo-lb-img" src="" alt="" />
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
+
+<script>
+'use strict';
+
+// ─────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────
+var ZOOM_COUNTY   = 7;   // below this: state markers
+var ZOOM_LOCATION = 10;  // above this: individual location markers (clustered)
+var PHOTO_DELAY   = 600; // ms between iNat requests (keep under rate limit)
+
+// ─────────────────────────────────────────
+// GLOBALS
+// ─────────────────────────────────────────
+var allRecords    = [];
+var speciesList   = [];
+var selectedSpp   = [];
+var stateCountyMap = {};
+
+var map           = null;
+var clusterGroup  = null;
+var oms           = null;
+var countyLayer   = null;
+var stateLayer    = null;
+var showHotspots  = true;
+var showRegions   = true;
+
+// markerRefs: regionKey → {marker, radius, label, spCount, liferCount, sm}
+// rebuilt on every updateMap() call
+var markerRefs = {};
+
+// Photos
+var photoCache     = {};  // commonName → url (iNat fetched)
+var photoOverrides = {};  // commonName → url (user-set, persisted in localStorage)
+var photoQueue     = [];
+var photoFetching  = false;
+var photoTotal     = 0;
+
+// ─────────────────────────────────────────
+// PHOTO PERSISTENCE
+// ─────────────────────────────────────────
+function loadOverrides() {
+  try { photoOverrides = JSON.parse(localStorage.getItem('obn_overrides') || '{}'); }
+  catch(e) { photoOverrides = {}; }
+}
+
+function saveOverrides() {
+  try { localStorage.setItem('obn_overrides', JSON.stringify(photoOverrides)); }
+  catch(e) {}
+}
+
+function getPhoto(name) {
+  return photoOverrides[name] || photoCache[name] || '';
+}
+
+// ─────────────────────────────────────────
+// iNAT PHOTO QUEUE
+// ─────────────────────────────────────────
+function queuePhotos(names) {
+  names.forEach(function(n) {
+    if (!getPhoto(n) && photoQueue.indexOf(n) === -1) photoQueue.push(n);
+  });
+  photoTotal = photoQueue.length;
+  if (!photoFetching) processQueue();
+}
+
+function processQueue() {
+  if (!photoQueue.length) {
+    photoFetching = false;
+    document.getElementById('photo-progress').textContent = '';
+    return;
+  }
+  photoFetching = true;
+  var done = photoTotal - photoQueue.length;
+  document.getElementById('photo-progress').textContent =
+    'Photos ' + done + ' / ' + photoTotal + '…';
+
+  var name = photoQueue.shift();
+  fetchInat(name, 0, function(url) {
+    if (url) {
+      photoCache[name] = url;
+      refreshMarkersForSpecies(name);
+    }
+    setTimeout(processQueue, PHOTO_DELAY);
+  });
+}
+
+function fetchInat(name, retries, cb) {
+  fetch('https://api.inaturalist.org/v1/taxa/autocomplete?q='
+    + encodeURIComponent(name) + '&per_page=1&iconic_taxa=Aves')
+    .then(function(r) {
+      if (r.status === 429 && retries < 3) {
+        // Back off and retry
+        setTimeout(function() { fetchInat(name, retries + 1, cb); }, 2000 * (retries + 1));
+        return null;
+      }
+      return r.json();
+    })
+    .then(function(d) {
+      if (!d) return; // waiting on retry
+      var r = (d.results || [])[0];
+      var p = r ? (r.default_photo || {}) : {};
+      cb(p.medium_url || p.square_url || '');
+    })
+    .catch(function() { cb(''); });
+}
+
+// ─────────────────────────────────────────
+// CSV PARSING
+// ─────────────────────────────────────────
+function parseCSV(file) {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: function(res) {
+      allRecords = normalize(res.data);
+      computeLifers(allRecords);
+      speciesList = uniqueSpecies(allRecords);
+      buildStateCountyMap(allRecords);
+      showApp();
+      buildAutocomplete();
+      buildDropdowns();
+      // Defer map init so the browser has time to lay out the flex container
+      // before Leaflet reads its dimensions
+      setTimeout(function() {
+        initMap();
+        updateMap();
+        queuePhotos(speciesList.slice());
+      }, 50);
+    },
+    error: function(e) { alert('Could not read CSV: ' + e.message); }
+  });
+}
+
+function normalize(rows) {
+  return rows.reduce(function(out, row) {
+    var lat = parseFloat(row['Latitude']);
+    var lon = parseFloat(row['Longitude']);
+    var name = (row['Common Name'] || '').trim();
+    if (!name || isNaN(lat) || isNaN(lon)) return out;
+    out.push({
+      subId:    row['Submission ID'] || '',
+      name:     name,
+      sci:      (row['Scientific Name']     || '').trim(),
+      state:    (row['State/Province']      || '').trim(),
+      county:   (row['County']              || '').trim(),
+      location: (row['Location']            || '').trim(),
+      lat: lat, lon: lon,
+      date:     (row['Date']                || '').trim(),  // M/D/YYYY
+      time:     (row['Time']                || '').trim(),
+      protocol: (row['Protocol']            || '').trim(),
+      allObs:   row['All Obs Reported'] === '1',
+      breeding: (row['Breeding Code']       || '').trim(),
+      lifer: false,
+    });
+    return out;
+  }, []);
+}
+
+function computeLifers(records) {
+  // Sort by date ascending; first occurrence of each species = lifer
+  records.sort(function(a, b) {
+    return new Date(a.date) - new Date(b.date);
+  });
+  var seen = {};
+  records.forEach(function(r) {
+    r.lifer = !seen[r.name];
+    seen[r.name] = true;
+  });
+}
+
+function uniqueSpecies(records) {
+  var seen = {};
+  records.forEach(function(r) { seen[r.name] = true; });
+  return Object.keys(seen).sort();
+}
+
+function buildStateCountyMap(records) {
+  stateCountyMap = {};
+  records.forEach(function(r) {
+    if (!r.state) return;
+    if (!stateCountyMap[r.state]) stateCountyMap[r.state] = {};
+    if (r.county) stateCountyMap[r.state][r.county] = true;
+  });
+}
+
+// ─────────────────────────────────────────
+// MAP INIT
+// ─────────────────────────────────────────
+function initMap() {
+  if (map) return;
+
+  map = L.map('map', { zoomControl: true }).setView([39.5, -98.3], 4);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_all/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://carto.com/" target="_blank">CartoDB</a>',
+    subdomains: 'abcd', maxZoom: 19,
+  }).addTo(map);
+
+  clusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 48,
+    iconCreateFunction: function(cluster) {
+      var n = cluster.getChildCount();
+      return L.divIcon({
+        html: '<div style="width:38px;height:38px;border-radius:50%;'
+          + 'background:rgba(45,90,61,0.88);'
+          + 'border:2px solid rgba(122,171,136,0.55);'
+          + 'display:flex;align-items:center;justify-content:center;'
+          + 'color:#7aab88;font-size:11px;font-weight:700;'
+          + 'font-family:\'DM Mono\',monospace;">' + n + '</div>',
+        className: '', iconSize: [38, 38], iconAnchor: [19, 19],
+      });
+    },
+  });
+
+  oms = new OverlappingMarkerSpiderfier(map, {
+    nearbyDistance: 18, keepSpiderfied: true, legWeight: 2,
+    legColors: { usual: '#4a7c59', spiderfied: '#f0b429' },
+  });
+
+  countyLayer = L.layerGroup();
+  stateLayer  = L.layerGroup();
+
+  map.on('zoomend', handleZoom);
+
+  // Force Leaflet to re-read container size after flex layout settles
+  setTimeout(function() { map.invalidateSize(); }, 100);
+}
+
+// ─────────────────────────────────────────
+// ICONS
+// ─────────────────────────────────────────
+function makeIcon(photoUrl, radius, label, spCount, liferCount) {
+  var d   = radius * 2;
+  var W   = Math.max(d + 12, 110);
+  var lbl = label.length > 24 ? label.slice(0, 23) + '…' : label;
+
+  var top = '<div style="width:' + W + 'px;text-align:center;'
+    + 'background:rgba(8,13,9,0.88);border-radius:5px 5px 0 0;'
+    + 'padding:3px 6px 2px;box-sizing:border-box;">'
+    + '<div style="color:#eee;font-size:10px;font-weight:700;'
+    + 'font-family:DM Mono,monospace;white-space:nowrap;'
+    + 'overflow:hidden;text-overflow:ellipsis;">' + lbl + '</div>'
+    + '<div style="color:#7aab88;font-size:9px;font-family:DM Mono,monospace;">'
+    + spCount + ' sp' + (liferCount > 0 ? ' · ⭐' + liferCount : '') + '</div>'
+    + '</div>';
+
+  var circ = photoUrl
+    ? '<img src="' + photoUrl + '" '
+      + 'style="width:' + d + 'px;height:' + d + 'px;border-radius:50%;'
+      + 'border:2px solid rgba(122,171,136,0.65);object-fit:cover;'
+      + 'box-shadow:0 2px 14px rgba(0,0,0,0.75);display:block;" '
+      + 'onerror="this.parentNode.innerHTML=\'<div style=&quot;width:' + d
+      + 'px;height:' + d + 'px;border-radius:50%;background:linear-gradient'
+      + '(135deg,#2d5a3d,#1b3a2d);border:2px solid rgba(122,171,136,0.4);'
+      + 'box-shadow:0 2px 14px rgba(0,0,0,0.75);&quot;></div>\'" />'
+    : '<div style="width:' + d + 'px;height:' + d + 'px;border-radius:50%;'
+      + 'background:linear-gradient(135deg,#2d5a3d,#1b3a2d);'
+      + 'border:2px solid rgba(122,171,136,0.4);'
+      + 'box-shadow:0 2px 14px rgba(0,0,0,0.75);"></div>';
+
+  var lh = 34; // label bar height
+  return L.divIcon({
+    html: '<div style="display:flex;flex-direction:column;align-items:center;">'
+      + top + '<div style="width:' + d + 'px;margin:0 auto;">' + circ + '</div></div>',
+    className:   '',
+    iconSize:    [W, lh + d],
+    iconAnchor:  [W / 2, lh + d / 2],
+    popupAnchor: [0, -(d / 2 + 8)],
+  });
+}
+
+function scaleR(v, mn, mx, rMin, rMax) {
+  if (mx <= mn) return Math.round((rMin + rMax) / 2);
+  var t = Math.log(v - mn + 1) / Math.log(mx - mn + 1);
+  return Math.round(rMin + t * (rMax - rMin));
+}
+
+// ─────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────
+function buildSM(records) {
+  // species map: name → {count, lifer}
+  var sm = {};
+  records.forEach(function(r) {
+    if (!sm[r.name]) sm[r.name] = { count: 0, lifer: false };
+    sm[r.name].count++;
+    if (r.lifer) sm[r.name].lifer = true;
+  });
+  return sm;
+}
+
+function bestPhoto(sm) {
+  // Prefer lifer species that have a photo
+  var best = null, bestCount = Infinity;
+  Object.keys(sm).forEach(function(sp) {
+    if (sm[sp].lifer && getPhoto(sp) && sm[sp].count < bestCount) {
+      best = sp; bestCount = sm[sp].count;
+    }
+  });
+  if (best) return getPhoto(best);
+  // Fallback: any species with a photo
+  var fallback = null;
+  Object.keys(sm).some(function(sp) { if (getPhoto(sp)) { fallback = sp; return true; } });
+  return fallback ? getPhoto(fallback) : '';
+}
+
+function refreshMarkersForSpecies(name) {
+  Object.keys(markerRefs).forEach(function(rKey) {
+    var ref = markerRefs[rKey];
+    if (!ref.sm[name]) return;
+    var p = bestPhoto(ref.sm);
+    if (!p) return;
+    ref.marker.setIcon(makeIcon(p, ref.radius, ref.label, ref.spCount, ref.liferCount));
+  });
+}
+
+// ─────────────────────────────────────────
+// POPUP
+// ─────────────────────────────────────────
+function buildPopup(title, sm, extra) {
+  var total  = Object.keys(sm).length;
+  var lifers = Object.keys(sm).filter(function(s) { return sm[s].lifer; }).length;
+
+  var spList = Object.keys(sm).map(function(s) {
+    return { name: s, count: sm[s].count, lifer: sm[s].lifer };
+  }).sort(function(a, b) {
+    if (a.lifer !== b.lifer) return b.lifer ? 1 : -1;
+    return b.count - a.count;
+  });
+
+  var h = '<div style="font-family:Arial,sans-serif;font-size:12px;min-width:260px">';
+  h += '<b style="font-size:14px;color:#1b3a2d">' + title + '</b><br>';
+  h += '<span style="color:#888;font-size:11px">' + total + ' species';
+  if (extra)  h += ' · ' + extra;
+  if (lifers) h += ' · <span style="color:#c97d22">⭐ ' + lifers + ' lifers</span>';
+  h += '</span><hr style="border:none;border-top:1px solid #e8e0d0;margin:6px 0"/>';
+
+  h += '<div style="max-height:360px;overflow-y:auto">'
+     + '<table style="width:100%;border-collapse:collapse">';
+
+  spList.forEach(function(e) {
+    var photo  = getPhoto(e.name);
+    var spEsc  = e.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    var ebLink = 'https://ebird.org/search?q=' + encodeURIComponent(e.name);
+
+    h += '<tr style="border-bottom:1px solid #f0ece4">';
+
+    // Thumbnail
+    h += '<td style="padding:3px 4px 3px 0;width:54px;vertical-align:middle">';
+    if (photo) {
+      h += '<img src="' + photo + '" onclick="openLightbox(this.src)" '
+        + 'style="width:50px;height:50px;object-fit:cover;border-radius:4px;'
+        + 'display:block;cursor:pointer;" '
+        + 'onerror="this.style.display=\'none\'" />';
+    } else {
+      h += '<div style="width:50px;height:50px;background:#e8e4dc;border-radius:4px;'
+        + 'display:flex;align-items:center;justify-content:center;font-size:18px;">🐦</div>';
+    }
+    h += '</td>';
+
+    // Name + eBird link
+    h += '<td style="padding:2px 4px;vertical-align:middle">'
+      + (e.lifer ? '⭐ ' : '')
+      + '<span style="font-weight:500;color:#1b3a2d">' + e.name + '</span><br>'
+      + '<a href="' + ebLink + '" target="_blank" rel="noopener" '
+      + 'style="font-size:10px;color:#4a7c59;text-decoration:none">eBird ↗</a></td>';
+
+    // Count
+    h += '<td style="text-align:right;padding:2px 6px;color:#999;font-size:11px;'
+      + 'vertical-align:middle;white-space:nowrap">×' + e.count + '</td>';
+
+    // Photo button
+    h += '<td style="padding:2px 3px;vertical-align:middle">'
+      + '<button onclick="photoDialog.open(\'' + spEsc + '\')" '
+      + 'title="Set Macaulay Library photo" '
+      + 'style="background:none;border:1px solid #ddd;border-radius:3px;'
+      + 'cursor:pointer;padding:2px 5px;font-size:11px;">📷</button></td>';
+
+    h += '</tr>';
+  });
+
+  h += '</table></div></div>';
+  return h;
+}
+
+// ─────────────────────────────────────────
+// LAYER BUILDERS
+// ─────────────────────────────────────────
+function buildLocationLayer(filtered) {
+  clusterGroup.clearLayers();
+  if (oms) oms.clearMarkers();
+
+  var locMap = {};
+  filtered.forEach(function(r) {
+    var key = r.location || (r.county + ',' + r.state);
+    if (!locMap[key]) locMap[key] = { name: r.location || key, lat: r.lat, lon: r.lon, records: [] };
+    locMap[key].records.push(r);
+  });
+
+  var keys = Object.keys(locMap);
+  if (!keys.length) return;
+  var counts = keys.map(function(k) { return Object.keys(buildSM(locMap[k].records)).length; });
+  var minC = Math.min.apply(null, counts), maxC = Math.max.apply(null, counts);
+
+  keys.forEach(function(key) {
+    var loc  = locMap[key];
+    var sm   = buildSM(loc.records);
+    var spN  = Object.keys(sm).length;
+    var lifN = Object.keys(sm).filter(function(s) { return sm[s].lifer; }).length;
+    var r    = scaleR(spN, minC, maxC, 14, 44);
+    var mk   = L.marker([loc.lat, loc.lon], { icon: makeIcon(bestPhoto(sm), r, loc.name, spN, lifN) });
+    var rKey = 'loc|' + key;
+
+    mk.bindTooltip('<b>' + loc.name + '</b><br>' + spN + ' species · ' + loc.records.length + ' sightings'
+      + (lifN ? '<br>⭐ ' + lifN + ' lifers' : ''), { sticky: true });
+    mk.bindPopup((function(n, s, r) { return function() { return buildPopup(n, s, r + ' sightings'); }; })(loc.name, sm, loc.records.length), { maxWidth: 480 });
+
+    markerRefs[rKey] = { marker: mk, radius: r, label: loc.name, spCount: spN, liferCount: lifN, sm: sm };
+    clusterGroup.addLayer(mk);
+    if (oms) oms.addMarker(mk);
+  });
+}
+
+function buildCountyLayer(filtered) {
+  countyLayer.clearLayers();
+
+  var agg = {};
+  filtered.forEach(function(r) {
+    if (!r.state || !r.state.startsWith('US-')) return;
+    var key = (r.county || 'Unknown') + '|' + r.state;
+    if (!agg[key]) agg[key] = { label: (r.county || 'Unknown') + ', ' + r.state,
+                                 latS: 0, lonS: 0, n: 0, records: [] };
+    agg[key].records.push(r);
+    agg[key].latS += r.lat; agg[key].lonS += r.lon; agg[key].n++;
+  });
+
+  var keys = Object.keys(agg);
+  if (!keys.length) return;
+  var counts = keys.map(function(k) { return Object.keys(buildSM(agg[k].records)).length; });
+  var minC = Math.min.apply(null, counts), maxC = Math.max.apply(null, counts);
+
+  keys.forEach(function(key) {
+    var a    = agg[key];
+    var sm   = buildSM(a.records);
+    var spN  = Object.keys(sm).length;
+    var lifN = Object.keys(sm).filter(function(s) { return sm[s].lifer; }).length;
+    var lat  = a.latS / a.n, lon = a.lonS / a.n;
+    var r    = scaleR(spN, minC, maxC, 16, 52);
+    var mk   = L.marker([lat, lon], { icon: makeIcon(bestPhoto(sm), r, a.label, spN, lifN) });
+    var rKey = 'county|' + key;
+
+    mk.bindTooltip('<b>' + a.label + '</b><br>' + spN + ' species'
+      + (lifN ? '<br>⭐ ' + lifN + ' lifers' : ''), { sticky: true });
+    mk.bindPopup((function(lbl, s) { return function() { return buildPopup(lbl, s); }; })(a.label, sm), { maxWidth: 480 });
+
+    markerRefs[rKey] = { marker: mk, radius: r, label: a.label, spCount: spN, liferCount: lifN, sm: sm };
+    countyLayer.addLayer(mk);
+  });
+}
+
+var STATE_CENTROIDS = {
+  'US-AL':[32.80,-86.79],'US-AK':[64.20,-153.49],'US-AZ':[34.27,-111.66],
+  'US-AR':[34.89,-92.44],'US-CA':[37.17,-119.45],'US-CO':[39.55,-105.78],
+  'US-CT':[41.60,-72.69],'US-DE':[39.00,-75.50],'US-FL':[28.65,-81.52],
+  'US-GA':[32.68,-83.43],'US-HI':[20.27,-156.36],'US-ID':[44.07,-114.74],
+  'US-IL':[40.06,-89.00],'US-IN':[39.85,-86.26],'US-IA':[42.08,-93.50],
+  'US-KS':[38.53,-96.73],'US-KY':[37.64,-84.67],'US-LA':[31.17,-91.87],
+  'US-ME':[45.37,-68.97],'US-MD':[39.06,-76.80],'US-MA':[42.26,-71.81],
+  'US-MI':[44.35,-84.55],'US-MN':[46.28,-94.31],'US-MS':[32.74,-89.67],
+  'US-MO':[38.46,-92.29],'US-MT':[47.03,-109.65],'US-NE':[41.49,-99.90],
+  'US-NV':[39.35,-116.67],'US-NH':[43.45,-71.57],'US-NJ':[40.22,-74.76],
+  'US-NM':[34.84,-106.25],'US-NY':[42.94,-75.53],'US-NC':[35.63,-79.81],
+  'US-ND':[47.45,-100.47],'US-OH':[40.35,-82.74],'US-OK':[35.59,-97.49],
+  'US-OR':[43.94,-120.56],'US-PA':[40.90,-77.83],'US-RI':[41.68,-71.57],
+  'US-SC':[33.90,-80.90],'US-SD':[44.44,-100.24],'US-TN':[35.86,-86.35],
+  'US-TX':[31.17,-99.33],'US-UT':[39.42,-111.09],'US-VT':[44.07,-72.67],
+  'US-VA':[37.93,-79.45],'US-WA':[47.38,-120.45],'US-WV':[38.64,-80.62],
+  'US-WI':[44.27,-89.62],'US-WY':[42.96,-107.55],'US-DC':[38.91,-77.04],
+};
+
+function buildStateLayer(filtered) {
+  stateLayer.clearLayers();
+
+  var agg = {};
+  filtered.forEach(function(r) {
+    if (!r.state) return;
+    // Group US states by state code, everything else by country prefix
+    var key = r.state.startsWith('US-') ? r.state : r.state.split('-')[0];
+    if (!agg[key]) agg[key] = { label: key, latS: 0, lonS: 0, n: 0, records: [] };
+    agg[key].records.push(r);
+    agg[key].latS += r.lat; agg[key].lonS += r.lon; agg[key].n++;
+  });
+
+  var keys = Object.keys(agg);
+  if (!keys.length) return;
+  var counts = keys.map(function(k) { return Object.keys(buildSM(agg[k].records)).length; });
+  var minC = Math.min.apply(null, counts), maxC = Math.max.apply(null, counts);
+
+  keys.forEach(function(key) {
+    var a    = agg[key];
+    var sm   = buildSM(a.records);
+    var spN  = Object.keys(sm).length;
+    var lifN = Object.keys(sm).filter(function(s) { return sm[s].lifer; }).length;
+    var ctr  = STATE_CENTROIDS[key];
+    var lat  = ctr ? ctr[0] : a.latS / a.n;
+    var lon  = ctr ? ctr[1] : a.lonS / a.n;
+    var r    = scaleR(spN, minC, maxC, 20, 58);
+    var mk   = L.marker([lat, lon], { icon: makeIcon(bestPhoto(sm), r, key, spN, lifN) });
+    var rKey = 'state|' + key;
+
+    mk.bindTooltip('<b>' + key + '</b><br>' + spN + ' species'
+      + (lifN ? '<br>⭐ ' + lifN + ' lifers' : ''), { sticky: true });
+    mk.bindPopup((function(k, s) { return function() { return buildPopup(k, s); }; })(key, sm), { maxWidth: 480 });
+
+    markerRefs[rKey] = { marker: mk, radius: r, label: key, spCount: spN, liferCount: lifN, sm: sm };
+    stateLayer.addLayer(mk);
+  });
+}
+
+// ─────────────────────────────────────────
+// FILTER + UPDATE
+// ─────────────────────────────────────────
+function getFiltered() {
+  var liferOnly = document.getElementById('chk-lifers').checked;
+  var stFilter  = document.getElementById('state-select').value;
+  var cnFilter  = document.getElementById('county-select').value;
+  return allRecords.filter(function(r) {
+    if (selectedSpp.length && selectedSpp.indexOf(r.name) === -1) return false;
+    if (liferOnly && !r.lifer)               return false;
+    if (stFilter  && r.state  !== stFilter)  return false;
+    if (cnFilter  && r.county !== cnFilter)  return false;
+    return true;
+  });
+}
+
+function updateMap() {
+  if (!map) return;
+  var filtered = getFiltered();
+  markerRefs = {};
+  buildLocationLayer(filtered);
+  buildCountyLayer(filtered);
+  buildStateLayer(filtered);
+  handleZoom();
+  updateStats(filtered);
+
+  // On first load, fit the map to the actual data so tiles load for the right area
+  if (!map._didFit && filtered.length) {
+    map._didFit = true;
+    var lats = filtered.map(function(r) { return r.lat; });
+    var lons  = filtered.map(function(r) { return r.lon; });
+    map.fitBounds([
+      [Math.min.apply(null, lats), Math.min.apply(null, lons)],
+      [Math.max.apply(null, lats), Math.max.apply(null, lons)]
+    ], { padding: [80, 80], maxZoom: 8 });
+  }
+}
+
+function updateStats(filtered) {
+  var sp = {}, lists = {}, lifSp = {};
+  filtered.forEach(function(r) {
+    sp[r.name] = true;
+    lists[r.subId] = true;
+    if (r.lifer) lifSp[r.name] = true;
+  });
+  document.getElementById('stat-species').textContent = Object.keys(sp).length.toLocaleString();
+  document.getElementById('stat-lifers').textContent  = Object.keys(lifSp).length.toLocaleString();
+  document.getElementById('stat-lists').textContent   = Object.keys(lists).length.toLocaleString();
+}
+
+// ─────────────────────────────────────────
+// ZOOM
+// ─────────────────────────────────────────
+function handleZoom() {
+  if (!map) return;
+  var z = map.getZoom();
+
+  function setL(layer, on) {
+    if (!layer) return;
+    if (on  && !map.hasLayer(layer)) map.addLayer(layer);
+    if (!on &&  map.hasLayer(layer)) map.removeLayer(layer);
+  }
+
+  setL(clusterGroup, showHotspots && z >= ZOOM_LOCATION);
+  setL(countyLayer,  showRegions  && z >= ZOOM_COUNTY && z < ZOOM_LOCATION);
+  setL(stateLayer,   showRegions  && z < ZOOM_COUNTY);
+}
+
+// ─────────────────────────────────────────
+// AUTOCOMPLETE
+// ─────────────────────────────────────────
+function buildAutocomplete() {
+  var inp = document.getElementById('species-input');
+  var dd  = document.getElementById('species-dropdown');
+
+  inp.addEventListener('input', function() {
+    var q = this.value.toLowerCase().trim();
+    dd.innerHTML = '';
+    if (!q) { dd.style.display = 'none'; return; }
+    var hits = speciesList.filter(function(s) {
+      return s.toLowerCase().includes(q) && selectedSpp.indexOf(s) === -1;
+    }).slice(0, 20);
+    if (!hits.length) { dd.style.display = 'none'; return; }
+    hits.forEach(function(s) {
+      var div = document.createElement('div');
+      div.textContent = s;
+      div.onclick = function() {
+        selectedSpp.push(s);
+        inp.value = '';
+        dd.style.display = 'none';
+        renderTags();
+        updateMap();
+      };
+      dd.appendChild(div);
+    });
+    dd.style.display = 'block';
+  });
+
+  document.addEventListener('click', function(e) {
+    if (e.target !== inp) dd.style.display = 'none';
+  });
+}
+
+function renderTags() {
+  var el = document.getElementById('selected-tags');
+  el.innerHTML = '';
+  selectedSpp.forEach(function(s) {
+    var t = document.createElement('span');
+    t.className = 'stag';
+    t.textContent = s + ' ✕';
+    t.onclick = function() {
+      selectedSpp = selectedSpp.filter(function(x) { return x !== s; });
+      renderTags(); updateMap();
+    };
+    el.appendChild(t);
+  });
+}
+
+// ─────────────────────────────────────────
+// DROPDOWNS
+// ─────────────────────────────────────────
+function buildDropdowns() {
+  var stSel = document.getElementById('state-select');
+  var cnSel = document.getElementById('county-select');
+
+  Object.keys(stateCountyMap).sort().forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    stSel.appendChild(o);
+  });
+
+  stSel.addEventListener('change', function() {
+    cnSel.innerHTML = '<option value="">All counties</option>';
+    var st = this.value;
+    if (st && stateCountyMap[st]) {
+      Object.keys(stateCountyMap[st]).sort().forEach(function(c) {
+        var o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        cnSel.appendChild(o);
+      });
+    }
+    updateMap();
+  });
+
+  cnSel.addEventListener('change', updateMap);
+}
+
+// ─────────────────────────────────────────
+// PHOTO DIALOG
+// ─────────────────────────────────────────
+var photoDialog = (function() {
+  var sp = null;
+
+  function mlUrl(id) {
+    return 'https://cdn.download.ams.birds.cornell.edu/api/v1/asset/' + id.trim() + '/2400';
+  }
+
+  function showPrev(url) {
+    var img = document.getElementById('photo-preview');
+    img.style.display = url ? 'block' : 'none';
+    if (url) img.src = url;
+  }
+
+  function apply(name, url) {
+    photoOverrides[name] = url;
+    photoCache[name]     = url;
+    saveOverrides();
+    refreshMarkersForSpecies(name);
+    if (map) map.closePopup();
+  }
+
+  return {
+    open: function(name) {
+      sp = name;
+      document.getElementById('photo-dialog-sp').textContent = name;
+      document.getElementById('dlg-asset-id').value = '';
+      document.getElementById('dlg-url').value       = '';
+      showPrev(getPhoto(name));
+      document.getElementById('photo-dialog').style.display    = 'block';
+      document.getElementById('photo-dialog-bg').style.display = 'block';
+    },
+    close: function() {
+      document.getElementById('photo-dialog').style.display    = 'none';
+      document.getElementById('photo-dialog-bg').style.display = 'none';
+      sp = null;
+    },
+    previewAsset: function(v) {
+      if (/^\d+$/.test(v.trim())) showPrev(mlUrl(v));
+    },
+    applyAsset: function() {
+      var id = document.getElementById('dlg-asset-id').value.trim();
+      if (id && sp) { apply(sp, mlUrl(id)); this.close(); }
+    },
+    previewUrl: function(v) { if (v.trim()) showPrev(v.trim()); },
+    applyUrl: function() {
+      var url = document.getElementById('dlg-url').value.trim();
+      if (url && sp) { apply(sp, url); this.close(); }
+    },
+    reset: function() {
+      if (!sp) return;
+      delete photoOverrides[sp];
+      delete photoCache[sp];
+      saveOverrides();
+      // Re-queue for iNat
+      photoQueue.unshift(sp);
+      if (!photoFetching) processQueue();
+      refreshMarkersForSpecies(sp);
+      if (map) map.closePopup();
+      this.close();
+    },
+  };
+})();
+
+// ─────────────────────────────────────────
+// LIGHTBOX
+// ─────────────────────────────────────────
+function openLightbox(url) {
+  document.getElementById('photo-lb-img').src = url;
+  document.getElementById('photo-lb').style.display = 'flex';
+}
+function closeLightbox() {
+  document.getElementById('photo-lb').style.display = 'none';
+}
+
+// ─────────────────────────────────────────
+// SHOW APP
+// ─────────────────────────────────────────
+function showApp() {
+  document.getElementById('upload-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display    = 'block';
+  document.getElementById('layer-bar').style.display     = 'flex';
+}
+
+// ─────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────
+document.getElementById('btn-hotspots').addEventListener('click', function() {
+  showHotspots = !showHotspots;
+  this.classList.toggle('on', showHotspots);
+  handleZoom();
+});
+
+document.getElementById('btn-regions').addEventListener('click', function() {
+  showRegions = !showRegions;
+  this.classList.toggle('on', showRegions);
+  handleZoom();
+});
+
+document.getElementById('chk-lifers').addEventListener('change', updateMap);
+document.getElementById('photo-dialog-bg').addEventListener('click', function() { photoDialog.close(); });
+
+document.getElementById('clear-btn').addEventListener('click', function() {
+  selectedSpp = [];
+  renderTags();
+  document.getElementById('species-input').value = '';
+  document.getElementById('chk-lifers').checked  = false;
+  document.getElementById('state-select').value  = '';
+  document.getElementById('county-select').innerHTML = '<option value="">All counties</option>';
+  updateMap();
+});
+
+// File drop + pick
+var dropZone = document.getElementById('drop-zone');
+var csvInput = document.getElementById('csv-input');
+
+dropZone.addEventListener('click', function() { csvInput.click(); });
+
+dropZone.addEventListener('dragover', function(e) {
+  e.preventDefault(); dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', function() {
+  dropZone.classList.remove('drag-over');
+});
+dropZone.addEventListener('drop', function(e) {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) parseCSV(e.dataTransfer.files[0]);
+});
+csvInput.addEventListener('change', function() {
+  if (this.files[0]) parseCSV(this.files[0]);
+});
+
+// ─────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────
+loadOverrides();
+</script>
+</body>
+</html>
