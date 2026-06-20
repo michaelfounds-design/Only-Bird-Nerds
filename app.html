@@ -491,11 +491,13 @@
 
   <div id="side-panel">
     <div class="panel-header">
-      <img src="onlybirdnerds-logo-v4.svg" alt="" />
-      <div>
-        <div class="panel-site">Only Bird Nerds</div>
-        <div class="panel-sub">My Map</div>
-      </div>
+      <a href="index.html" style="display:flex;align-items:center;gap:0.55rem;text-decoration:none;flex:1;min-width:0">
+        <img src="onlybirdnerds-logo-v4.svg" alt="" />
+        <div>
+          <div class="panel-site">Only Bird Nerds</div>
+          <div class="panel-sub">My Map</div>
+        </div>
+      </a>
     </div>
 
     <div id="stats-row">
@@ -1158,7 +1160,12 @@ function getFiltered() {
 function updateHeat(filtered) {
   if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
   if (!showHeat || !filtered.length) return;
-  var pts = filtered.map(function(r) { return [r.lat, r.lon]; });
+  // One point per unique checklist (not per observation)
+  var seen = {};
+  var pts = [];
+  filtered.forEach(function(r) {
+    if (!seen[r.subId]) { seen[r.subId] = true; pts.push([r.lat, r.lon]); }
+  });
   heatLayer = L.heatLayer(pts, { radius: 22, blur: 18, maxZoom: 17, gradient: {0.2:'#1b3a2d', 0.5:'#4a7c59', 0.8:'#f0b429', 1.0:'#d4622a'} });
   map.addLayer(heatLayer);
 }
