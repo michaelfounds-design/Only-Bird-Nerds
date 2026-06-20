@@ -544,6 +544,13 @@
 
       <button class="clear-btn" id="clear-btn">Clear all filters</button>
       <div id="photo-progress"></div>
+
+      <div class="sec-label" style="margin-top:1rem">Photo overrides</div>
+      <div style="display:flex;gap:0.4rem">
+        <button class="clear-btn" id="export-btn" style="flex:1;margin-top:0">Export</button>
+        <button class="clear-btn" id="import-btn" style="flex:1;margin-top:0">Import</button>
+      </div>
+      <input type="file" id="import-input" accept=".json" style="display:none" />
     </div>
   </div>
 
@@ -554,6 +561,7 @@
 <div id="layer-bar">
   <button class="lbtn on" id="btn-hotspots">📍 Locations</button>
   <button class="lbtn on" id="btn-regions">🗺 Regions</button>
+  <button class="lbtn" id="btn-heat">🔥 Heat</button>
 </div>
 
 <!-- ── Photo override dialog ── -->
@@ -595,6 +603,7 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
 
 <script>
@@ -622,6 +631,8 @@ var countyLayer   = null;
 var stateLayer    = null;
 var showHotspots  = true;
 var showRegions   = true;
+var showHeat      = false;
+var heatLayer     = null;
 
 // markerRefs: regionKey → {marker, radius, label, spCount, liferCount, sm}
 // rebuilt on every updateMap() call
@@ -1144,6 +1155,14 @@ function getFiltered() {
   });
 }
 
+function updateHeat(filtered) {
+  if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+  if (!showHeat || !filtered.length) return;
+  var pts = filtered.map(function(r) { return [r.lat, r.lon]; });
+  heatLayer = L.heatLayer(pts, { radius: 22, blur: 18, maxZoom: 17, gradient: {0.2:'#1b3a2d', 0.5:'#4a7c59', 0.8:'#f0b429', 1.0:'#d4622a'} });
+  map.addLayer(heatLayer);
+}
+
 function updateMap() {
   if (!map) return;
   var filtered = getFiltered();
@@ -1151,6 +1170,7 @@ function updateMap() {
   buildLocationLayer(filtered);
   buildCountyLayer(filtered);
   buildStateLayer(filtered);
+  updateHeat(filtered);
   handleZoom();
   updateStats(filtered);
 
@@ -1400,6 +1420,12 @@ document.getElementById('btn-regions').addEventListener('click', function() {
   handleZoom();
 });
 
+document.getElementById('btn-heat').addEventListener('click', function() {
+  showHeat = !showHeat;
+  this.classList.toggle('on', showHeat);
+  updateHeat(getFiltered());
+});
+
 document.getElementById('chk-lifers').addEventListener('change', updateMap);
 document.getElementById('photo-dialog-bg').addEventListener('click', function() { photoDialog.close(); });
 
@@ -1444,6 +1470,47 @@ dropZone.addEventListener('drop', function(e) {
 });
 csvInput.addEventListener('change', function() {
   if (this.files[0]) parseCSV(this.files[0]);
+});
+
+// ─────────────────────────────────────────
+// EXPORT / IMPORT PHOTO OVERRIDES
+// ─────────────────────────────────────────
+document.getElementById('export-btn').addEventListener('click', function() {
+  var data = JSON.stringify(photoOverrides, null, 2);
+  var blob = new Blob([data], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'obn_photo_overrides.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('import-btn').addEventListener('click', function() {
+  document.getElementById('import-input').click();
+});
+
+document.getElementById('import-input').addEventListener('change', function() {
+  var file = this.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var imported = JSON.parse(e.target.result);
+      // Merge: imported values overwrite existing ones
+      Object.keys(imported).forEach(function(k) {
+        photoOverrides[k] = imported[k];
+        photoCache[k]     = imported[k];
+      });
+      saveOverrides();
+      // Refresh all markers to show newly imported photos
+      Object.keys(imported).forEach(function(k) { refreshMarkersForSpecies(k); });
+      alert('Imported ' + Object.keys(imported).length + ' photo overrides.');
+    } catch(err) {
+      alert('Could not read file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  this.value = ''; // reset so same file can be re-imported
 });
 
 // ─────────────────────────────────────────
