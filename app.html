@@ -1311,8 +1311,8 @@ function updateHeat(filtered) {
     if (!seen[key]) { seen[key] = true; pts.push([r.lat, r.lon]); }
   });
   heatLayer = L.heatLayer(pts, {
-    radius: 22, blur: 10, maxZoom: 10, minOpacity: 0.55,
-    gradient: { 0.0: '#4a7c59', 0.5: '#f0b429', 1.0: '#d4622a' }
+    radius: 30, blur: 28, maxZoom: 10, minOpacity: 0.1,
+    gradient: { 0.0: '#2d6644', 0.35: '#4a7c59', 0.65: '#f0b429', 1.0: '#d4622a' }
   });
   // Visibility managed by handleZoom — not added to map here
 }
