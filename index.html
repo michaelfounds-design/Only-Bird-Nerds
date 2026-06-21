@@ -936,21 +936,36 @@
 
     /* ─── RESPONSIVE ─── */
     @media (max-width: 700px) {
+      nav { padding: 0.9rem 1.25rem; }
+      .nav-links a:not(.nav-cta) { display: none; }
+
       .hero {
         grid-template-columns: 1fr;
         min-height: auto;
       }
       .hero-right {
-        height: 50vw;
-        min-height: 220px;
+        height: 60vw;
+        min-height: 260px;
         order: -1;
       }
-      .hero-left { padding: 2.5rem 1.25rem; }
-      nav { padding: 0.9rem 1.25rem; }
-      .nav-links a:not(.nav-cta) { display: none; }
+      /* Left-edge gradient doesn't apply when panels are stacked */
+      .hero-right::before { display: none; }
+
+      .hero-left {
+        padding: 2.2rem 1.25rem 2.8rem;
+      }
+      .hero-tagline-rows { gap: 0.5rem; }
+      .tagline-text {
+        font-size: clamp(1.4rem, 5.5vw, 2rem);
+      }
+      .hero-sub { font-size: 0.92rem; margin-bottom: 1.6rem; }
+
+      .hero-drop-card { padding: 1.4rem 1.6rem; gap: 0.45rem; }
+      .hero-drop-logo { height: 46px; }
+      .hero-drop-title { font-size: 0.85rem; }
+      .hero-drop-sub, .hero-drop-hint { font-size: 0.72rem; }
+
       .email-section { padding: 4rem 1.25rem; }
-      .map-split { grid-template-columns: 1fr; }
-      .map-split .map-frame-wrap { height: 300px; }
       footer { padding: 1.5rem 1.25rem; }
     }
   </style>

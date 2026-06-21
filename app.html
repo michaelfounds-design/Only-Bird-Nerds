@@ -660,6 +660,102 @@
       color: var(--sage);
     }
     .share-opt-btn.secondary:hover { background: rgba(74,124,89,0.3); color: var(--cream); }
+
+    /* ── Mobile panel drag handle (hidden on desktop) ── */
+    #panel-drag-handle {
+      display: none;
+      width: 36px; height: 4px;
+      background: rgba(122,171,136,0.35);
+      border-radius: 2px;
+      margin: 10px auto 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Mobile floating button (hidden on desktop) ── */
+    #mobile-panel-btn {
+      display: none;
+      position: fixed;
+      bottom: 1.25rem; right: 1.25rem;
+      z-index: 600;
+      background: rgba(27,58,45,0.97);
+      border: 1px solid rgba(122,171,136,0.38);
+      color: var(--cream);
+      padding: 0.7rem 1.2rem;
+      border-radius: 100px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      align-items: center; gap: 0.4rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+      transition: background 0.15s;
+    }
+    #mobile-panel-btn:hover { background: rgba(45,90,61,0.97); }
+
+    /* ── Mobile overlay (tap map to close panel) ── */
+    #mobile-panel-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 450;
+      background: transparent;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      /* Upload screen */
+      .upload-hero { padding: 2rem 1.25rem; max-width: 100%; }
+      .upload-hero h1 { font-size: clamp(1.7rem, 7vw, 2.4rem); }
+      .upload-hero p { font-size: 0.88rem; margin-bottom: 1.6rem; }
+      .drop-zone { padding: 1.8rem 1.5rem; }
+      .drop-icon { font-size: 2rem; }
+      .drop-label { font-size: 0.7rem; }
+      .drop-sub::before { content: "Tap to select"; }
+      .drop-sub span { display: none; }
+
+      /* Side panel → bottom sheet */
+      #side-panel {
+        top: auto;
+        left: 0; right: 0; bottom: 0;
+        width: 100%;
+        height: auto;
+        max-height: 82vh;
+        border-right: none;
+        border-top: 1px solid rgba(122,171,136,0.2);
+        border-radius: 18px 18px 0 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.32,0,0.15,1);
+      }
+      #side-panel.collapsed { transform: translateY(100%); }
+      #side-panel.mobile-open { transform: translateY(0); }
+
+      /* Hide desktop toggle, show mobile elements */
+      #panel-toggle { display: none !important; }
+      #panel-drag-handle { display: block; }
+      #mobile-panel-btn { display: flex; }
+
+      /* Map always full screen */
+      #map { left: 0 !important; transition: none; }
+
+      /* Layer bar — no panel offset on mobile */
+      #layer-bar {
+        left: 50%;
+        transform: translateX(-50%);
+        top: 10px;
+      }
+
+      /* Stats grid — 4 across on mobile */
+      #stats-row { grid-template-columns: repeat(4, 1fr); }
+
+      /* Share modal — stack options vertically */
+      #share-modal-body { grid-template-columns: 1fr; }
+      .share-divider { width: 100%; height: 1px; margin: 0.2rem 0; }
+
+      /* Modals — full width */
+      #badge-modal-card, #share-modal-card { width: 96vw; max-height: 88vh; }
+
+      /* Photo dialog — full width */
+      #photo-dialog { width: 94vw; left: 50%; }
+    }
   </style>
 </head>
 <body>
@@ -697,6 +793,7 @@
 <div id="app-screen">
 
   <div id="side-panel">
+    <div id="panel-drag-handle"></div>
     <div class="panel-header">
       <a href="index.html" style="display:flex;align-items:center;gap:0.55rem;text-decoration:none;flex:1;min-width:0">
         <img src="onlybirdnerds-logo-v4.svg" alt="" />
@@ -770,6 +867,10 @@
 
   <div id="map"></div>
 </div>
+
+<!-- Mobile: floating panel toggle & tap-to-close overlay -->
+<button id="mobile-panel-btn">☰ Filters &amp; Info</button>
+<div id="mobile-panel-overlay"></div>
 
 <!-- ── Layer bar ── -->
 <div id="layer-bar">
@@ -1897,6 +1998,37 @@ document.getElementById('share-modal').addEventListener('click', function(e) {
   if (e.target === this) this.classList.remove('open');
 });
 document.getElementById('download-map-btn').addEventListener('click', downloadMap);
+
+// ─────────────────────────────────────────
+// MOBILE PANEL
+// ─────────────────────────────────────────
+(function() {
+  var panel   = document.getElementById('side-panel');
+  var btn     = document.getElementById('mobile-panel-btn');
+  var overlay = document.getElementById('mobile-panel-overlay');
+
+  function isMobile() { return window.innerWidth <= 768; }
+
+  function openMobilePanel() {
+    panel.classList.add('mobile-open');
+    overlay.style.display = 'block';
+    btn.textContent = '✕ Close';
+  }
+  function closeMobilePanel() {
+    panel.classList.remove('mobile-open');
+    overlay.style.display = 'none';
+    btn.textContent = '☰ Filters & Info';
+  }
+
+  btn.addEventListener('click', function() {
+    if (panel.classList.contains('mobile-open')) closeMobilePanel();
+    else openMobilePanel();
+  });
+  overlay.addEventListener('click', closeMobilePanel);
+  document.getElementById('panel-drag-handle').addEventListener('click', function() {
+    if (isMobile()) closeMobilePanel();
+  });
+})();
 
 function downloadMap() {
   // Build per-location summary
