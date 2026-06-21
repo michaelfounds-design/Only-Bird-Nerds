@@ -454,22 +454,33 @@
       color: #7aab88 !important; font-weight: bold;
     }
 
-    /* ── Badge button ── */
+    /* ── Panel footer ── */
     .panel-footer {
       flex-shrink: 0;
       padding: 0.6rem 0.9rem 0.8rem;
       border-top: 1px solid rgba(122,171,136,0.12);
+      display: flex; gap: 0.4rem;
     }
     #badge-btn {
-      width: 100%; padding: 0.55rem;
+      flex: 1; padding: 0.55rem;
       background: rgba(240,180,41,0.08);
       border: 1px solid rgba(240,180,41,0.28);
       border-radius: 6px; color: var(--sun);
-      font-family: 'DM Mono', monospace; font-size: 0.65rem;
+      font-family: 'DM Mono', monospace; font-size: 0.62rem;
       letter-spacing: 0.07em; text-transform: uppercase;
       cursor: pointer; transition: background 0.15s;
     }
     #badge-btn:hover { background: rgba(240,180,41,0.16); }
+    #share-btn {
+      flex: 1; padding: 0.55rem;
+      background: rgba(74,124,89,0.1);
+      border: 1px solid rgba(74,124,89,0.3);
+      border-radius: 6px; color: var(--sage);
+      font-family: 'DM Mono', monospace; font-size: 0.62rem;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #share-btn:hover { background: rgba(74,124,89,0.2); }
 
     /* ── Badge modal ── */
     #badge-modal {
@@ -577,6 +588,78 @@
       font-size: 0.65rem; margin-top: 0.2rem; line-height: 1;
     }
     /* tooltip via title attr — browser default is fine for now */
+
+    /* ── Share modal ── */
+    #share-modal {
+      display: none; position: fixed; inset: 0;
+      z-index: 2000; background: rgba(0,0,0,0.72);
+      align-items: center; justify-content: center;
+    }
+    #share-modal.open { display: flex; }
+    #share-modal-card {
+      background: rgba(12,19,14,0.99);
+      border: 1px solid rgba(122,171,136,0.18);
+      border-radius: 14px; width: 520px;
+      max-width: 92vw;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    #share-modal-hdr {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.1rem 0.75rem;
+      border-bottom: 1px solid rgba(122,171,136,0.12);
+    }
+    #share-modal-close {
+      background: none; border: none;
+      color: var(--sage); font-size: 1rem;
+      cursor: pointer; padding: 0.2rem 0.4rem; line-height: 1;
+    }
+    #share-modal-body {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0; padding: 1.25rem;
+      align-items: stretch;
+    }
+    .share-divider {
+      width: 1px; background: rgba(122,171,136,0.14);
+      margin: 0 0.1rem; align-self: stretch;
+    }
+    .share-option {
+      padding: 1rem 1.1rem;
+      display: flex; flex-direction: column; gap: 0.55rem;
+    }
+    .share-option-icon {
+      font-size: 1.8rem; line-height: 1; margin-bottom: 0.1rem;
+    }
+    .share-option h3 {
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: 0.95rem; color: var(--cream);
+      letter-spacing: -0.01em;
+    }
+    .share-option p {
+      font-family: 'Lora', serif; font-size: 0.82rem;
+      line-height: 1.6; color: rgba(200,221,208,0.65);
+      flex: 1;
+    }
+    .share-opt-btn {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.5rem 1rem; border-radius: 100px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.15s, transform 0.12s; width: fit-content;
+      border: none;
+    }
+    .share-opt-btn:hover { transform: translateY(-1px); }
+    .share-opt-btn.primary {
+      background: var(--cream); color: var(--forest);
+    }
+    .share-opt-btn.primary:hover { background: var(--mist); }
+    .share-opt-btn.secondary {
+      background: rgba(74,124,89,0.18);
+      border: 1px solid rgba(122,171,136,0.35);
+      color: var(--sage);
+    }
+    .share-opt-btn.secondary:hover { background: rgba(74,124,89,0.3); color: var(--cream); }
   </style>
 </head>
 <body>
@@ -681,6 +764,7 @@
 
     <div class="panel-footer">
       <button id="badge-btn">🏅 Your Badges</button>
+      <button id="share-btn">↑ Share Map</button>
     </div>
   </div>
 
@@ -733,6 +817,31 @@
     </div>
     <div id="badge-modal-tabs"></div>
     <div id="badge-modal-body"></div>
+  </div>
+</div>
+
+<!-- ── Share Modal ── -->
+<div id="share-modal">
+  <div id="share-modal-card">
+    <div id="share-modal-hdr">
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--cream)">Share Your Map</span>
+      <button id="share-modal-close">✕</button>
+    </div>
+    <div id="share-modal-body">
+      <div class="share-option">
+        <div class="share-option-icon">👤</div>
+        <h3>Create an Account</h3>
+        <p>Save your badges across sessions, share your map with other birders, and get notified when new features launch.</p>
+        <a href="index.html#notify" class="share-opt-btn primary">Sign up →</a>
+      </div>
+      <div class="share-divider"></div>
+      <div class="share-option">
+        <div class="share-option-icon">⬇</div>
+        <h3>Download My Map</h3>
+        <p>Get a standalone HTML file of your map with all your locations baked in. View it anytime, share it with anyone.</p>
+        <button id="download-map-btn" class="share-opt-btn secondary">Download →</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1774,6 +1883,62 @@ document.getElementById('badge-modal-close').addEventListener('click', function(
 document.getElementById('badge-modal').addEventListener('click', function(e) {
   if (e.target === this) this.classList.remove('open');
 });
+
+// ─────────────────────────────────────────
+// SHARE MODAL
+// ─────────────────────────────────────────
+document.getElementById('share-btn').addEventListener('click', function() {
+  document.getElementById('share-modal').classList.add('open');
+});
+document.getElementById('share-modal-close').addEventListener('click', function() {
+  document.getElementById('share-modal').classList.remove('open');
+});
+document.getElementById('share-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+document.getElementById('download-map-btn').addEventListener('click', downloadMap);
+
+function downloadMap() {
+  // Build per-location summary
+  var locMap = {};
+  allRecords.forEach(function(r) {
+    if (!r.lat || !r.lon) return;
+    var key = r.lat.toFixed(4) + ',' + r.lon.toFixed(4);
+    if (!locMap[key]) locMap[key] = { name: r.location || 'Unknown', lat: r.lat, lon: r.lon, sp: {}, cl: {} };
+    locMap[key].sp[r.name] = true;
+    if (r.subId) locMap[key].cl[r.subId] = true;
+  });
+  var locs = Object.values(locMap).map(function(l) {
+    return { name: l.name, lat: l.lat, lon: l.lon, species: Object.keys(l.sp).length, checklists: Object.keys(l.cl).length };
+  });
+
+  // Stats
+  var clIds = {};
+  allRecords.forEach(function(r) { if (r.subId) clIds[r.subId] = true; });
+  var totalCl = Object.keys(clIds).length;
+  var dates = allRecords.map(function(r) { return r.date; }).filter(Boolean).sort();
+  var dateRange = dates.length
+    ? new Date(dates[0]).toLocaleDateString('en-US', {month:'short',year:'numeric'})
+      + ' – ' + new Date(dates[dates.length-1]).toLocaleDateString('en-US', {month:'short',year:'numeric'})
+    : '';
+  var generated = new Date().toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'});
+
+  var stats = { species: speciesList.length, checklists: totalCl, locations: locs.length, dateRange: dateRange, generated: generated };
+
+  var html = buildDownloadHTML(locs, stats);
+  var blob = new Blob([html], { type: 'text/html' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'my-bird-map.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function buildDownloadHTML(locs, stats) {
+  var locsJSON = JSON.stringify(locs);
+  var statsJSON = JSON.stringify(stats);
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8"/>\n<meta name="viewport" content="width=device-width,initial-scale=1"/>\n<title>My Bird Map · Only Bird Nerds</title>\n<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>\n<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{background:#08120c;font-family:\'DM Mono\',monospace;color:#f7f3ec;display:flex;flex-direction:column;height:100vh;overflow:hidden}\n#hdr{display:flex;align-items:center;gap:1.2rem;padding:0.7rem 1.4rem;background:rgba(27,58,45,0.97);border-bottom:1px solid rgba(122,171,136,0.18);flex-shrink:0}\n#hdr .brand{font-family:Georgia,serif;font-weight:700;font-size:1rem;color:#f7f3ec;letter-spacing:-0.01em}\n.sep{width:1px;height:28px;background:rgba(122,171,136,0.2)}\n.stat{display:flex;flex-direction:column;align-items:center;gap:0.1rem}\n.stat-n{font-size:1.1rem;font-weight:600;color:#f0b429;line-height:1}\n.stat-l{font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;color:#7aab88}\n.meta{margin-left:auto;font-size:0.55rem;letter-spacing:0.05em;color:rgba(122,171,136,0.45);text-align:right;line-height:1.5}\n.meta a{color:rgba(122,171,136,0.55);text-decoration:none}\n.meta a:hover{color:#7aab88}\n#map{flex:1}\n.leaflet-popup-content-wrapper{background:rgba(12,24,16,0.97)!important;border:1px solid rgba(122,171,136,0.25)!important;border-radius:10px!important;box-shadow:0 4px 20px rgba(0,0,0,0.5)!important}\n.leaflet-popup-content{color:#f7f3ec!important;font-family:\'DM Mono\',monospace!important;font-size:0.7rem!important;line-height:1.7!important}\n.leaflet-popup-content strong{color:#7aab88;font-size:0.72rem;display:block;margin-bottom:0.15rem}\n.leaflet-popup-tip{background:rgba(12,24,16,0.97)!important}\n.leaflet-popup-close-button{color:#7aab88!important}\n</style>\n</head>\n<body>\n<div id="hdr">\n  <span class="brand">Only Bird Nerds</span>\n  <div class="sep"></div>\n  <div class="stat"><span class="stat-n">'+stats.species+'</span><span class="stat-l">Species</span></div>\n  <div class="stat"><span class="stat-n">'+stats.locations+'</span><span class="stat-l">Locations</span></div>\n  <div class="stat"><span class="stat-n">'+stats.checklists+'</span><span class="stat-l">Checklists</span></div>\n  <div class="meta">'+stats.dateRange+'<br/><a href="https://onlybirdnerds.com" target="_blank">onlybirdnerds.com</a> · '+stats.generated+'</div>\n</div>\n<div id="map"></div>\n<script>\nvar LOCS='+locsJSON+';\nvar map=L.map("map",{center:[39,-98],zoom:4,zoomControl:true});\nL.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap © CARTO",maxZoom:19}).addTo(map);\nvar maxSp=Math.max.apply(null,LOCS.map(function(l){return l.species;}));\nLOCS.forEach(function(loc){\n  var t=loc.species/Math.max(maxSp,1);\n  var r=5+Math.round(t*10);\n  var col=t<0.4?"#4a7c59":t<0.7?"#f0b429":"#d4622a";\n  var m=L.circleMarker([loc.lat,loc.lon],{radius:r,fillColor:col,color:"rgba(255,255,255,0.25)",weight:1,fillOpacity:0.75}).addTo(map);\n  m.bindPopup("<strong>"+loc.name+"</strong>"+loc.species+" species · "+loc.checklists+" checklist"+(loc.checklists!==1?"s":""));\n});\nif(LOCS.length){\n  var bounds=L.latLngBounds(LOCS.map(function(l){return[l.lat,l.lon];}));\n  map.fitBounds(bounds,{padding:[40,40]});\n}\n<\/script>\n</body>\n</html>';
+}
 
 // ─────────────────────────────────────────
 // BOOT
