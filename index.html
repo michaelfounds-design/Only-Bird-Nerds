@@ -866,7 +866,7 @@
       .hero-left { padding: 2.5rem 1.25rem; }
       nav { padding: 0.9rem 1.25rem; }
       .nav-links a:not(.nav-cta) { display: none; }
-      .obs-section, .map-section, .quests-section, .email-section { padding: 4rem 1.25rem; }
+      .email-section { padding: 4rem 1.25rem; }
       .map-split { grid-template-columns: 1fr; }
       .map-split .map-frame-wrap { height: 300px; }
       footer { padding: 1.5rem 1.25rem; }
@@ -882,8 +882,7 @@
     Only Bird Nerds
   </a>
   <div class="nav-links">
-    <a class="nav-link" href="app.html">My Map</a>
-    <a class="nav-link" href="#quests">Quests</a>
+    <a class="nav-link" href="shared.html">See Shared Maps</a>
     <a class="nav-link" href="about.html">About</a>
     <a class="nav-link nav-cta" href="app.html">Try your map</a>
   </div>
@@ -953,117 +952,18 @@
       Upload your observations. Watch it come alive on your map.
     </p>
 
-    <div class="hero-actions">
-      <a href="app.html" class="btn-primary">&#x1f5fa; Try your map</a>
-      <a href="about.html" class="btn-ghost">Our story →</a>
-    </div>
-
-    <div class="quest-pills" aria-label="Example badges">
-      <span class="quest-pill"><span class="pip"></span> Spark Bird — your first species</span>
-      <span class="quest-pill"><span class="pip amber"></span> Sleep Is for January — 100+ dawn checklists</span>
-      <span class="quest-pill"><span class="pip coral"></span> No Plans That Day — 100 species in a single day</span>
-      <span class="quest-pill"><span class="pip forest"></span> Warbler Neck — 10 warbler species</span>
-      <span class="quest-pill"><span class="pip"></span> Smells Like Rain — birding the Pacific Northwest</span>
-    </div>
   </div>
 
-  <div class="hero-right" aria-hidden="true">
-    <!-- High quality PNW bird photo from Unsplash (free to use) -->
-    <img
-      src="https://images.unsplash.com/photo-1444464666168-49d633b86797?w=900&auto=format&fit=crop&q=80"
-      alt="A bird perched in natural habitat"
-      loading="eager"
-    />
-
-    <div class="hero-badge" role="presentation">
-      🏅 New badge unlocked
-    </div>
-
-    <div class="hero-stat-card">
-      <p class="stat-label">Species logged</p>
-      <p class="stat-value">247</p>
-      <p class="stat-sub">across 12 Oregon counties</p>
-    </div>
+  <div class="hero-right">
+    <iframe
+      src="app.html?demo=1"
+      title="Live bird sighting map"
+      loading="lazy"
+      style="width:100%;height:100%;border:none;display:block;"
+    ></iframe>
   </div>
 </section>
 
-
-<!-- ─── LIVE MAP ─── -->
-<section class="map-section" id="map">
-  <div class="map-inner">
-    <div class="map-header">
-      <div>
-        <p class="map-tag">Interactive map</p>
-        <h2>Track lifetime observations <em>spatially.</em></h2>
-      </div>
-      <a class="btn-map-open" href="map.html" target="_blank" rel="noopener">
-        Open full map ↗
-      </a>
-    </div>
-
-    <div class="map-split">
-      <div class="map-frame-wrap">
-        <iframe
-          src="app.html?demo=1"
-          title="Live bird observation map"
-          loading="lazy"
-        ></iframe>
-      </div>
-      <div class="map-popup-preview">
-        <img src="Popup-preview.png" alt="Map popup showing lifer photos and species list for Smith and Bybee Lakes" loading="lazy" />
-        <p class="popup-caption">Add your unique photos and track your observations at the Country, State, County, or Hotspot level</p>
-      </div>
-    </div>
-
-    <p class="map-caption">Example map — Michael's personal eBird sightings · Upload your own MyEBirdData.csv to see your map</p>
-  </div>
-</section>
-
-<!-- ─── QUESTS / FEATURES ─── -->
-<section class="quests-section" id="quests">
-  <div class="quests-inner">
-    <p class="section-tag">Badges &amp; Quests</p>
-    <h2>Every birder's journey is different.</h2>
-
-    <div class="feature-grid">
-      <div class="feature-card green">
-        <div class="feature-icon">🐦</div>
-        <h3>Life List</h3>
-        <p>Species milestones from your first spark bird all the way to grinding toward a thousand. Five tiers of recognition.</p>
-      </div>
-
-      <div class="feature-card amber">
-        <div class="feature-icon">📋</div>
-        <h3>Dedication</h3>
-        <p>For the habit builders. Dawn checklists, streak days, total lists submitted — the consistent work gets counted.</p>
-      </div>
-
-      <div class="feature-card forest">
-        <div class="feature-icon">🗺️</div>
-        <h3>Geographic</h3>
-        <p>Counties, states, and countries ticked. The map of everywhere you've been willing to stop and look up.</p>
-      </div>
-
-      <div class="feature-card coral">
-        <div class="feature-icon">⏰</div>
-        <h3>Temporal</h3>
-        <p>Big days, pre-dawn patrols, seasonal coverage, year lists. How you bird matters, not just what you find.</p>
-      </div>
-
-      <div class="feature-card sun">
-        <div class="feature-icon">🔬</div>
-        <h3>Species Groups</h3>
-        <p>Go deep on a family. Owls, warblers, shorebirds, raptors, flycatchers, herons, and more — 11 specialist tracks.</p>
-      </div>
-
-      <div class="feature-card sage">
-        <div class="feature-icon">🌎</div>
-        <h3>Regional</h3>
-        <p>PNW, California, Desert SW, Texas, Florida, Rockies — depth in the places you know best.</p>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ─── EMAIL SIGNUP ─── -->
 <section class="email-section" id="notify">
