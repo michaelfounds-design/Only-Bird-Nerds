@@ -1311,8 +1311,16 @@ function updateHeat(filtered) {
     if (!seen[key]) { seen[key] = true; pts.push([r.lat, r.lon]); }
   });
   heatLayer = L.heatLayer(pts, {
-    radius: 30, blur: 28, maxZoom: 10, minOpacity: 0.1,
-    gradient: { 0.0: '#2d6644', 0.35: '#4a7c59', 0.65: '#f0b429', 1.0: '#d4622a' }
+    radius: 45, blur: 40, minOpacity: 0.05,
+    gradient: {
+      0.0:  'rgba(0,0,0,0)',
+      0.15: '#313695',
+      0.3:  '#4575b4',
+      0.45: '#4a7c59',
+      0.62: '#fee090',
+      0.78: '#f46d43',
+      1.0:  '#d73027'
+    }
   });
   // Visibility managed by handleZoom — not added to map here
 }
@@ -1363,7 +1371,7 @@ function handleZoom() {
     if (!on &&  map.hasLayer(layer)) map.removeLayer(layer);
   }
 
-  setL(heatLayer,    showHeat     && z < ZOOM_LOCATION);
+  setL(heatLayer,    showHeat);
   setL(clusterGroup, showHotspots && z >= ZOOM_LOCATION);
   setL(countyLayer,  showRegions  && z >= ZOOM_COUNTY && z < ZOOM_LOCATION);
   setL(stateLayer,   showRegions  && z < ZOOM_COUNTY);
