@@ -614,9 +614,12 @@
       height: 3px;
     }
 
-    .feature-card.green::before  { background: var(--fern); }
-    .feature-card.amber::before  { background: var(--amber); }
-    .feature-card.coral::before  { background: var(--coral); }
+    .feature-card.green::before   { background: var(--fern); }
+    .feature-card.amber::before   { background: var(--amber); }
+    .feature-card.coral::before   { background: var(--coral); }
+    .feature-card.sun::before     { background: var(--sun); }
+    .feature-card.sage::before    { background: var(--sage); }
+    .feature-card.forest::before  { background: var(--forest); }
 
     .feature-icon {
       font-size: 1.8rem;
@@ -955,11 +958,12 @@
       <a href="about.html" class="btn-ghost">Our story →</a>
     </div>
 
-    <div class="quest-pills" aria-label="Example quests">
-      <span class="quest-pill"><span class="pip"></span> The Centurion — 100 species in a single day</span>
-      <span class="quest-pill"><span class="pip amber"></span> The Dawnbreaker — 25 checklists before 6am</span>
-      <span class="quest-pill"><span class="pip forest"></span> The Chronicler — 500 checklists submitted</span>
-      <span class="quest-pill"><span class="pip coral"></span> County Cartographer — 100 species per county</span>
+    <div class="quest-pills" aria-label="Example badges">
+      <span class="quest-pill"><span class="pip"></span> Spark Bird — your first species</span>
+      <span class="quest-pill"><span class="pip amber"></span> Sleep Is for January — 100+ dawn checklists</span>
+      <span class="quest-pill"><span class="pip coral"></span> No Plans That Day — 100 species in a single day</span>
+      <span class="quest-pill"><span class="pip forest"></span> Warbler Neck — 10 warbler species</span>
+      <span class="quest-pill"><span class="pip"></span> Smells Like Rain — birding the Pacific Northwest</span>
     </div>
   </div>
 
@@ -1000,10 +1004,9 @@
     <div class="map-split">
       <div class="map-frame-wrap">
         <iframe
-          src="map.html"
+          src="app.html?demo=1"
           title="Live bird observation map"
           loading="lazy"
-          allow="geolocation"
         ></iframe>
       </div>
       <div class="map-popup-preview">
@@ -1012,36 +1015,51 @@
       </div>
     </div>
 
-    <p class="map-caption">Example map — Michael's personal sightings · Click any marker to see your full species list · Built with Folium / Leaflet.js</p>
+    <p class="map-caption">Example map — Michael's personal eBird sightings · Upload your own MyEBirdData.csv to see your map</p>
   </div>
 </section>
 
 <!-- ─── QUESTS / FEATURES ─── -->
 <section class="quests-section" id="quests">
   <div class="quests-inner">
-    <p class="section-tag">What you can do</p>
-    <h2>More than a list.</h2>
+    <p class="section-tag">Badges &amp; Quests</p>
+    <h2>Every birder's journey is different.</h2>
 
     <div class="feature-grid">
       <div class="feature-card green">
-        <div class="feature-icon">🗺️</div>
-        <h3>Map your sightings</h3>
-        <p>Upload a CSV or paste an eBird link and watch your observations populate on an interactive map.</p>
-        <a href="app.html" class="feature-status status-live" style="text-decoration:none">Try it →</a>
+        <div class="feature-icon">🐦</div>
+        <h3>Life List</h3>
+        <p>Species milestones from your first spark bird all the way to grinding toward a thousand. Five tiers of recognition.</p>
       </div>
 
       <div class="feature-card amber">
-        <div class="feature-icon">📸</div>
-        <h3>Share your photos</h3>
-        <p>Attach real field photos to your observations. Drop a file or paste a photo URL. Build a visual life list you can actually show off.</p>
-        <span class="feature-status status-soon">Coming soon</span>
+        <div class="feature-icon">📋</div>
+        <h3>Dedication</h3>
+        <p>For the habit builders. Dawn checklists, streak days, total lists submitted — the consistent work gets counted.</p>
+      </div>
+
+      <div class="feature-card forest">
+        <div class="feature-icon">🗺️</div>
+        <h3>Geographic</h3>
+        <p>Counties, states, and countries ticked. The map of everywhere you've been willing to stop and look up.</p>
       </div>
 
       <div class="feature-card coral">
-        <div class="feature-icon">🏅</div>
-        <h3>Complete quests</h3>
-        <p>Birding should be fun. Get ideas for your next birding quest &amp; get outside!</p>
-        <span class="feature-status status-planned">In the works</span>
+        <div class="feature-icon">⏰</div>
+        <h3>Temporal</h3>
+        <p>Big days, pre-dawn patrols, seasonal coverage, year lists. How you bird matters, not just what you find.</p>
+      </div>
+
+      <div class="feature-card sun">
+        <div class="feature-icon">🔬</div>
+        <h3>Species Groups</h3>
+        <p>Go deep on a family. Owls, warblers, shorebirds, raptors, flycatchers, herons, and more — 11 specialist tracks.</p>
+      </div>
+
+      <div class="feature-card sage">
+        <div class="feature-icon">🌎</div>
+        <h3>Regional</h3>
+        <p>PNW, California, Desert SW, Texas, Florida, Rockies — depth in the places you know best.</p>
       </div>
     </div>
   </div>
