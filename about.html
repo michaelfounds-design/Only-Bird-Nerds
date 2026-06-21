@@ -74,60 +74,59 @@
     }
     .nav-cta:hover { background: var(--moss) !important; }
 
-    /* ── Page hero ── */
-    .page-hero {
-      padding: 9rem 2.5rem 5rem;
-      background: var(--forest);
+    /* ── About split hero ── */
+    .about-split {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding-top: 76px;
+    }
+
+    .about-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4rem 3.5rem;
+      background: var(--paper);
+    }
+
+    .about-image {
       position: relative;
       overflow: hidden;
     }
-
-    .page-hero::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 70% 50%, rgba(74,124,89,0.25) 0%, transparent 65%);
-      pointer-events: none;
+    .about-image img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      display: block;
     }
 
-    .page-hero-inner {
-      max-width: 680px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .page-eyebrow {
+    .about-eyebrow {
       font-family: 'DM Mono', monospace;
-      font-size: 0.68rem; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--sage);
-      margin-bottom: 1.2rem;
-      display: flex; align-items: center; gap: 0.7rem;
+      font-size: 0.65rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--fern);
+      margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 0.5rem;
     }
-    .page-eyebrow::before {
+    .about-eyebrow::before {
       content: '';
-      width: 24px; height: 2px;
-      background: var(--sage); border-radius: 2px;
+      width: 16px; height: 2px;
+      background: var(--fern); border-radius: 2px;
       display: inline-block; flex-shrink: 0;
     }
 
-    .page-hero h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(2.4rem, 5vw, 4rem);
-      font-weight: 800; line-height: 1.06;
-      letter-spacing: -0.03em; color: var(--cream);
-      margin-bottom: 1.3rem;
-    }
-    .page-hero h1 em {
-      font-family: 'Lora', serif;
-      font-style: italic; font-weight: 400;
-      color: var(--sage);
+    .about-text .lead {
+      font-size: 1.2rem; line-height: 1.84;
+      color: var(--ink);
+      margin-bottom: 1.5rem;
     }
 
-    .page-hero-sub {
-      font-size: 1.1rem; line-height: 1.8;
-      color: rgba(200,221,208,0.7);
-      max-width: 560px;
+    .about-text p {
+      font-size: 0.98rem; line-height: 1.88;
+      color: var(--warm-gray);
+      margin-bottom: 1.2rem;
     }
+    .about-text p:last-child { margin-bottom: 0; }
 
     /* ── Content sections ── */
     .content-section {
@@ -314,7 +313,9 @@
     @media (max-width: 700px) {
       nav { padding: 0.9rem 1.25rem; }
       .nav-links a:not(.nav-cta) { display: none; }
-      .page-hero { padding: 7.5rem 1.25rem 4rem; }
+      .about-split { grid-template-columns: 1fr; min-height: auto; padding-top: 70px; }
+      .about-image { height: 55vw; min-height: 220px; }
+      .about-text { padding: 2.5rem 1.25rem; }
       .content-section { padding: 4rem 1.25rem; }
       footer { padding: 1.5rem 1.25rem; }
     }
@@ -329,53 +330,40 @@
     Only Bird Nerds
   </a>
   <div class="nav-links">
-    <a class="nav-link" href="app.html">My Map</a>
-    <a class="nav-link" href="index.html#quests">Quests</a>
+    <a class="nav-link" href="shared.html">See Shared Maps</a>
     <a class="nav-link" href="about.html">About</a>
     <a class="nav-link nav-cta" href="app.html">Try your map</a>
   </div>
 </nav>
 
-<!-- ── Page hero ── -->
-<section class="page-hero">
-  <div class="page-hero-inner">
-    <p class="page-eyebrow">About Only Bird Nerds</p>
-    <h1>The data you collect should be worth <em>more than rows.</em></h1>
+<!-- ── Split: text left, photo right ── -->
+<section class="about-split">
+  <div class="about-text">
+    <p class="about-eyebrow">About Only Bird Nerds</p>
+    <p class="lead">
+      OnlyBirdNerds started with a simple frustration: birding is an experience, but listing
+      turns it into a spreadsheet. For me, birding is meditative. It's a way to focus,
+      slow down, and spend time outside. The data I collect should be worth something
+      more than rows.
+    </p>
+    <p>
+      I wanted a way to revisit past trips that wasn't a folder of blurry phone pics or
+      a half-colored map of where I've been. So I built an interactive map of my own
+      eBird data, and I wanted to share it!
+    </p>
+    <p>
+      From there I added features to let you explore your own sightings, replay your best
+      days, and plan your next quest. Why turn it into a game with quests? Because your
+      life list shouldn't be the only thing that counts. There should be a way to value
+      the journey, the local patch you know by heart, the rainy morning that turned up
+      one good bird, even if you'll never see 8,000 species.
+    </p>
   </div>
-</section>
-
-<!-- ── Hero photo ── -->
-<div style="width:100%;height:340px;overflow:hidden;flex-shrink:0;">
-  <img
-    src="https://images.unsplash.com/photo-1444464666168-49d633b86797?w=1800&auto=format&fit=crop&q=80"
-    alt="A bird perched in natural habitat"
-    style="width:100%;height:100%;object-fit:cover;object-position:center 35%;"
-  />
-</div>
-
-<!-- ── Story ── -->
-<section class="content-section paper">
-  <div class="content-inner">
-    <div class="prose">
-      <p class="lead">
-        OnlyBirdNerds started with a simple frustration: birding is an experience, but listing
-        turns it into a spreadsheet. For me, birding is meditative. It's a way to focus,
-        slow down, and spend time outside. The data I collect should be worth something
-        more than rows.
-      </p>
-      <p>
-        I wanted a way to revisit past trips that wasn't a folder of blurry phone pics or
-        a half-colored map of where I've been. So I built an interactive map of my own
-        eBird data, and I wanted to share it!
-      </p>
-      <p>
-        From there I added features to let you explore your own sightings, replay your best
-        days, and plan your next quest. Why turn it into a game with quests? Because your
-        life list shouldn't be the only thing that counts. There should be a way to value
-        the journey, the local patch you know by heart, the rainy morning that turned up
-        one good bird, even if you'll never see 8,000 species.
-      </p>
-    </div>
+  <div class="about-image">
+    <img
+      src="https://images.unsplash.com/photo-1444464666168-49d633b86797?w=1200&auto=format&fit=crop&q=85"
+      alt="A bird perched in natural habitat"
+    />
   </div>
 </section>
 

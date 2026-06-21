@@ -129,15 +129,26 @@
       justify-content: center;
       gap: 0.6rem;
       padding: 2rem;
-      background: var(--forest);
-      border-left: 1px solid rgba(74,124,89,0.2);
-      transition: background 0.2s;
+      background-image: url('MapExample.png');
+      background-size: cover;
+      background-position: center;
       text-align: center;
     }
 
-    .hero-right.drag-over .hero-drop-inner {
-      background: var(--moss);
-      border: 2px dashed var(--sage);
+    .hero-drop-inner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 22, 16, 0.52);
+      z-index: 0;
+    }
+
+    .hero-drop-inner > * { position: relative; z-index: 1; }
+
+    .hero-right.drag-over .hero-drop-inner::before {
+      background: rgba(10, 22, 16, 0.7);
+      outline: 3px dashed var(--sage);
+      outline-offset: -12px;
     }
 
     .hero-drop-icon { font-size: 3rem; line-height: 1; margin-bottom: 0.4rem; }
