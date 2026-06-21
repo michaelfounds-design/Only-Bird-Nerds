@@ -1311,8 +1311,8 @@ function updateHeat(filtered) {
     if (!seen[key]) { seen[key] = true; pts.push([r.lat, r.lon]); }
   });
   heatLayer = L.heatLayer(pts, {
-    radius: 28, blur: 22, maxZoom: 10,
-    gradient: { 0.0: '#0d1f16', 0.25: '#1b3a2d', 0.5: '#4a7c59', 0.75: '#f0b429', 1.0: '#d4622a' }
+    radius: 22, blur: 10, maxZoom: 10, minOpacity: 0.55,
+    gradient: { 0.0: '#4a7c59', 0.5: '#f0b429', 1.0: '#d4622a' }
   });
   // Visibility managed by handleZoom — not added to map here
 }
@@ -1772,28 +1772,25 @@ document.getElementById('badge-modal').addEventListener('click', function(e) {
 // ─────────────────────────────────────────
 loadOverrides();
 
-// Auto-load demo data when embedded with ?demo param (landing page iframe)
+// Pick up CSV dropped on the landing page hero zone
 (function() {
-  if (new URLSearchParams(window.location.search).has('demo')) {
-    fetch('demo-data.csv')
-      .then(function(r) { if (!r.ok) throw new Error('no demo file'); return r.text(); })
-      .then(function(csv) {
-        Papa.parse(csv, {
-          header: true, skipEmptyLines: true,
-          complete: function(res) {
-            allRecords = normalize(res.data);
-            computeLifers(allRecords);
-            speciesList = uniqueSpecies(allRecords);
-            buildStateCountyMap(allRecords);
-            currentStats = computeStats(allRecords);
-            showApp();
-            buildAutocomplete();
-            buildDropdowns();
-            setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
-          }
-        });
-      })
-      .catch(function() {});
+  var pending = null;
+  try { pending = sessionStorage.getItem('pendingCSV'); sessionStorage.removeItem('pendingCSV'); } catch(e) {}
+  if (pending) {
+    Papa.parse(pending, {
+      header: true, skipEmptyLines: true,
+      complete: function(res) {
+        allRecords = normalize(res.data);
+        computeLifers(allRecords);
+        speciesList = uniqueSpecies(allRecords);
+        buildStateCountyMap(allRecords);
+        currentStats = computeStats(allRecords);
+        showApp();
+        buildAutocomplete();
+        buildDropdowns();
+        setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
+      }
+    });
   }
 })();
 </script>

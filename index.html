@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Only Bird Nerds — Collect. Map. Flex.</title>
+  <title>Only Bird Nerds — Community Bird Nerding Platform</title>
+  <meta name="description" content="Community bird nerding platform. Map your eBird sightings, earn badges, and explore your birding journey." />
+  <meta property="og:title" content="Only Bird Nerds" />
+  <meta property="og:description" content="Community bird nerding platform. Map your eBird sightings, earn badges, and explore your birding journey." />
+  <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -116,20 +120,59 @@
       overflow: hidden;
     }
 
-    .hero-right img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* overlay gradient on photo */
-    .hero-right::after {
-      content: '';
+    .hero-drop-inner {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to right, var(--paper) 0%, transparent 18%),
-                  linear-gradient(to top, rgba(27,58,45,0.4) 0%, transparent 40%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 2rem;
+      background: var(--forest);
+      border-left: 1px solid rgba(74,124,89,0.2);
+      transition: background 0.2s;
+      text-align: center;
+    }
+
+    .hero-right.drag-over .hero-drop-inner {
+      background: var(--moss);
+      border: 2px dashed var(--sage);
+    }
+
+    .hero-drop-icon { font-size: 3rem; line-height: 1; margin-bottom: 0.4rem; }
+
+    .hero-drop-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.15rem; font-weight: 700;
+      color: var(--cream); letter-spacing: -0.01em;
+    }
+
+    .hero-drop-sub {
+      font-size: 0.9rem; line-height: 1.6;
+      color: rgba(200,221,208,0.65);
+    }
+    .hero-drop-sub strong { color: var(--sage); font-weight: 600; }
+
+    .hero-drop-browse {
+      display: inline-block;
+      margin-top: 0.4rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--forest);
+      background: var(--cream);
+      padding: 0.5rem 1.2rem; border-radius: 100px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .hero-drop-browse:hover { background: var(--mist); }
+
+    .hero-drop-hint {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.06em;
+      color: rgba(122,171,136,0.5);
+      margin-top: 0.6rem;
     }
 
     /* floating stat card on hero photo */
@@ -954,13 +997,17 @@
 
   </div>
 
-  <div class="hero-right">
-    <iframe
-      src="app.html?demo=1"
-      title="Live bird sighting map"
-      loading="lazy"
-      style="width:100%;height:100%;border:none;display:block;"
-    ></iframe>
+  <div class="hero-right" id="hero-drop">
+    <div class="hero-drop-inner" id="hero-drop-inner">
+      <div class="hero-drop-icon">🗺️</div>
+      <p class="hero-drop-title">Drop your eBird data here</p>
+      <p class="hero-drop-sub">Drag your <strong>MyEBirdData.csv</strong> onto this panel</p>
+      <label class="hero-drop-browse">
+        or browse to select
+        <input type="file" accept=".csv" id="hero-file-input" style="display:none" />
+      </label>
+      <p class="hero-drop-hint">In eBird: My eBird → Download My Data</p>
+    </div>
   </div>
 </section>
 
@@ -968,10 +1015,10 @@
 <!-- ─── EMAIL SIGNUP ─── -->
 <section class="email-section" id="notify">
   <div class="email-inner">
-    <p class="section-tag" style="justify-content:center;">Early access</p>
-    <h2>Be first to upload your data.</h2>
+    <p class="section-tag" style="justify-content:center;">Stay in the loop</p>
+    <h2>Get updates as new features arrive.</h2>
     <p>
-      The upload tool is in development. Leave your email and we'll reach out when it's ready for real birders to test.
+      Sign up to get updates about the site as new features become available.
     </p>
 
     <form class="email-form" id="notifyForm" onsubmit="handleSubmit(event)">
@@ -1014,6 +1061,27 @@
       }
     });
   }
+
+  // Hero drop zone — reads CSV, stores in sessionStorage, redirects to app
+  (function() {
+    var zone = document.getElementById('hero-drop');
+    var input = document.getElementById('hero-file-input');
+
+    function loadFile(file) {
+      if (!file || !file.name.endsWith('.csv')) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try { sessionStorage.setItem('pendingCSV', e.target.result); } catch(err) {}
+        window.location.href = 'app.html';
+      };
+      reader.readAsText(file);
+    }
+
+    zone.addEventListener('dragover',  function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function()  { zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop',      function(e) { e.preventDefault(); zone.classList.remove('drag-over'); loadFile(e.dataTransfer.files[0]); });
+    input.addEventListener('change',   function()  { loadFile(this.files[0]); this.value = ''; });
+  })();
 
   // smooth scroll
   document.querySelectorAll('a[href^="#"]').forEach(a => {
