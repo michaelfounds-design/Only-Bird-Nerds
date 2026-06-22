@@ -1025,9 +1025,12 @@ function getPhoto(name) {
 // iNAT PHOTO QUEUE
 // ─────────────────────────────────────────
 function queuePhotos(names) {
-  // Lifers first so their photos appear before common species fill in
+  // Lifers first; within each group, rarest species (lowest globalFreq) first.
+  // This ensures the rarest bird loads before Anna's Hummingbird.
   var ordered = names.slice().sort(function(a, b) {
-    return (liferSet[b] ? 1 : 0) - (liferSet[a] ? 1 : 0);
+    var aL = liferSet[a] ? 1 : 0, bL = liferSet[b] ? 1 : 0;
+    if (aL !== bL) return bL - aL;
+    return (globalFreq[a] || 0) - (globalFreq[b] || 0);
   });
   ordered.forEach(function(n) {
     if (!getPhoto(n) && photoQueue.indexOf(n) === -1) photoQueue.push(n);
@@ -1049,9 +1052,10 @@ function processQueue() {
 
   var name = photoQueue.shift();
   fetchInat(name, 0, function(url) {
-    if (url) photoCache[name] = url;
-    // Always refresh for lifers (even on failure) so placeholder shows immediately
-    if (url || liferSet[name]) refreshMarkersForSpecies(name);
+    if (url) {
+      photoCache[name] = url;
+      refreshMarkersForSpecies(name);
+    }
     setTimeout(processQueue, PHOTO_DELAY);
   });
 }
@@ -1279,14 +1283,14 @@ function buildSM(records) {
 
 function bestPhoto(sm) {
   var best = null, bestFreq = Infinity;
-  // 1. Lifer with fewest global records — photo not required (may return '')
+  // 1. Lifer with a photo, ranked by fewest global records
   Object.keys(sm).forEach(function(sp) {
-    if (!sm[sp].lifer) return;
+    if (!sm[sp].lifer || !getPhoto(sp)) return;
     var freq = globalFreq[sp] || 0;
     if (freq < bestFreq) { best = sp; bestFreq = freq; }
   });
-  if (best) return getPhoto(best); // possibly '' — makeIcon shows 🐦 placeholder
-  // 2. No lifers — rarest species with a photo
+  if (best) return getPhoto(best);
+  // 2. No lifer photo yet — show rarest non-lifer with a photo as placeholder
   bestFreq = Infinity;
   Object.keys(sm).forEach(function(sp) {
     if (!getPhoto(sp)) return;
@@ -1301,8 +1305,7 @@ function refreshMarkersForSpecies(name) {
     var ref = markerRefs[rKey];
     if (!ref.sm[name]) return;
     var p = bestPhoto(ref.sm);
-    // Skip update only if no photo and no lifers (placeholder not needed)
-    if (!p && !ref.liferCount) return;
+    if (!p) return;
     ref.marker.setIcon(makeIcon(p, ref.radius, ref.label, ref.spCount, ref.liferCount));
   });
 }
