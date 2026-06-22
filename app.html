@@ -349,6 +349,166 @@
     }
     #map.panel-hidden { left: 0; }
 
+    /* ── Profile panel (slides in from right) ── */
+    #profile-panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 320px; z-index: 1500;
+      background: rgba(8,14,9,0.98);
+      border-left: 1px solid rgba(122,171,136,0.15);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    #profile-panel.open { transform: translateX(0); }
+    #profile-overlay {
+      display: none; position: fixed; inset: 0;
+      z-index: 1499; background: rgba(0,0,0,0.45);
+    }
+    #profile-overlay.open { display: block; }
+    #profile-panel-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1rem 0;
+      flex-shrink: 0;
+    }
+    .ptabs {
+      display: flex; gap: 0.2rem;
+      background: rgba(122,171,136,0.06);
+      border-radius: 8px; padding: 3px;
+    }
+    .ptab {
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      background: none; border: none; border-radius: 6px;
+      color: rgba(122,171,136,0.5); cursor: pointer;
+      padding: 0.3rem 0.7rem; transition: all 0.15s;
+    }
+    .ptab.active {
+      background: rgba(74,124,89,0.25); color: var(--sage);
+    }
+    #profile-close-btn {
+      background: none; border: none; color: var(--sage);
+      font-size: 1rem; cursor: pointer;
+      padding: 0.2rem 0.4rem; line-height: 1;
+    }
+    .ptab-body { flex: 1; overflow-y: auto; padding: 1rem; }
+    .ptab-body::-webkit-scrollbar { width: 3px; }
+    .ptab-body::-webkit-scrollbar-thumb { background: rgba(122,171,136,0.18); }
+    /* Profile tab */
+    #avatar-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 1.1rem; gap: 0.5rem;
+    }
+    #avatar-circle {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: rgba(74,124,89,0.15);
+      border: 2px dashed rgba(122,171,136,0.3);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; overflow: hidden; position: relative;
+      transition: border-color 0.2s;
+    }
+    #avatar-circle:hover { border-color: var(--sage); }
+    #avatar-circle img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    #avatar-placeholder {
+      font-size: 2rem; color: rgba(122,171,136,0.35); line-height: 1;
+    }
+    #avatar-edit-hint {
+      font-family: 'DM Mono', monospace; font-size: 0.55rem;
+      color: rgba(122,171,136,0.4); letter-spacing: 0.07em;
+    }
+    .profile-field {
+      margin-bottom: 0.75rem;
+    }
+    .profile-field label {
+      display: block; font-family: 'DM Mono', monospace;
+      font-size: 0.57rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--sage);
+      margin-bottom: 0.3rem;
+    }
+    .profile-field input, .profile-field textarea {
+      width: 100%; background: rgba(122,171,136,0.06);
+      border: 1px solid rgba(122,171,136,0.18);
+      border-radius: 7px; color: var(--cream);
+      font-family: 'Lora', serif; font-size: 0.85rem;
+      padding: 0.5rem 0.65rem; outline: none;
+      transition: border-color 0.15s;
+    }
+    .profile-field input:focus, .profile-field textarea:focus {
+      border-color: rgba(122,171,136,0.45);
+    }
+    .profile-field textarea { resize: vertical; min-height: 72px; }
+    #profile-save-btn {
+      width: 100%; padding: 0.55rem;
+      background: rgba(74,124,89,0.2);
+      border: 1px solid rgba(74,124,89,0.4);
+      border-radius: 7px; color: var(--sage);
+      font-family: 'DM Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #profile-save-btn:hover { background: rgba(74,124,89,0.3); color: var(--cream); }
+    #profile-saved-msg {
+      text-align: center; font-family: 'DM Mono', monospace;
+      font-size: 0.58rem; color: var(--sage);
+      margin-top: 0.4rem; opacity: 0; transition: opacity 0.3s;
+    }
+    /* Shared data tab */
+    .shared-section-lbl {
+      font-family: 'DM Mono', monospace; font-size: 0.57rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--sage); margin-bottom: 0.6rem;
+    }
+    .shared-empty {
+      font-family: 'Lora', serif; font-style: italic;
+      font-size: 0.82rem; color: rgba(200,221,208,0.35);
+      margin-bottom: 1.2rem;
+    }
+    .share-action {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 0.8rem; border-radius: 9px;
+      border: 1px solid rgba(122,171,136,0.14);
+      background: rgba(122,171,136,0.04);
+      margin-bottom: 0.5rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .share-action:hover { background: rgba(122,171,136,0.1); }
+    .share-action-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .share-action-body { flex: 1; }
+    .share-action h4 {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.82rem; color: var(--cream);
+      margin-bottom: 0.1rem;
+    }
+    .share-action p {
+      font-family: 'Lora', serif; font-size: 0.72rem;
+      color: rgba(200,221,208,0.5); line-height: 1.4;
+    }
+    .share-action .share-soon {
+      font-family: 'DM Mono', monospace; font-size: 0.5rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--sun); border: 1px solid rgba(240,180,41,0.3);
+      border-radius: 100px; padding: 0.12rem 0.45rem;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .share-action.works { border-color: rgba(74,124,89,0.3); }
+    .share-action.works h4 { color: var(--sage); }
+    /* Profile trigger button */
+    #profile-btn {
+      position: fixed; top: 12px; right: 14px;
+      z-index: 1000;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(10,16,11,0.92);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(200,221,208,0.7);
+      font-size: 1rem; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #profile-btn:hover { border-color: rgba(122,171,136,0.5); color: var(--sage); }
+    @media (max-width: 768px) {
+      #profile-panel { width: 100%; }
+      #profile-btn { top: 10px; right: 10px; }
+    }
+
     /* ── Layer bar ── */
     #layer-bar {
       position: fixed;
@@ -644,77 +804,6 @@
     }
     /* tooltip via title attr — browser default is fine for now */
 
-    /* ── Share modal ── */
-    #share-modal {
-      display: none; position: fixed; inset: 0;
-      z-index: 2000; background: rgba(0,0,0,0.72);
-      align-items: center; justify-content: center;
-    }
-    #share-modal.open { display: flex; }
-    #share-modal-card {
-      background: rgba(12,19,14,0.99);
-      border: 1px solid rgba(122,171,136,0.18);
-      border-radius: 14px; width: 520px;
-      max-width: 92vw;
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    #share-modal-hdr {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      padding: 0.9rem 1.1rem 0.75rem;
-      border-bottom: 1px solid rgba(122,171,136,0.12);
-    }
-    #share-modal-close {
-      background: none; border: none;
-      color: var(--sage); font-size: 1rem;
-      cursor: pointer; padding: 0.2rem 0.4rem; line-height: 1;
-    }
-    #share-modal-body {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 0; padding: 1.25rem;
-      align-items: stretch;
-    }
-    .share-divider {
-      width: 1px; background: rgba(122,171,136,0.14);
-      margin: 0 0.1rem; align-self: stretch;
-    }
-    .share-option {
-      padding: 1rem 1.1rem;
-      display: flex; flex-direction: column; gap: 0.55rem;
-    }
-    .share-option-icon {
-      font-size: 1.8rem; line-height: 1; margin-bottom: 0.1rem;
-    }
-    .share-option h3 {
-      font-family: 'Syne', sans-serif; font-weight: 800;
-      font-size: 0.95rem; color: var(--cream);
-      letter-spacing: -0.01em;
-    }
-    .share-option p {
-      font-family: 'Lora', serif; font-size: 0.82rem;
-      line-height: 1.6; color: rgba(200,221,208,0.65);
-      flex: 1;
-    }
-    .share-opt-btn {
-      display: inline-flex; align-items: center; gap: 0.35rem;
-      padding: 0.5rem 1rem; border-radius: 100px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase;
-      cursor: pointer; text-decoration: none;
-      transition: background 0.15s, transform 0.12s; width: fit-content;
-      border: none;
-    }
-    .share-opt-btn:hover { transform: translateY(-1px); }
-    .share-opt-btn.primary {
-      background: var(--cream); color: var(--forest);
-    }
-    .share-opt-btn.primary:hover { background: var(--mist); }
-    .share-opt-btn.secondary {
-      background: rgba(74,124,89,0.18);
-      border: 1px solid rgba(122,171,136,0.35);
-      color: var(--sage);
-    }
-    .share-opt-btn.secondary:hover { background: rgba(74,124,89,0.3); color: var(--cream); }
 
     /* ── Mobile panel drag handle (hidden on desktop) ── */
     #panel-drag-handle {
@@ -801,12 +890,8 @@
       /* Stats grid — 4 across on mobile */
       #stats-row { grid-template-columns: repeat(4, 1fr); }
 
-      /* Share modal — stack options vertically */
-      #share-modal-body { grid-template-columns: 1fr; }
-      .share-divider { width: 100%; height: 1px; margin: 0.2rem 0; }
-
       /* Modals — full width */
-      #badge-modal-card, #share-modal-card { width: 96vw; max-height: 88vh; }
+      #badge-modal-card { width: 96vw; max-height: 88vh; }
 
       /* Photo dialog — full width */
       #photo-dialog { width: 94vw; left: 50%; }
@@ -950,6 +1035,77 @@
   <button class="lbtn on" id="btn-heat">🔥 Heat</button>
 </div>
 
+<!-- ── Profile trigger ── -->
+<button id="profile-btn" title="Profile &amp; Sharing">👤</button>
+
+<!-- ── Profile panel ── -->
+<div id="profile-overlay"></div>
+<div id="profile-panel">
+  <div id="profile-panel-hdr">
+    <div class="ptabs">
+      <button class="ptab active" data-ptab="profile">Profile</button>
+      <button class="ptab" data-ptab="shared">My Shared Data</button>
+    </div>
+    <button id="profile-close-btn">✕</button>
+  </div>
+
+  <!-- Profile tab -->
+  <div class="ptab-body" id="ptab-profile">
+    <div id="avatar-wrap">
+      <div id="avatar-circle">
+        <img id="avatar-img" src="" alt="" />
+        <span id="avatar-placeholder">👤</span>
+      </div>
+      <span id="avatar-edit-hint">Click to upload photo</span>
+      <input type="file" id="avatar-input" accept="image/*" style="display:none" />
+    </div>
+    <div class="profile-field">
+      <label>Display name</label>
+      <input type="text" id="profile-name" placeholder="Your name" maxlength="60" />
+    </div>
+    <div class="profile-field">
+      <label>About you</label>
+      <textarea id="profile-bio" placeholder="A little about your birding journey…" maxlength="280"></textarea>
+    </div>
+    <button id="profile-save-btn">Save profile</button>
+    <div id="profile-saved-msg">Saved!</div>
+  </div>
+
+  <!-- Shared Data tab -->
+  <div class="ptab-body" id="ptab-shared" style="display:none">
+    <p class="shared-section-lbl">Your shared maps</p>
+    <p class="shared-empty">No shared maps yet.</p>
+
+    <p class="shared-section-lbl" style="margin-top:1rem">Create</p>
+
+    <div class="share-action">
+      <span class="share-action-icon">🗺️</span>
+      <div class="share-action-body">
+        <h4>Share a Trip</h4>
+        <p>Select specific observations — a day, a trip, your local patch.</p>
+      </div>
+      <span class="share-soon">Soon</span>
+    </div>
+
+    <div class="share-action">
+      <span class="share-action-icon">🌎</span>
+      <div class="share-action-body">
+        <h4>Share All Observations</h4>
+        <p>Make your full life map public for other birders to explore.</p>
+      </div>
+      <span class="share-soon">Soon</span>
+    </div>
+
+    <div class="share-action works" id="share-download-btn">
+      <span class="share-action-icon">⬇</span>
+      <div class="share-action-body">
+        <h4>Download Data</h4>
+        <p>Standalone HTML file with all your locations baked in.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Photo override dialog ── -->
 <div id="photo-dialog-bg"></div>
 <div id="photo-dialog">
@@ -992,30 +1148,6 @@
   </div>
 </div>
 
-<!-- ── Share Modal ── -->
-<div id="share-modal">
-  <div id="share-modal-card">
-    <div id="share-modal-hdr">
-      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--cream)">Share Your Map</span>
-      <button id="share-modal-close">✕</button>
-    </div>
-    <div id="share-modal-body">
-      <div class="share-option">
-        <div class="share-option-icon">👤</div>
-        <h3>Create an Account</h3>
-        <p>Save your badges across sessions, share your map with other birders, and get notified when new features launch.</p>
-        <a href="index.html#notify" class="share-opt-btn primary">Sign up →</a>
-      </div>
-      <div class="share-divider"></div>
-      <div class="share-option">
-        <div class="share-option-icon">⬇</div>
-        <h3>Download My Map</h3>
-        <p>Get a standalone HTML file of your map with all your locations baked in. View it anytime, share it with anyone.</p>
-        <button id="download-map-btn" class="share-opt-btn secondary">Download →</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ── Lightbox ── -->
 <div id="photo-lb" onclick="closeLightbox()">
@@ -1905,6 +2037,7 @@ function showApp() {
   document.getElementById('upload-screen').style.display = 'none';
   document.getElementById('app-screen').style.display    = 'block';
   document.getElementById('layer-bar').style.display     = 'flex';
+  document.getElementById('profile-btn').style.display   = 'flex';
   document.getElementById('panel-toggle').classList.add('visible');
 }
 
@@ -2169,18 +2302,71 @@ function renderPanelQB() {
 }
 
 // ─────────────────────────────────────────
-// SHARE MODAL
 // ─────────────────────────────────────────
-document.getElementById('share-btn').addEventListener('click', function() {
-  document.getElementById('share-modal').classList.add('open');
+// PROFILE PANEL
+// ─────────────────────────────────────────
+var profileData = JSON.parse(localStorage.getItem('obn_profile') || '{"name":"","bio":"","avatar":""}');
+
+function openProfilePanel(tab) {
+  document.getElementById('profile-panel').classList.add('open');
+  document.getElementById('profile-overlay').classList.add('open');
+  if (tab) switchProfileTab(tab);
+}
+function closeProfilePanel() {
+  document.getElementById('profile-panel').classList.remove('open');
+  document.getElementById('profile-overlay').classList.remove('open');
+}
+function switchProfileTab(tab) {
+  document.querySelectorAll('.ptab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.ptab === tab);
+  });
+  document.getElementById('ptab-profile').style.display = tab === 'profile' ? '' : 'none';
+  document.getElementById('ptab-shared').style.display  = tab === 'shared'  ? '' : 'none';
+}
+
+function loadProfileUI() {
+  document.getElementById('profile-name').value = profileData.name || '';
+  document.getElementById('profile-bio').value  = profileData.bio  || '';
+  if (profileData.avatar) {
+    document.getElementById('avatar-img').src = profileData.avatar;
+    document.getElementById('avatar-img').style.display = 'block';
+    document.getElementById('avatar-placeholder').style.display = 'none';
+  }
+}
+loadProfileUI();
+
+document.getElementById('avatar-circle').addEventListener('click', function() {
+  document.getElementById('avatar-input').click();
 });
-document.getElementById('share-modal-close').addEventListener('click', function() {
-  document.getElementById('share-modal').classList.remove('open');
+document.getElementById('avatar-input').addEventListener('change', function() {
+  var file = this.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    profileData.avatar = e.target.result;
+    document.getElementById('avatar-img').src = e.target.result;
+    document.getElementById('avatar-img').style.display = 'block';
+    document.getElementById('avatar-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
 });
-document.getElementById('share-modal').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
+document.getElementById('profile-save-btn').addEventListener('click', function() {
+  profileData.name = document.getElementById('profile-name').value.trim();
+  profileData.bio  = document.getElementById('profile-bio').value.trim();
+  localStorage.setItem('obn_profile', JSON.stringify(profileData));
+  var msg = document.getElementById('profile-saved-msg');
+  msg.style.opacity = '1';
+  setTimeout(function() { msg.style.opacity = '0'; }, 1800);
 });
-document.getElementById('download-map-btn').addEventListener('click', downloadMap);
+
+document.querySelectorAll('.ptab').forEach(function(btn) {
+  btn.addEventListener('click', function() { switchProfileTab(this.dataset.ptab); });
+});
+document.getElementById('profile-close-btn').addEventListener('click', closeProfilePanel);
+document.getElementById('profile-overlay').addEventListener('click', closeProfilePanel);
+document.getElementById('profile-btn').addEventListener('click', function() { openProfilePanel('profile'); });
+document.getElementById('share-btn').addEventListener('click', function() { openProfilePanel('shared'); });
+document.getElementById('share-download-btn').addEventListener('click', downloadMap);
 
 // ─────────────────────────────────────────
 // MOBILE PANEL
