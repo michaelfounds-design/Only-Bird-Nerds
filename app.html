@@ -129,7 +129,8 @@
       background: rgba(74,124,89,0.14);
     }
 
-    .drop-icon  { font-size: 2.4rem; margin-bottom: 0.7rem; }
+    .drop-icon  { margin-bottom: 0.7rem; }
+    .drop-icon img { width: 110px; height: 110px; border-radius: 50%; display: block; margin: 0 auto; }
     .drop-label {
       font-family: 'DM Mono', monospace;
       font-size: 0.76rem;
@@ -835,7 +836,7 @@
       .upload-hero h1 { font-size: clamp(1.7rem, 7vw, 2.4rem); }
       .upload-hero p { font-size: 0.88rem; margin-bottom: 1.6rem; }
       .drop-zone { padding: 1.8rem 1.5rem; }
-      .drop-icon { font-size: 2rem; }
+      .drop-icon img { width: 80px; height: 80px; }
       .drop-label { font-size: 0.7rem; }
       .drop-sub::before { content: "Tap to select"; }
       .drop-sub span { display: none; }
@@ -900,7 +901,7 @@
        It never leaves your device — everything runs in your browser.</p>
 
     <div class="drop-zone" id="drop-zone">
-      <div class="drop-icon">🦅</div>
+      <div class="drop-icon"><img src="onlybirdnerds-logo-v4.svg" alt="Only Bird Nerds" /></div>
       <div class="drop-label">Drop your CSV here</div>
       <div class="drop-sub">or click to browse</div>
     </div>
