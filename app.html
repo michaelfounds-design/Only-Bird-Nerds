@@ -326,11 +326,19 @@
     }
     .clear-btn:hover { background: rgba(74,124,89,0.14); }
 
+    #photo-load-wrap { margin-top: 0.75rem; }
+    #photo-load-track {
+      height: 3px; background: rgba(122,171,136,0.12);
+      border-radius: 2px; overflow: hidden; margin-bottom: 0.3rem;
+    }
+    #photo-load-bar {
+      height: 100%; width: 0%; border-radius: 2px;
+      background: var(--fern); transition: width 0.4s ease;
+    }
     #photo-progress {
       font-family: 'DM Mono', monospace;
-      font-size: 0.57rem; color: rgba(122,171,136,0.5);
-      letter-spacing: 0.05em; margin-top: 0.65rem;
-      min-height: 14px;
+      font-size: 0.55rem; color: rgba(122,171,136,0.45);
+      letter-spacing: 0.05em;
     }
 
     /* ── Map ── */
@@ -849,7 +857,10 @@
       </select>
 
       <button class="clear-btn" id="clear-btn">Clear all filters</button>
-      <div id="photo-progress"></div>
+      <div id="photo-load-wrap" style="display:none">
+        <div id="photo-load-track"><div id="photo-load-bar"></div></div>
+        <div id="photo-progress"></div>
+      </div>
 
       <div class="sec-label" style="margin-top:1rem">Photo overrides</div>
       <div style="display:flex;gap:0.4rem">
@@ -1050,13 +1061,15 @@ function queuePhotos(names) {
 function processQueue() {
   if (!photoQueue.length) {
     photoFetching = false;
-    document.getElementById('photo-progress').textContent = '';
+    document.getElementById('photo-load-wrap').style.display = 'none';
     return;
   }
   photoFetching = true;
   var done = photoTotal - photoQueue.length;
-  document.getElementById('photo-progress').textContent =
-    'Photos ' + done + ' / ' + photoTotal + '…';
+  var pct  = photoTotal > 0 ? Math.round(done / photoTotal * 100) : 0;
+  document.getElementById('photo-load-wrap').style.display = 'block';
+  document.getElementById('photo-load-bar').style.width    = pct + '%';
+  document.getElementById('photo-progress').textContent    = done + ' / ' + photoTotal + ' photos';
 
   var name = photoQueue.shift();
   fetchInat(name, 0, function(url) {
@@ -1222,6 +1235,20 @@ function initMap() {
 
   map.on('zoomend', handleZoom);
 
+  // When a popup opens, move its species to the front of the photo queue
+  map.on('popupopen', function(e) {
+    var el = e.popup.getElement();
+    if (!el) return;
+    el.querySelectorAll('img[data-sp]').forEach(function(img) {
+      var n = img.getAttribute('data-sp');
+      if (!n || getPhoto(n)) return;
+      var idx = photoQueue.indexOf(n);
+      if (idx > 0) { photoQueue.splice(idx, 1); photoQueue.unshift(n); }
+      else if (idx === -1 && !getPhoto(n)) photoQueue.unshift(n);
+    });
+    if (photoQueue.length && !photoFetching) processQueue();
+  });
+
   // Force Leaflet to re-read container size after flex layout settles
   setTimeout(function() { map.invalidateSize(); }, 100);
 }
@@ -1309,12 +1336,22 @@ function bestPhoto(sm) {
 }
 
 function refreshMarkersForSpecies(name) {
+  var url = getPhoto(name);
   Object.keys(markerRefs).forEach(function(rKey) {
     var ref = markerRefs[rKey];
     if (!ref.sm[name]) return;
     var p = bestPhoto(ref.sm);
     if (!p) return;
     ref.marker.setIcon(makeIcon(p, ref.radius, ref.label, ref.spCount, ref.liferCount));
+  });
+  // Live-update any open popup that contains this species
+  if (!url) return;
+  var attr = name.replace(/"/g, '&quot;');
+  document.querySelectorAll('img[data-sp="' + attr + '"]').forEach(function(img) {
+    img.src = url; img.style.display = 'block';
+  });
+  document.querySelectorAll('[data-sp-ph="' + attr + '"]').forEach(function(ph) {
+    ph.style.display = 'none';
   });
 }
 
@@ -1350,17 +1387,18 @@ function buildPopup(title, sm, extra) {
 
     h += '<tr style="border-bottom:1px solid #f0ece4">';
 
-    // Thumbnail
+    // Thumbnail — data-sp lets refreshMarkersForSpecies live-update open popups
+    var spAttr = e.name.replace(/"/g, '&quot;');
     h += '<td style="padding:3px 4px 3px 0;width:54px;vertical-align:middle">';
-    if (photo) {
-      h += '<img src="' + photo + '" onclick="openLightbox(this.src)" '
-        + 'style="width:50px;height:50px;object-fit:cover;border-radius:4px;'
-        + 'display:block;cursor:pointer;" '
-        + 'onerror="this.style.display=\'none\'" />';
-    } else {
-      h += '<div style="width:50px;height:50px;background:#e8e4dc;border-radius:4px;'
-        + 'display:flex;align-items:center;justify-content:center;font-size:18px;">🐦</div>';
-    }
+    h += '<img src="' + (photo || '') + '" data-sp="' + spAttr + '" '
+      + 'onclick="if(this.src)openLightbox(this.src)" '
+      + 'style="width:50px;height:50px;object-fit:cover;border-radius:4px;'
+      + 'display:' + (photo ? 'block' : 'none') + ';cursor:pointer;" '
+      + 'onerror="this.style.display=\'none\'" />'
+      + '<div data-sp-ph="' + spAttr + '" '
+      + 'style="width:50px;height:50px;background:#e8e4dc;border-radius:4px;'
+      + 'display:flex;align-items:center;justify-content:center;font-size:18px;'
+      + (photo ? 'display:none' : '') + '">🐦</div>';
     h += '</td>';
 
     // Name + eBird link
