@@ -680,22 +680,6 @@
       color: rgba(122,171,136,0.35); font-style: italic;
     }
 
-    /* ── Panel footer ── */
-    .panel-footer {
-      flex-shrink: 0;
-      padding: 0.55rem 0.9rem 0.7rem;
-      border-top: 1px solid rgba(122,171,136,0.12);
-    }
-    #share-btn {
-      width: 100%; padding: 0.6rem;
-      background: rgba(74,124,89,0.1);
-      border: 1px solid rgba(74,124,89,0.3);
-      border-radius: 6px; color: var(--sage);
-      font-family: 'DM Mono', monospace; font-size: 0.64rem;
-      letter-spacing: 0.07em; text-transform: uppercase;
-      cursor: pointer; transition: background 0.15s;
-    }
-    #share-btn:hover { background: rgba(74,124,89,0.2); }
 
     /* ── Badge modal ── */
     #badge-modal {
@@ -1016,9 +1000,6 @@
       </div>
     </div>
 
-    <div class="panel-footer">
-      <button id="share-btn">↑ Share Map</button>
-    </div>
   </div>
 
   <div id="map"></div>
@@ -1772,41 +1753,49 @@ function getFiltered() {
   });
 }
 
+var _heatPts = [];
+var _heatMax = 1;
+
 function updateHeat(filtered) {
   if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
-  if (!showHeat || !filtered.length) return;
 
-  // Count observations per unique location — more visits = higher weight = redder
-  var locMap = {};
-  filtered.forEach(function(r) {
-    var key = r.lat.toFixed(4) + ',' + r.lon.toFixed(4);
-    if (!locMap[key]) locMap[key] = { lat: r.lat, lon: r.lon, n: 0 };
-    locMap[key].n++;
-  });
-  var pts = Object.keys(locMap).map(function(k) {
-    var v = locMap[k];
-    return [v.lat, v.lon, v.n];
-  });
+  if (filtered) {
+    // Recompute pts: count observations per unique lat/lon
+    var locMap = {};
+    filtered.forEach(function(r) {
+      var key = r.lat.toFixed(4) + ',' + r.lon.toFixed(4);
+      if (!locMap[key]) locMap[key] = { lat: r.lat, lon: r.lon, n: 0 };
+      locMap[key].n++;
+    });
+    _heatPts = Object.keys(locMap).map(function(k) {
+      var v = locMap[k]; return [v.lat, v.lon, v.n];
+    });
+    // Cap at 90th-percentile so one mega-hotspot doesn't flatten everything else
+    var sorted = _heatPts.map(function(p) { return p[2]; }).sort(function(a,b) { return a-b; });
+    _heatMax = sorted[Math.floor(sorted.length * 0.9)] || 1;
+  }
 
-  // Cap at 95th-percentile count so outlier hotspots don't wash out everything else
-  var sorted = pts.map(function(p) { return p[2]; }).sort(function(a,b) { return a-b; });
-  var maxVal = sorted[Math.floor(sorted.length * 0.95)] || 1;
+  if (!showHeat || !_heatPts.length) return;
 
-  heatLayer = L.heatLayer(pts, {
-    radius: 28,
-    blur: 22,
-    max: maxVal,
-    minOpacity: 0.55,
+  // Radius scales with zoom so individual points stay visible at any zoom level
+  var z = map ? map.getZoom() : 5;
+  var r = z <= 4 ? 60 : z <= 6 ? 45 : z <= 8 ? 32 : z <= 10 ? 24 : 18;
+
+  heatLayer = L.heatLayer(_heatPts, {
+    radius: r,
+    blur: Math.round(r * 0.7),
+    max: _heatMax,
+    minOpacity: 0.7,
     gradient: {
       0.0:  '#1a3a8c',
-      0.25: '#2b6cb0',
-      0.5:  '#38a169',
-      0.7:  '#d69e2e',
-      0.85: '#e53e3e',
+      0.3:  '#2b6cb0',
+      0.55: '#38a169',
+      0.75: '#d69e2e',
+      0.88: '#e53e3e',
       1.0:  '#c53030'
     }
   });
-  // Visibility managed by handleZoom
+  // Added to map by handleZoom
 }
 
 function updateMap() {
@@ -1855,6 +1844,8 @@ function handleZoom() {
     if (!on &&  map.hasLayer(layer)) map.removeLayer(layer);
   }
 
+  // Rebuild heat with zoom-appropriate radius then show/hide
+  if (showHeat && _heatPts.length) updateHeat();
   setL(heatLayer,    showHeat);
   setL(clusterGroup, showHotspots && z >= ZOOM_LOCATION);
   setL(countyLayer,  showRegions  && z >= ZOOM_COUNTY && z < ZOOM_LOCATION);
@@ -2296,14 +2287,14 @@ function renderPanelQB() {
   // Badges
   var bHtml = '';
   if (earned.length) {
-    earned.slice(0, 10).forEach(function(q) {
+    earned.slice(0, 4).forEach(function(q) {
       var tier = TIERS[q.tier - 1];
       var col  = tierColors[q.tier - 1] || '#7aab88';
       bHtml += '<span class="pb-chip" style="color:' + col + ';border-color:' + col + '33" title="' + q.desc + '">'
         + tier.icon + ' ' + q.name + '</span>';
     });
-    if (earned.length > 10) {
-      bHtml += '<span class="pb-chip" style="color:rgba(122,171,136,0.5);border-color:rgba(122,171,136,0.18)">+' + (earned.length - 10) + ' more</span>';
+    if (earned.length > 4) {
+      bHtml += '<span class="pb-chip" style="color:rgba(122,171,136,0.5);border-color:rgba(122,171,136,0.18)">+' + (earned.length - 4) + ' more</span>';
     }
   } else {
     bHtml = '<p class="pb-empty">No badges earned yet</p>';
@@ -2377,7 +2368,6 @@ document.querySelectorAll('.ptab').forEach(function(btn) {
 document.getElementById('profile-close-btn').addEventListener('click', closeProfilePanel);
 document.getElementById('profile-overlay').addEventListener('click', closeProfilePanel);
 document.getElementById('profile-btn').addEventListener('click', function() { openProfilePanel('profile'); });
-document.getElementById('share-btn').addEventListener('click', function() { openProfilePanel('shared'); });
 document.getElementById('share-download-btn').addEventListener('click', downloadMap);
 
 // ─────────────────────────────────────────
