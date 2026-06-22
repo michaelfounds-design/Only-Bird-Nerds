@@ -1775,26 +1775,38 @@ function getFiltered() {
 function updateHeat(filtered) {
   if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
   if (!showHeat || !filtered.length) return;
-  // One point per unique visited location — density comes from hotspot clustering
-  var seen = {};
-  var pts = [];
+
+  // Count observations per unique location — more visits = higher weight = redder
+  var locMap = {};
   filtered.forEach(function(r) {
     var key = r.lat.toFixed(4) + ',' + r.lon.toFixed(4);
-    if (!seen[key]) { seen[key] = true; pts.push([r.lat, r.lon]); }
+    if (!locMap[key]) locMap[key] = { lat: r.lat, lon: r.lon, n: 0 };
+    locMap[key].n++;
   });
+  var pts = Object.keys(locMap).map(function(k) {
+    var v = locMap[k];
+    return [v.lat, v.lon, v.n];
+  });
+
+  // Cap at 95th-percentile count so outlier hotspots don't wash out everything else
+  var sorted = pts.map(function(p) { return p[2]; }).sort(function(a,b) { return a-b; });
+  var maxVal = sorted[Math.floor(sorted.length * 0.95)] || 1;
+
   heatLayer = L.heatLayer(pts, {
-    radius: 45, blur: 40, minOpacity: 0.05,
+    radius: 28,
+    blur: 22,
+    max: maxVal,
+    minOpacity: 0.55,
     gradient: {
-      0.0:  'rgba(0,0,0,0)',
-      0.15: '#313695',
-      0.3:  '#4575b4',
-      0.45: '#4a7c59',
-      0.62: '#fee090',
-      0.78: '#f46d43',
-      1.0:  '#d73027'
+      0.0:  '#1a3a8c',
+      0.25: '#2b6cb0',
+      0.5:  '#38a169',
+      0.7:  '#d69e2e',
+      0.85: '#e53e3e',
+      1.0:  '#c53030'
     }
   });
-  // Visibility managed by handleZoom — not added to map here
+  // Visibility managed by handleZoom
 }
 
 function updateMap() {
