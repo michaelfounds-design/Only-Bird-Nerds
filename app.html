@@ -992,6 +992,10 @@ var heatLayer     = null;
 // rebuilt on every updateMap() call
 var markerRefs = {};
 
+// globalFreq: speciesName → total record count across all data
+// used by bestPhoto() to rank by global rarity, not local count
+var globalFreq = {};
+
 // Photos
 var photoCache     = {};  // commonName → url (iNat fetched)
 var photoOverrides = {};  // commonName → url (user-set, persisted in localStorage)
@@ -1078,6 +1082,7 @@ function parseCSV(file) {
     complete: function(res) {
       allRecords = normalize(res.data);
       computeLifers(allRecords);
+      computeGlobalFreq(allRecords);
       speciesList = uniqueSpecies(allRecords);
       buildStateCountyMap(allRecords);
       currentStats = computeStats(allRecords);
@@ -1138,6 +1143,13 @@ function computeLifers(records) {
   records.forEach(function(r) {
     r.lifer = !seen[r.name];
     seen[r.name] = true;
+  });
+}
+
+function computeGlobalFreq(records) {
+  globalFreq = {};
+  records.forEach(function(r) {
+    globalFreq[r.name] = (globalFreq[r.name] || 0) + 1;
   });
 }
 
@@ -1263,18 +1275,22 @@ function buildSM(records) {
 }
 
 function bestPhoto(sm) {
-  // Prefer lifer species that have a photo
-  var best = null, bestCount = Infinity;
+  var best = null, bestFreq = Infinity;
+  // 1. Lifer seen least frequently across all records
   Object.keys(sm).forEach(function(sp) {
-    if (sm[sp].lifer && getPhoto(sp) && sm[sp].count < bestCount) {
-      best = sp; bestCount = sm[sp].count;
-    }
+    if (!sm[sp].lifer || !getPhoto(sp)) return;
+    var freq = globalFreq[sp] || 0;
+    if (freq < bestFreq) { best = sp; bestFreq = freq; }
   });
   if (best) return getPhoto(best);
-  // Fallback: any species with a photo
-  var fallback = null;
-  Object.keys(sm).some(function(sp) { if (getPhoto(sp)) { fallback = sp; return true; } });
-  return fallback ? getPhoto(fallback) : '';
+  // 2. No lifers — rarest species (globally) at this location that has a photo
+  bestFreq = Infinity;
+  Object.keys(sm).forEach(function(sp) {
+    if (!getPhoto(sp)) return;
+    var freq = globalFreq[sp] || 0;
+    if (freq < bestFreq) { best = sp; bestFreq = freq; }
+  });
+  return best ? getPhoto(best) : '';
 }
 
 function refreshMarkersForSpecies(name) {
