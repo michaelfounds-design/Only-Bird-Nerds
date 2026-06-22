@@ -998,11 +998,19 @@ var globalFreq = {};
 var liferSet   = {};  // species that are lifers, for queue prioritization
 
 // Photos
-var photoCache     = {};  // commonName → url (iNat fetched)
+var photoManifest  = {};  // commonName → local path (from bird-photos/manifest.json)
+var photoCache     = {};  // commonName → url (iNat fetched this session)
 var photoOverrides = {};  // commonName → url (user-set, persisted in localStorage)
 var photoQueue     = [];
 var photoFetching  = false;
 var photoTotal     = 0;
+
+// Load local photo manifest immediately — by the time the user uploads a CSV
+// this will already be resolved, so most species skip the iNat queue entirely.
+fetch('bird-photos/manifest.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) { photoManifest = data; })
+  .catch(function() {}); // graceful fallback to live iNat fetching
 
 // ─────────────────────────────────────────
 // PHOTO PERSISTENCE
@@ -1018,7 +1026,7 @@ function saveOverrides() {
 }
 
 function getPhoto(name) {
-  return photoOverrides[name] || photoCache[name] || '';
+  return photoOverrides[name] || photoManifest[name] || photoCache[name] || '';
 }
 
 // ─────────────────────────────────────────
