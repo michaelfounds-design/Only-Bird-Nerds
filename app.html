@@ -995,6 +995,7 @@ var markerRefs = {};
 // globalFreq: speciesName → total record count across all data
 // used by bestPhoto() to rank by global rarity, not local count
 var globalFreq = {};
+var liferSet   = {};  // species that are lifers, for queue prioritization
 
 // Photos
 var photoCache     = {};  // commonName → url (iNat fetched)
@@ -1024,7 +1025,11 @@ function getPhoto(name) {
 // iNAT PHOTO QUEUE
 // ─────────────────────────────────────────
 function queuePhotos(names) {
-  names.forEach(function(n) {
+  // Lifers first so their photos appear before common species fill in
+  var ordered = names.slice().sort(function(a, b) {
+    return (liferSet[b] ? 1 : 0) - (liferSet[a] ? 1 : 0);
+  });
+  ordered.forEach(function(n) {
     if (!getPhoto(n) && photoQueue.indexOf(n) === -1) photoQueue.push(n);
   });
   photoTotal = photoQueue.length;
@@ -1044,10 +1049,9 @@ function processQueue() {
 
   var name = photoQueue.shift();
   fetchInat(name, 0, function(url) {
-    if (url) {
-      photoCache[name] = url;
-      refreshMarkersForSpecies(name);
-    }
+    if (url) photoCache[name] = url;
+    // Always refresh for lifers (even on failure) so placeholder shows immediately
+    if (url || liferSet[name]) refreshMarkersForSpecies(name);
     setTimeout(processQueue, PHOTO_DELAY);
   });
 }
@@ -1135,14 +1139,13 @@ function normalize(rows) {
 }
 
 function computeLifers(records) {
-  // Sort by date ascending; first occurrence of each species = lifer
-  records.sort(function(a, b) {
-    return new Date(a.date) - new Date(b.date);
-  });
+  records.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
   var seen = {};
+  liferSet = {};
   records.forEach(function(r) {
     r.lifer = !seen[r.name];
     seen[r.name] = true;
+    if (r.lifer) liferSet[r.name] = true;
   });
 }
 
@@ -1276,14 +1279,14 @@ function buildSM(records) {
 
 function bestPhoto(sm) {
   var best = null, bestFreq = Infinity;
-  // 1. Lifer seen least frequently across all records
+  // 1. Lifer with fewest global records — photo not required (may return '')
   Object.keys(sm).forEach(function(sp) {
-    if (!sm[sp].lifer || !getPhoto(sp)) return;
+    if (!sm[sp].lifer) return;
     var freq = globalFreq[sp] || 0;
     if (freq < bestFreq) { best = sp; bestFreq = freq; }
   });
-  if (best) return getPhoto(best);
-  // 2. No lifers — rarest species (globally) at this location that has a photo
+  if (best) return getPhoto(best); // possibly '' — makeIcon shows 🐦 placeholder
+  // 2. No lifers — rarest species with a photo
   bestFreq = Infinity;
   Object.keys(sm).forEach(function(sp) {
     if (!getPhoto(sp)) return;
@@ -1298,10 +1301,12 @@ function refreshMarkersForSpecies(name) {
     var ref = markerRefs[rKey];
     if (!ref.sm[name]) return;
     var p = bestPhoto(ref.sm);
-    if (!p) return;
+    // Skip update only if no photo and no lifers (placeholder not needed)
+    if (!p && !ref.liferCount) return;
     ref.marker.setIcon(makeIcon(p, ref.radius, ref.label, ref.spCount, ref.liferCount));
   });
 }
+
 
 // ─────────────────────────────────────────
 // POPUP
