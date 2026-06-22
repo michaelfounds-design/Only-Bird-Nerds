@@ -1383,7 +1383,8 @@ function buildPopup(title, sm, extra) {
   spList.forEach(function(e) {
     var photo  = getPhoto(e.name);
     var spEsc  = e.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    var ebLink = 'https://ebird.org/search?q=' + encodeURIComponent(e.name);
+    var aabSlug = e.name.replace(/'/g, '').replace(/\s+/g, '_');
+    var spLink  = 'https://www.allaboutbirds.org/guide/' + aabSlug;
 
     h += '<tr style="border-bottom:1px solid #f0ece4">';
 
@@ -1405,8 +1406,8 @@ function buildPopup(title, sm, extra) {
     h += '<td style="padding:2px 4px;vertical-align:middle">'
       + (e.lifer ? '⭐ ' : '')
       + '<span style="font-weight:500;color:#1b3a2d">' + e.name + '</span><br>'
-      + '<a href="' + ebLink + '" target="_blank" rel="noopener" '
-      + 'style="font-size:10px;color:#4a7c59;text-decoration:none">eBird ↗</a></td>';
+      + '<a href="' + spLink + '" target="_blank" rel="noopener" '
+      + 'style="font-size:10px;color:#4a7c59;text-decoration:none">All About Birds ↗</a></td>';
 
     // Count
     h += '<td style="text-align:right;padding:2px 6px;color:#999;font-size:11px;'
