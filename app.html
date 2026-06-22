@@ -2119,6 +2119,7 @@ loadOverrides();
       complete: function(res) {
         allRecords = normalize(res.data);
         computeLifers(allRecords);
+        computeGlobalFreq(allRecords);
         speciesList = uniqueSpecies(allRecords);
         buildStateCountyMap(allRecords);
         currentStats = computeStats(allRecords);
