@@ -105,13 +105,44 @@
       background: #0a100b;
     }
 
-    .hero-gif {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-      display: block;
+    /* Crossfade slideshow — full quality JPGs, no GIF color limits */
+    .hero-slides {
+      position: absolute;
+      inset: 0;
     }
+
+    .hero-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 0.65s ease-in-out;
+    }
+
+    .hero-slide.active { opacity: 1; }
+
+    /* Step label — lower right, above banner */
+    .hero-step-label {
+      position: absolute;
+      bottom: 5.5rem;
+      right: 2rem;
+      z-index: 10;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sage);
+      background: rgba(8, 14, 9, 0.7);
+      padding: 0.3rem 0.7rem;
+      border-radius: 100px;
+      border: 1px solid rgba(122,171,136,0.2);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .hero-step-label.visible { opacity: 1; }
 
     /* Branding overlay — top left */
     .hero-brand {
@@ -714,7 +745,17 @@
 
 <!-- ─── HERO ─── -->
 <section class="hero">
-  <img src="howto.gif" alt="How to use Only Bird Nerds — 6 step animated guide" class="hero-gif" />
+  <div class="hero-slides">
+    <div class="hero-slide active" style="background-image:url('hero-slides/slide0.jpg')"></div>
+    <div class="hero-slide"        style="background-image:url('hero-slides/slide1.jpg')"></div>
+    <div class="hero-slide"        style="background-image:url('hero-slides/slide2.jpg')"></div>
+    <div class="hero-slide"        style="background-image:url('hero-slides/slide3.jpg')"></div>
+    <div class="hero-slide"        style="background-image:url('hero-slides/slide4.jpg')"></div>
+    <div class="hero-slide"        style="background-image:url('hero-slides/slide5.jpg')"></div>
+    <div class="hero-slide"        style="background-image:url('hero-slides/slide6.jpg')"></div>
+  </div>
+
+  <div class="hero-step-label" id="hero-step-label"></div>
 
   <div class="hero-brand">
     <span class="hero-brand-name">Only Bird Nerds</span>
@@ -777,6 +818,37 @@
       }
     });
   }
+
+  // Hero slideshow
+  (function() {
+    var slides   = document.querySelectorAll('.hero-slide');
+    var label    = document.getElementById('hero-step-label');
+    var current  = 0;
+
+    var STEPS = [
+      { hold: 3500, text: '' },
+      { hold: 3000, text: 'STEP 01 / 06  —  Download your eBird data' },
+      { hold: 3000, text: 'STEP 02 / 06  —  Drop your CSV on the site' },
+      { hold: 3000, text: 'STEP 03 / 06  —  Your personalized map is built!' },
+      { hold: 3000, text: 'STEP 04 / 06  —  Click any hotspot to explore' },
+      { hold: 3000, text: 'STEP 05 / 06  —  Quest on!' },
+      { hold: 4500, text: 'STEP 06 / 06  —  Build a profile & share' },
+    ];
+
+    function goTo(idx) {
+      slides[current].classList.remove('active');
+      current = idx % slides.length;
+      slides[current].classList.add('active');
+      var step = STEPS[current];
+      if (label) {
+        label.textContent = step.text;
+        label.classList.toggle('visible', step.text !== '');
+      }
+      setTimeout(function() { goTo(current + 1); }, step.hold);
+    }
+
+    setTimeout(function() { goTo(1); }, STEPS[0].hold);
+  })();
 
   // smooth scroll
   document.querySelectorAll('a[href^="#"]').forEach(a => {
