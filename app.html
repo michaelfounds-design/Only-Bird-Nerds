@@ -1186,6 +1186,7 @@ var liferSet   = {};  // species that are lifers, for queue prioritization
 var photoManifest  = {};  // commonName → local path (from bird-photos/manifest.json)
 var photoCache     = {};  // commonName → url (iNat fetched this session)
 var photoOverrides = {};  // commonName → url (user-set, persisted in localStorage)
+var locationPins   = {};  // rKey → pinned species name (persisted in localStorage)
 var photoQueue     = [];
 var photoFetching  = false;
 var photoTotal     = 0;
@@ -1212,6 +1213,42 @@ function saveOverrides() {
 
 function getPhoto(name) {
   return photoOverrides[name] || photoManifest[name] || photoCache[name] || '';
+}
+
+function loadPins() {
+  try { locationPins = JSON.parse(localStorage.getItem('obn_pins') || '{}'); }
+  catch(e) { locationPins = {}; }
+}
+function savePins() {
+  try { localStorage.setItem('obn_pins', JSON.stringify(locationPins)); }
+  catch(e) {}
+}
+// Like bestPhoto but respects a pinned species for a specific marker
+function markerPhoto(sm, rKey) {
+  var pinned = locationPins[rKey];
+  if (pinned && sm[pinned]) { var p = getPhoto(pinned); if (p) return p; }
+  return bestPhoto(sm);
+}
+// Called from popup pin buttons
+function pinToMarker(rKey, spName) {
+  if (locationPins[rKey] === spName) { delete locationPins[rKey]; }
+  else { locationPins[rKey] = spName; }
+  savePins();
+  // Update pin button states in the open popup without closing it
+  document.querySelectorAll('[data-pin-rkey]').forEach(function(btn) {
+    if (btn.getAttribute('data-pin-rkey') !== rKey) return;
+    var sp = btn.getAttribute('data-pin-sp');
+    var active = locationPins[rKey] === sp;
+    btn.style.background    = active ? '#fff3cd' : 'none';
+    btn.style.borderColor   = active ? '#f0b429' : '#ddd';
+    btn.title               = active ? 'Unpin bird from marker' : 'Pin this bird to marker';
+  });
+  // Rebuild the marker icon
+  var ref = markerRefs[rKey];
+  if (ref) {
+    var photo = markerPhoto(ref.sm, rKey);
+    ref.marker.setIcon(makeIcon(photo, ref.radius, ref.label, ref.spCount, ref.liferCount));
+  }
 }
 
 // ─────────────────────────────────────────
@@ -1422,6 +1459,13 @@ function initMap() {
       else if (idx === -1 && !getPhoto(n)) photoQueue.unshift(n);
     });
     if (photoQueue.length && !photoFetching) processQueue();
+    // Wire pin buttons (event delegation)
+    el.querySelectorAll('[data-pin-rkey]').forEach(function(btn) {
+      btn.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        pinToMarker(btn.getAttribute('data-pin-rkey'), btn.getAttribute('data-pin-sp'));
+      });
+    });
   });
 
   // Force Leaflet to re-read container size after flex layout settles
@@ -1534,7 +1578,7 @@ function refreshMarkersForSpecies(name) {
 // ─────────────────────────────────────────
 // POPUP
 // ─────────────────────────────────────────
-function buildPopup(title, sm, extra) {
+function buildPopup(title, sm, rKey, extra) {
   var total  = Object.keys(sm).length;
   var lifers = Object.keys(sm).filter(function(s) { return sm[s].lifer; }).length;
 
@@ -1591,9 +1635,20 @@ function buildPopup(title, sm, extra) {
     // Photo button
     h += '<td style="padding:2px 3px;vertical-align:middle">'
       + '<button onclick="photoDialog.open(\'' + spEsc + '\')" '
-      + 'title="Set Macaulay Library photo" '
+      + 'title="Set custom photo" '
       + 'style="background:none;border:1px solid #ddd;border-radius:3px;'
       + 'cursor:pointer;padding:2px 5px;font-size:11px;">📷</button></td>';
+
+    // Pin button — pins this species' photo to this marker
+    var isPinned  = rKey && locationPins[rKey] === e.name;
+    var rKeyAttr  = (rKey || '').replace(/"/g, '&quot;');
+    var spPinAttr = e.name.replace(/"/g, '&quot;');
+    h += '<td style="padding:2px 2px;vertical-align:middle">'
+      + '<button data-pin-rkey="' + rKeyAttr + '" data-pin-sp="' + spPinAttr + '" '
+      + 'title="' + (isPinned ? 'Unpin bird from marker' : 'Pin this bird to marker') + '" '
+      + 'style="background:' + (isPinned ? '#fff3cd' : 'none') + ';'
+      + 'border:1px solid ' + (isPinned ? '#f0b429' : '#ddd') + ';border-radius:3px;'
+      + 'cursor:pointer;padding:2px 5px;font-size:11px;">📌</button></td>';
 
     h += '</tr>';
   });
@@ -1627,12 +1682,12 @@ function buildLocationLayer(filtered) {
     var spN  = Object.keys(sm).length;
     var lifN = Object.keys(sm).filter(function(s) { return sm[s].lifer; }).length;
     var r    = scaleR(spN, minC, maxC, 14, 44);
-    var mk   = L.marker([loc.lat, loc.lon], { icon: makeIcon(bestPhoto(sm), r, loc.name, spN, lifN) });
     var rKey = 'loc|' + key;
+    var mk   = L.marker([loc.lat, loc.lon], { icon: makeIcon(markerPhoto(sm, rKey), r, loc.name, spN, lifN) });
 
     mk.bindTooltip('<b>' + loc.name + '</b><br>' + spN + ' species · ' + loc.records.length + ' sightings'
       + (lifN ? '<br>⭐ ' + lifN + ' lifers' : ''), { sticky: true });
-    mk.bindPopup((function(n, s, r) { return function() { return buildPopup(n, s, r + ' sightings'); }; })(loc.name, sm, loc.records.length), { maxWidth: 480 });
+    mk.bindPopup((function(n, s, rk, r) { return function() { return buildPopup(n, s, rk, r + ' sightings'); }; })(loc.name, sm, rKey, loc.records.length), { maxWidth: 480 });
 
     markerRefs[rKey] = { marker: mk, radius: r, label: loc.name, spCount: spN, liferCount: lifN, sm: sm };
     clusterGroup.addLayer(mk);
@@ -1645,10 +1700,17 @@ function buildCountyLayer(filtered) {
 
   var agg = {};
   filtered.forEach(function(r) {
-    if (!r.state || !r.state.startsWith('US-')) return;
-    var key = (r.county || 'Unknown') + '|' + r.state;
-    if (!agg[key]) agg[key] = { label: (r.county || 'Unknown') + ', ' + r.state,
-                                 latS: 0, lonS: 0, n: 0, records: [] };
+    if (!r.state) return;
+    var key, label;
+    if (r.state.startsWith('US-')) {
+      key   = (r.county || 'Unknown') + '|' + r.state;
+      label = (r.county || 'Unknown') + ', ' + r.state;
+    } else {
+      // Non-US: group by full state/province code (e.g. AU-NSW)
+      key   = r.state;
+      label = r.state;
+    }
+    if (!agg[key]) agg[key] = { label: label, latS: 0, lonS: 0, n: 0, records: [] };
     agg[key].records.push(r);
     agg[key].latS += r.lat; agg[key].lonS += r.lon; agg[key].n++;
   });
@@ -1665,12 +1727,12 @@ function buildCountyLayer(filtered) {
     var lifN = Object.keys(sm).filter(function(s) { return sm[s].lifer; }).length;
     var lat  = a.latS / a.n, lon = a.lonS / a.n;
     var r    = scaleR(spN, minC, maxC, 16, 52);
-    var mk   = L.marker([lat, lon], { icon: makeIcon(bestPhoto(sm), r, a.label, spN, lifN) });
     var rKey = 'county|' + key;
+    var mk   = L.marker([lat, lon], { icon: makeIcon(markerPhoto(sm, rKey), r, a.label, spN, lifN) });
 
     mk.bindTooltip('<b>' + a.label + '</b><br>' + spN + ' species'
       + (lifN ? '<br>⭐ ' + lifN + ' lifers' : ''), { sticky: true });
-    mk.bindPopup((function(lbl, s) { return function() { return buildPopup(lbl, s); }; })(a.label, sm), { maxWidth: 480 });
+    mk.bindPopup((function(lbl, s, rk) { return function() { return buildPopup(lbl, s, rk); }; })(a.label, sm, rKey), { maxWidth: 480 });
 
     markerRefs[rKey] = { marker: mk, radius: r, label: a.label, spCount: spN, liferCount: lifN, sm: sm };
     countyLayer.addLayer(mk);
@@ -1695,6 +1757,26 @@ var STATE_CENTROIDS = {
   'US-TX':[31.17,-99.33],'US-UT':[39.42,-111.09],'US-VT':[44.07,-72.67],
   'US-VA':[37.93,-79.45],'US-WA':[47.38,-120.45],'US-WV':[38.64,-80.62],
   'US-WI':[44.27,-89.62],'US-WY':[42.96,-107.55],'US-DC':[38.91,-77.04],
+  // Australia
+  'AU':[-25.27,133.78],
+  'AU-NSW':[-32.16,147.02],'AU-VIC':[-36.86,144.28],'AU-QLD':[-22.58,144.08],
+  'AU-WA':[-25.04,121.63],'AU-SA':[-30.00,135.76],'AU-TAS':[-41.64,146.31],
+  'AU-NT':[-19.49,134.36],'AU-ACT':[-35.47,149.01],
+  // Canada
+  'CA':[56.13,-106.35],
+  'CA-ON':[49.25,-84.49],'CA-BC':[53.73,-127.65],'CA-AB':[53.93,-116.57],
+  'CA-QC':[53.00,-73.55],'CA-MB':[54.90,-97.12],'CA-SK':[52.94,-106.45],
+  'CA-NS':[44.69,-63.23],'CA-NB':[46.56,-66.46],'CA-NL':[53.13,-59.38],
+  'CA-PE':[46.51,-63.42],'CA-YT':[62.00,-135.00],'CA-NT':[64.83,-124.85],
+  'CA-NU':[72.00,-95.00],
+  // Other common birding countries
+  'MX':[23.63,-102.55],'GB':[55.38,-3.44],'IE':[53.41,-8.24],
+  'NZ':[-40.90,174.89],'ZA':[-28.48,24.68],'KE':[0.02,37.91],
+  'ES':[40.46,-3.75],'DE':[51.17,10.45],'FR':[46.23,2.21],
+  'PT':[39.40,-8.22],'IT':[41.87,12.57],'NL':[52.13,5.29],
+  'IN':[20.59,78.96],'CR':[9.75,-83.75],'PA':[8.99,-79.52],
+  'CO':[4.57,-74.30],'BR':[-14.24,-51.93],'PE':[-9.19,-75.02],
+  'EC':[-1.83,-78.18],'TZ':[-6.37,34.89],'UG':[1.37,32.29],
 };
 
 function buildStateLayer(filtered) {
@@ -1724,12 +1806,12 @@ function buildStateLayer(filtered) {
     var lat  = ctr ? ctr[0] : a.latS / a.n;
     var lon  = ctr ? ctr[1] : a.lonS / a.n;
     var r    = scaleR(spN, minC, maxC, 20, 58);
-    var mk   = L.marker([lat, lon], { icon: makeIcon(bestPhoto(sm), r, key, spN, lifN) });
     var rKey = 'state|' + key;
+    var mk   = L.marker([lat, lon], { icon: makeIcon(markerPhoto(sm, rKey), r, key, spN, lifN) });
 
     mk.bindTooltip('<b>' + key + '</b><br>' + spN + ' species'
       + (lifN ? '<br>⭐ ' + lifN + ' lifers' : ''), { sticky: true });
-    mk.bindPopup((function(k, s) { return function() { return buildPopup(k, s); }; })(key, sm), { maxWidth: 480 });
+    mk.bindPopup((function(k, s, rk) { return function() { return buildPopup(k, s, rk); }; })(key, sm, rKey), { maxWidth: 480 });
 
     markerRefs[rKey] = { marker: mk, radius: r, label: key, spCount: spN, liferCount: lifN, sm: sm };
     stateLayer.addLayer(mk);
@@ -2448,6 +2530,7 @@ function buildDownloadHTML(locs, stats) {
 // BOOT
 // ─────────────────────────────────────────
 loadOverrides();
+loadPins();
 
 // Pick up CSV dropped on the landing page hero zone
 (function() {
