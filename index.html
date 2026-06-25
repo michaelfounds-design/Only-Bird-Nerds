@@ -97,184 +97,85 @@
 
     /* ─── HERO ─── */
     .hero {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      padding-top: 64px;
       position: relative;
+      width: 100%;
+      height: calc(100vh - 64px);
+      margin-top: 64px;
       overflow: hidden;
-    }
-
-    .hero-left {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 5rem 3rem 5rem 2.5rem;
-      background: var(--forest);
-      position: relative;
-      z-index: 2;
-    }
-
-    .hero-right {
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Gradient fade from forest green into the map */
-    .hero-right::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 48px; height: 100%;
-      background: linear-gradient(to right, var(--forest), transparent);
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    .hero-drop-inner {
-      position: absolute;
-      inset: 0;
       background: #0a100b;
     }
 
     .hero-gif {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
       object-position: center;
       display: block;
     }
 
-    /* floating stat card on hero photo */
-    .hero-stat-card {
+    /* Branding overlay — top left */
+    .hero-brand {
       position: absolute;
-      bottom: 2.5rem;
-      left: 1.5rem;
+      top: 2.4rem;
+      left: 3rem;
       z-index: 10;
-      background: rgba(253,250,245,0.92);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      min-width: 180px;
-    }
-
-    .stat-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--fern);
-      margin-bottom: 0.3rem;
-    }
-
-    .stat-value {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.9rem;
-      font-weight: 800;
-      color: var(--forest);
-      line-height: 1;
-    }
-
-    .stat-sub {
-      font-size: 0.78rem;
-      color: var(--warm-gray);
-      margin-top: 0.2rem;
-    }
-
-    /* achievement badge on photo */
-    .hero-badge {
-      position: absolute;
-      top: 2rem;
-      right: 1.5rem;
-      z-index: 10;
-      background: var(--sun);
-      color: var(--forest);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62rem;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0.45rem 0.9rem;
-      border-radius: 100px;
       display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      animation: badge-bounce 3s ease-in-out infinite;
+      flex-direction: column;
+      gap: 0.45rem;
     }
 
-    @keyframes badge-bounce {
-      0%,100% { transform: translateY(0) rotate(-1deg); }
-      50% { transform: translateY(-5px) rotate(1deg); }
+    .hero-brand-name {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+      font-weight: 800;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      text-shadow: 0 2px 18px rgba(0,0,0,0.75);
     }
 
-    .hero-eyebrow {
+    .hero-brand-sub {
       font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.14em;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--sage);
-      margin-bottom: 1.3rem;
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.7);
     }
 
-    .hero-eyebrow::before {
-      content: '';
-      width: 24px; height: 2px;
-      background: var(--sage);
-      border-radius: 2px;
-      display: inline-block;
-      flex-shrink: 0;
-    }
-
-    h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(2.4rem, 4.5vw, 3.8rem);
-      font-weight: 800;
-      line-height: 1.06;
-      letter-spacing: -0.03em;
-      color: var(--forest);
-      margin-bottom: 1.4rem;
-    }
-
-    h1 .accent { color: var(--fern); }
-    h1 .underline-word {
-      position: relative;
-      display: inline-block;
-    }
-    h1 .underline-word::after {
-      content: '';
+    /* Bottom banner */
+    .hero-banner {
       position: absolute;
-      bottom: -4px; left: 0; right: 0;
-      height: 3px;
-      background: var(--sun);
-      border-radius: 2px;
-    }
-
-    .hero-sub {
-      font-size: 1.05rem;
-      line-height: 1.78;
-      color: rgba(200,221,208,0.7);
-      max-width: 420px;
-      margin-bottom: 2.2rem;
-    }
-
-    .hero-actions {
+      bottom: 0; left: 0; right: 0;
+      z-index: 10;
+      background: rgba(8, 14, 9, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(122,171,136,0.22);
+      padding: 1.4rem 3rem;
       display: flex;
-      gap: 0.85rem;
-      flex-wrap: wrap;
       align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .hero-banner-text {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1rem, 1.75vw, 1.55rem);
+      font-weight: 800;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin: 0;
     }
 
     .btn-primary {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: var(--forest);
+      background: var(--fern);
       color: var(--cream);
-      padding: 0.8rem 1.6rem;
+      padding: 0.85rem 1.8rem;
       border-radius: 100px;
       text-decoration: none;
       font-family: 'DM Mono', monospace;
@@ -283,6 +184,7 @@
       text-transform: uppercase;
       transition: background 0.2s, transform 0.15s;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .btn-primary:hover { background: var(--moss); transform: translateY(-2px); }
@@ -305,40 +207,6 @@
     }
 
     .btn-ghost:hover { border-color: var(--fern); background: rgba(74,124,89,0.06); }
-
-    /* small quest pills below CTA */
-    .quest-pills {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: 1.8rem;
-    }
-
-    .quest-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      background: var(--cream);
-      border: 1px solid var(--card-border);
-      border-radius: 100px;
-      padding: 0.3rem 0.75rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.06em;
-      color: var(--warm-gray);
-      white-space: nowrap;
-    }
-
-    .quest-pill .pip {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--sage);
-      flex-shrink: 0;
-    }
-
-    .quest-pill .pip.amber  { background: var(--amber); }
-    .quest-pill .pip.coral  { background: var(--coral); }
-    .quest-pill .pip.forest { background: var(--forest); }
 
     /* ─── CARD GRID: OBSERVATIONS ─── */
     .obs-section {
@@ -777,58 +645,6 @@
       color: rgba(122,171,136,0.7);
     }
 
-    /* ─── HERO TAGLINE ROWS ─── */
-    .hero-tagline-rows {
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      margin-bottom: 1.4rem;
-    }
-
-    .tagline-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .tagline-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 60px;
-      height: 60px;
-      border-radius: 10px;
-      background: var(--cream);
-      border: 1.5px solid var(--card-border);
-      flex-shrink: 0;
-    }
-
-    .tagline-icon svg {
-      width: 30px;
-      height: 30px;
-    }
-
-    .tagline-icon.green  { background: rgba(74,124,89,0.22);  border-color: rgba(74,124,89,0.45); }
-    .tagline-icon.amber  { background: rgba(201,125,34,0.22); border-color: rgba(201,125,34,0.45); }
-    .tagline-icon.sage   { background: rgba(122,171,136,0.22); border-color: rgba(122,171,136,0.45); }
-    .tagline-icon.coral  { background: rgba(212,98,42,0.22);  border-color: rgba(212,98,42,0.45); }
-    .tagline-icon.sun    { background: rgba(240,180,41,0.22); border-color: rgba(240,180,41,0.45); }
-
-    .tagline-text {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(1.7rem, 3.1vw, 2.7rem);
-      font-weight: 800;
-      line-height: 1.06;
-      letter-spacing: -0.03em;
-      color: var(--cream);
-    }
-
-    .tagline-text .accent-green { color: var(--sage); }
-    .tagline-text .accent-amber { color: var(--amber); }
-    .tagline-text .accent-sage  { color: var(--sage); }
-    .tagline-text .accent-coral { color: var(--coral); }
-    .tagline-text .accent-sun   { color: var(--sun); }
-
     /* ─── MAP SPLIT ─── */
     .map-split {
       display: grid;
@@ -870,26 +686,11 @@
       nav { padding: 0.9rem 1.25rem; }
       .nav-links a:not(.nav-cta):not([href="about.html"]) { display: none; }
 
-      .hero {
-        grid-template-columns: 1fr;
-        min-height: auto;
-      }
-      .hero-right {
-        height: 60vw;
-        min-height: 260px;
-        order: -1;
-      }
-      /* Left-edge gradient doesn't apply when panels are stacked */
-      .hero-right::before { display: none; }
-
-      .hero-left {
-        padding: 2.2rem 1.25rem 2.8rem;
-      }
-      .hero-tagline-rows { gap: 0.5rem; }
-      .tagline-text {
-        font-size: clamp(1.4rem, 5.5vw, 2rem);
-      }
-      .hero-sub { font-size: 0.92rem; margin-bottom: 1.6rem; }
+      .hero { height: 70vw; min-height: 320px; }
+      .hero-brand { top: 1.2rem; left: 1.4rem; }
+      .hero-brand-name { font-size: clamp(1.2rem, 5vw, 1.8rem); }
+      .hero-banner { padding: 1rem 1.4rem; gap: 1rem; flex-direction: column; align-items: flex-start; }
+      .hero-banner-text { font-size: clamp(0.9rem, 3.5vw, 1.1rem); }
 
       .email-section { padding: 4rem 1.25rem; }
       footer { padding: 1.5rem 1.25rem; }
@@ -913,74 +714,16 @@
 
 <!-- ─── HERO ─── -->
 <section class="hero">
-  <div class="hero-left">
-    <p class="hero-eyebrow">Community birding platform</p>
+  <img src="howto.gif" alt="How to use Only Bird Nerds — 6 step animated guide" class="hero-gif" />
 
-    <div class="hero-tagline-rows" role="heading" aria-level="1">
-
-      <div class="tagline-row">
-        <div class="tagline-icon green" aria-hidden="true">
-          <!-- Binoculars icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="#4a7c59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="6.5" cy="13.5" r="3.5"/>
-            <circle cx="17.5" cy="13.5" r="3.5"/>
-            <path d="M3 7l3.5 6.5M21 7l-3.5 6.5M10 13.5h4M6.5 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2M14.5 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
-          </svg>
-        </div>
-        <span class="tagline-text"><span class="accent-green">Catch</span> them.</span>
-      </div>
-
-      <div class="tagline-row">
-        <div class="tagline-icon amber" aria-hidden="true">
-          <!-- Map pin icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="#c97d22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-            <circle cx="12" cy="9" r="2.5"/>
-          </svg>
-        </div>
-        <span class="tagline-text"><span class="accent-amber">Map</span> them.</span>
-      </div>
-
-      <div class="tagline-row">
-        <div class="tagline-icon sun" aria-hidden="true">
-          <!-- Trophy / quest icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/>
-            <path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/>
-            <path d="M12 17c-3.3 0-6-2.7-6-6V5h12v6c0 3.3-2.7 6-6 6z"/>
-            <path d="M12 17v4"/>
-            <path d="M8 21h8"/>
-          </svg>
-        </div>
-        <span class="tagline-text"><span class="accent-sun">Join</span> your next Quest.</span>
-      </div>
-
-      <div class="tagline-row">
-        <div class="tagline-icon coral" aria-hidden="true">
-          <!-- Camera with bird in flight icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="#d4622a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 4.5c-.8-1-1.5-1.5-3-1 .5.8 1 1.5 2 1.5" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M15 4.5c.8-1 1.5-1.5 3-1-.5.8-1 1.5-2 1.5" stroke-width="1.5" stroke-linecap="round"/>
-            <rect x="2" y="11" width="20" height="11" rx="2"/>
-            <path d="M8 11V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
-            <circle cx="12" cy="16.5" r="2.5"/>
-          </svg>
-        </div>
-        <span class="tagline-text"><span class="accent-coral">Share</span> your adventures.</span>
-      </div>
-
-    </div>
-
-    <p class="hero-sub">
-      Upload your observations. Watch it come alive on your map.
-    </p>
-
+  <div class="hero-brand">
+    <span class="hero-brand-name">Only Bird Nerds</span>
+    <span class="hero-brand-sub">Community birding platform</span>
   </div>
 
-  <div class="hero-right">
-    <div class="hero-drop-inner">
-      <img src="howto.gif" alt="How to use Only Bird Nerds — 6 step animated guide" class="hero-gif" />
-    </div>
+  <div class="hero-banner">
+    <p class="hero-banner-text">Upload your observations.<br>Watch it come alive on your map.</p>
+    <a href="app.html" class="btn-primary">Try your map &rarr;</a>
   </div>
 </section>
 

@@ -1,243 +1,171 @@
 """
-Build OnlyBirdNerds how-to GIF from screenshots.
+Build OnlyBirdNerds how-to GIF — full-bleed 1280x720 version.
+No text bar; screenshots fill the whole frame.
+A small step counter sits in the lower-right corner of each step frame.
 Output: howto.gif in the same folder.
-Frames:
-  0  — hero overlay on map photo
-  01 — Download eBird data
-  02 — Drop CSV on site
-  03 — Map appears
-  04 — Click a hotspot
-  05 — Quest on!
-  06 — Build a profile & share
 """
 from PIL import Image, ImageDraw, ImageFont
 import os
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 OUT    = os.path.join(FOLDER, 'howto.gif')
-W, H   = 800, 520
-IMG_H  = 340   # image area height
-BAR_H  = H - IMG_H  # text bar height = 180
+W, H   = 1280, 720
 
 # Brand palette
 BG    = (10,  16,  11)
 FERN  = (74,  124, 89)
 SAGE  = (122, 171, 136)
 CREAM = (247, 243, 236)
-MIST  = (200, 221, 208)
 DIM   = (28,  44,  33)
 
 STEPS = [
-    dict(file='1Ebird_download.png',
-         num='01', total='06',
-         title='Download your eBird data',
-         sub='My eBird  →  Download My Data  →  Save MyEBirdData.csv'),
-    dict(file='2EbirdCsv.png',
-         num='02', total='06',
-         title='Drop your CSV on the site',
-         sub='Everything runs in your browser — your data never leaves your device.'),
-    dict(file='3.1MapExample.png',
-         num='03', total='06',
-         title='Your personalized map is built!',
-         sub='Every hotspot, county & state — with rare bird photos on each marker.'),
-    dict(file='3.2MapExample.png',
-         num='04', total='06',
-         title='Click any hotspot to explore',
-         sub='See every species observed there, with photos and All About Birds links.'),
-    dict(file='4completequests.png',
-         num='05', total='06',
-         title='Quest on!',
-         sub='Earn badges and track progress toward your next birding milestone.'),
-    dict(file='5 Edit Map & Share .png',
-         num='06', total='06',
-         title='Build a profile & share',
-         sub='Save your look, then share selected trips — only if you want to.'),
+    dict(file='1Ebird_download.png',  num='01', total='06'),
+    dict(file='2EbirdCsv.png',        num='02', total='06'),
+    dict(file='3.1MapExample.png',    num='03', total='06'),
+    dict(file='3.2MapExample.png',    num='04', total='06'),
+    dict(file='4completequests.png',  num='05', total='06'),
+    dict(file='5 Edit Map & Share .png', num='06', total='06'),
 ]
-
 
 # ── Fonts ──────────────────────────────────────────────────────────────────
 def load_font(paths, size):
     for p in paths:
-        try:
-            return ImageFont.truetype(p, size)
-        except Exception:
-            pass
+        try: return ImageFont.truetype(p, size)
+        except: pass
     return ImageFont.load_default()
 
 BOLD = [r'C:\Windows\Fonts\segoeuib.ttf', r'C:\Windows\Fonts\arialbd.ttf']
 REG  = [r'C:\Windows\Fonts\segoeui.ttf',  r'C:\Windows\Fonts\arial.ttf']
 MONO = [r'C:\Windows\Fonts\consola.ttf',  r'C:\Windows\Fonts\cour.ttf']
 
-f_hero_small = load_font(REG,  16)
-f_hero_big   = load_font(BOLD, 36)
-f_num        = load_font(MONO, 11)
-f_title      = load_font(BOLD, 22)
-f_sub        = load_font(REG,  13)
-f_logo       = load_font(MONO, 10)
+f_step    = load_font(MONO, 13)
+f_h1      = load_font(BOLD, 52)
+f_h2      = load_font(REG,  20)
+f_url     = load_font(MONO, 13)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
-def fit_image(img, max_w, max_h):
+def cover_image(img, tw, th):
+    """Scale to cover (center-crop) the target rectangle."""
     w, h = img.size
-    scale = min(max_w / w, max_h / h)
-    return img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
-
-
-def cover_image(img, target_w, target_h):
-    """Scale to cover (crop to fill) the target rectangle."""
-    w, h = img.size
-    scale = max(target_w / w, target_h / h)
+    scale = max(tw / w, th / h)
     nw, nh = int(w * scale), int(h * scale)
     img = img.resize((nw, nh), Image.LANCZOS)
-    x = (nw - target_w) // 2
-    y = (nh - target_h) // 2
-    return img.crop((x, y, x + target_w, y + target_h))
+    x = (nw - tw) // 2
+    y = (nh - th) // 2
+    return img.crop((x, y, x + tw, y + th))
 
 
-def centered_text(draw, text, font, y, color):
-    bb = draw.textbbox((0, 0), text, font=font)
-    x  = (W - (bb[2] - bb[0])) // 2
-    draw.text((x + 1, y + 1), text, font=font, fill=(0, 0, 0))  # shadow
-    draw.text((x, y),         text, font=font, fill=color)
+def bottom_gradient(frame, strength=0.55):
+    """Burn a dark gradient into the bottom third for text readability."""
+    grad_h = H // 3
+    overlay = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    for y in range(grad_h):
+        alpha = int(strength * 255 * (y / grad_h))
+        draw.line([(0, H - grad_h + y), (W, H - grad_h + y)],
+                  fill=(4, 8, 5, alpha))
+    return Image.alpha_composite(frame.convert('RGBA'), overlay).convert('RGB')
+
+
+def text_shadow(draw, xy, text, font, fill):
+    x, y = xy
+    draw.text((x + 2, y + 2), text, font=font, fill=(0, 0, 0))
+    draw.text((x, y),         text, font=font, fill=fill)
 
 
 # ── Frame builders ─────────────────────────────────────────────────────────
 def make_hero_frame():
-    """Frame 0: full-bleed map photo + centered title overlay."""
-    raw  = Image.open(os.path.join(FOLDER, '0_HowTo.png')).convert('RGB')
-    base = cover_image(raw, W, H)
-
-    # Dark overlay blended over the photo
-    dark = Image.new('RGB', (W, H), (4, 8, 5))
-    frame = Image.blend(base, dark, alpha=0.58)
+    """Full-bleed map photo + centred title overlay."""
+    raw   = Image.open(os.path.join(FOLDER, '0_HowTo.png')).convert('RGB')
+    base  = cover_image(raw, W, H)
+    dark  = Image.new('RGB', (W, H), (4, 8, 5))
+    frame = Image.blend(base, dark, alpha=0.55)
+    frame = bottom_gradient(frame, strength=0.7)
     draw  = ImageDraw.Draw(frame)
 
-    cy = H // 2
+    cx, cy = W // 2, H // 2
 
-    # Top line
     line1 = 'How to create your'
-    bb1 = draw.textbbox((0, 0), line1, font=f_hero_small)
-    x1  = (W - (bb1[2] - bb1[0])) // 2
-    draw.text((x1, cy - 60), line1, font=f_hero_small, fill=SAGE)
+    bb1 = draw.textbbox((0, 0), line1, font=f_h2)
+    draw.text(((W - (bb1[2]-bb1[0])) // 2, cy - 72), line1, font=f_h2, fill=SAGE)
 
-    # Main title
     line2 = 'OnlyBirdNerds map!'
-    bb2 = draw.textbbox((0, 0), line2, font=f_hero_big)
-    x2  = (W - (bb2[2] - bb2[0])) // 2
-    draw.text((x2 + 2, cy - 20 + 2), line2, font=f_hero_big, fill=(0, 0, 0))   # shadow
-    draw.text((x2,     cy - 20),      line2, font=f_hero_big, fill=CREAM)
+    bb2 = draw.textbbox((0, 0), line2, font=f_h1)
+    text_shadow(draw, ((W - (bb2[2]-bb2[0])) // 2, cy - 30), line2, f_h1, CREAM)
 
-    # Divider
-    draw.line([(W//2 - 100, cy + 30), (W//2 + 100, cy + 30)], fill=FERN, width=1)
+    draw.line([(cx - 130, cy + 42), (cx + 130, cy + 42)], fill=FERN, width=1)
 
-    # Sub line
-    line3 = '6 simple steps  ·  all in your browser'
-    bb3 = draw.textbbox((0, 0), line3, font=f_logo)
-    x3  = (W - (bb3[2] - bb3[0])) // 2
-    draw.text((x3, cy + 42), line3, font=f_logo, fill=SAGE)
+    line3 = '6 simple steps  |  all in your browser'
+    bb3 = draw.textbbox((0, 0), line3, font=f_url)
+    draw.text(((W - (bb3[2]-bb3[0])) // 2, cy + 56), line3, font=f_url, fill=SAGE)
 
-    # URL bottom-right
     url = 'onlybirdnerds.com'
-    bb  = draw.textbbox((0, 0), url, font=f_logo)
-    draw.text((W - (bb[2]-bb[0]) - 16, H - 20), url, font=f_logo, fill=(55, 85, 62))
+    bb4 = draw.textbbox((0, 0), url, font=f_url)
+    draw.text((W - (bb4[2]-bb4[0]) - 24, H - 30), url, font=f_url, fill=(55, 85, 62))
 
     return frame
 
 
 def make_step_frame(step):
-    frame = Image.new('RGB', (W, H), BG)
+    """Full-bleed screenshot + small step counter in lower-right."""
+    raw   = Image.open(os.path.join(FOLDER, step['file'])).convert('RGB')
+    frame = cover_image(raw, W, H)
+    frame = bottom_gradient(frame, strength=0.45)
     draw  = ImageDraw.Draw(frame)
 
-    # ── Image area ──────────────────────────────────────
-    pad = 16
-    raw = Image.open(os.path.join(FOLDER, step['file'])).convert('RGB')
-    img = fit_image(raw, W - pad * 2, IMG_H - pad * 2)
-    iw, ih = img.size
-    ix = (W - iw) // 2
-    iy = pad + ((IMG_H - pad * 2) - ih) // 2
-
-    # Shadow
-    shadow = Image.new('RGB', (iw + 8, ih + 8), (5, 10, 6))
-    frame.paste(shadow, (ix - 4, iy - 4))
-    # Border
-    border = Image.new('RGB', (iw + 2, ih + 2), (38, 68, 48))
-    frame.paste(border, (ix - 1, iy - 1))
-    frame.paste(img, (ix, iy))
-
-    # ── Text bar ─────────────────────────────────────────
-    bar_y = IMG_H
-    bar   = Image.new('RGB', (W, BAR_H), DIM)
-    frame.paste(bar, (0, bar_y))
-    draw.line([(0, bar_y), (W, bar_y)], fill=FERN, width=2)
-
-    # Step pill
+    # Step pill — lower right
     pill = f"STEP  {step['num']} / {step['total']}"
-    draw.text((24, bar_y + 12), pill, font=f_num, fill=SAGE)
-
-    # Title
-    draw.text((25, bar_y + 31), step['title'], font=f_title, fill=(0, 0, 0))  # shadow
-    draw.text((24, bar_y + 30), step['title'], font=f_title, fill=CREAM)
-
-    # Sub
-    draw.text((24, bar_y + 62), step['sub'], font=f_sub, fill=MIST)
-
-    # URL watermark
-    url = 'onlybirdnerds.com'
-    bb  = draw.textbbox((0, 0), url, font=f_logo)
-    draw.text((W - (bb[2]-bb[0]) - 16, bar_y + BAR_H - 18), url, font=f_logo, fill=(50, 78, 58))
+    bb   = draw.textbbox((0, 0), pill, font=f_step)
+    pw   = bb[2] - bb[0]
+    px   = W - pw - 24
+    py   = H - 34
+    # Pill background
+    pad = 6
+    draw.rounded_rectangle([px - pad, py - pad + 2, px + pw + pad, py + (bb[3]-bb[1]) + pad],
+                            radius=5, fill=(10, 16, 11, 180))
+    draw.text((px, py), pill, font=f_step, fill=SAGE)
 
     return frame
 
 
-# ── Cross-fade helper ──────────────────────────────────────────────────────
-def fade_between(a, b, n=4):
-    """n blended RGB frames from a → b."""
-    return [Image.blend(a, b, alpha=(i+1)/(n+1)) for i in range(n)]
+# ── Cross-fade ─────────────────────────────────────────────────────────────
+def fade_between(a, b, n=3):
+    return [Image.blend(a, b, alpha=(i + 1) / (n + 1)) for i in range(n)]
 
 
 # ── Assemble ───────────────────────────────────────────────────────────────
 print('Building frames...')
-hero       = make_hero_frame()
+hero        = make_hero_frame()
 step_frames = [make_step_frame(s) for s in STEPS]
 
-HERO_MS  = 3200   # hero hold
-HOLD_MS  = 3000   # normal step hold
-LAST_MS  = 5000   # last step hold (longer read time)
-FADE_MS  = 75     # ms per fade frame (4 × 75 = 300ms transition)
+HERO_MS = 3200
+HOLD_MS = 3000
+LAST_MS = 5000
+FADE_MS = 70    # 5 frames × 70ms = 350ms transition
 
 frames, durations = [], []
 
 def add(f, ms):
-    frames.append(f.convert('P', palette=Image.ADAPTIVE, colors=220))
+    frames.append(f.convert('P', palette=Image.ADAPTIVE, colors=128))
     durations.append(ms)
 
-# Hero → step 1
 add(hero, HERO_MS)
-for f in fade_between(hero, step_frames[0]):
-    add(f, FADE_MS)
+for f in fade_between(hero, step_frames[0]): add(f, FADE_MS)
 
-# Steps with fades between
 for i, sf in enumerate(step_frames):
-    hold = LAST_MS if i == len(step_frames) - 1 else HOLD_MS
-    add(sf, hold)
+    add(sf, LAST_MS if i == len(step_frames) - 1 else HOLD_MS)
     if i < len(step_frames) - 1:
-        for f in fade_between(sf, step_frames[i + 1]):
-            add(f, FADE_MS)
+        for f in fade_between(sf, step_frames[i + 1]): add(f, FADE_MS)
 
-# Fade back to hero for seamless loop
-for f in fade_between(step_frames[-1], hero):
-    add(f, FADE_MS)
+for f in fade_between(step_frames[-1], hero): add(f, FADE_MS)
 
 print(f'Total frames: {len(frames)}')
-print('Saving GIF...')
+print('Saving GIF (this may take a minute at 1280x720)...')
 
 frames[0].save(
-    OUT,
-    save_all=True,
-    append_images=frames[1:],
-    duration=durations,
-    loop=0,
-    optimize=True,
+    OUT, save_all=True, append_images=frames[1:],
+    duration=durations, loop=0, optimize=True,
 )
 
 kb = os.path.getsize(OUT) // 1024
