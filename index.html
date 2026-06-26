@@ -97,107 +97,60 @@
 
     /* ─── HERO ─── */
     .hero {
-      position: relative;
-      width: 100%;
-      height: calc(100vh - 64px);
       margin-top: 64px;
-      overflow: hidden;
+      padding: 2.5rem 1rem 3.5rem;
       background: #0a100b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.75rem;
     }
 
-    /* Crossfade slideshow — full quality JPGs, no GIF color limits */
+    /* Square box — 80% of viewport width, never taller than visible space */
+    .hero-box {
+      --box: min(80vw, calc(100vh - 210px));
+      width: var(--box);
+      height: var(--box);
+      position: relative;
+      background: #0a100b;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(122,171,136,0.12);
+      flex-shrink: 0;
+    }
+
     .hero-slides {
       position: absolute;
       inset: 0;
     }
 
+    /* contain = whole image visible, no cropping */
     .hero-slide {
       position: absolute;
       inset: 0;
-      background-size: cover;
+      background-size: contain;
       background-position: center;
+      background-repeat: no-repeat;
+      background-color: #0a100b;
       opacity: 0;
       transition: opacity 0.65s ease-in-out;
     }
 
     .hero-slide.active { opacity: 1; }
 
-    /* Step label — lower right, above banner */
-    .hero-step-label {
-      position: absolute;
-      bottom: 5.5rem;
-      right: 2rem;
-      z-index: 10;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--sage);
-      background: rgba(8, 14, 9, 0.7);
-      padding: 0.3rem 0.7rem;
-      border-radius: 100px;
-      border: 1px solid rgba(122,171,136,0.2);
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      pointer-events: none;
-    }
-
-    .hero-step-label.visible { opacity: 1; }
-
-    /* Branding overlay — top left */
-    .hero-brand {
-      position: absolute;
-      top: 2.4rem;
-      left: 3rem;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      gap: 0.45rem;
-    }
-
-    .hero-brand-name {
+    /* Caption below the box — updates with each slide */
+    .slide-caption {
       font-family: 'Syne', sans-serif;
-      font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+      font-size: clamp(1rem, 1.8vw, 1.4rem);
       font-weight: 800;
       color: var(--cream);
-      letter-spacing: -0.02em;
-      line-height: 1;
-      text-shadow: 0 2px 18px rgba(0,0,0,0.75);
-    }
-
-    .hero-brand-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--sage);
-      text-shadow: 0 1px 8px rgba(0,0,0,0.7);
-    }
-
-    /* Bottom banner */
-    .hero-banner {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      z-index: 10;
-      background: rgba(8, 14, 9, 0.82);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid rgba(122,171,136,0.22);
-      padding: 1.4rem 3rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 2rem;
-    }
-
-    .hero-banner-text {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(1rem, 1.75vw, 1.55rem);
-      font-weight: 800;
-      color: var(--cream);
-      letter-spacing: -0.02em;
-      line-height: 1.25;
+      text-align: center;
       margin: 0;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      max-width: 80vw;
+      min-height: 1.8em;
+      transition: opacity 0.25s ease;
     }
 
     .btn-primary {
@@ -717,11 +670,9 @@
       nav { padding: 0.9rem 1.25rem; }
       .nav-links a:not(.nav-cta):not([href="about.html"]) { display: none; }
 
-      .hero { height: 70vw; min-height: 320px; }
-      .hero-brand { top: 1.2rem; left: 1.4rem; }
-      .hero-brand-name { font-size: clamp(1.2rem, 5vw, 1.8rem); }
-      .hero-banner { padding: 1rem 1.4rem; gap: 1rem; flex-direction: column; align-items: flex-start; }
-      .hero-banner-text { font-size: clamp(0.9rem, 3.5vw, 1.1rem); }
+      .hero { padding: 1.5rem 1rem 2.5rem; gap: 1.25rem; }
+      .hero-box { --box: min(92vw, calc(100vh - 180px)); }
+      .slide-caption { font-size: clamp(0.95rem, 4vw, 1.1rem); }
 
       .email-section { padding: 4rem 1.25rem; }
       footer { padding: 1.5rem 1.25rem; }
@@ -745,27 +696,19 @@
 
 <!-- ─── HERO ─── -->
 <section class="hero">
-  <div class="hero-slides">
-    <div class="hero-slide active" style="background-image:url('hero-slides/slide0.jpg')"></div>
-    <div class="hero-slide"        style="background-image:url('hero-slides/slide1.jpg')"></div>
-    <div class="hero-slide"        style="background-image:url('hero-slides/slide2.jpg')"></div>
-    <div class="hero-slide"        style="background-image:url('hero-slides/slide3.jpg')"></div>
-    <div class="hero-slide"        style="background-image:url('hero-slides/slide4.jpg')"></div>
-    <div class="hero-slide"        style="background-image:url('hero-slides/slide5.jpg')"></div>
-    <div class="hero-slide"        style="background-image:url('hero-slides/slide6.jpg')"></div>
+  <div class="hero-box">
+    <div class="hero-slides">
+      <div class="hero-slide active" style="background-image:url('hero-slides/slide0.jpg')"></div>
+      <div class="hero-slide"        style="background-image:url('hero-slides/slide1.jpg')"></div>
+      <div class="hero-slide"        style="background-image:url('hero-slides/slide2.jpg')"></div>
+      <div class="hero-slide"        style="background-image:url('hero-slides/slide3.jpg')"></div>
+      <div class="hero-slide"        style="background-image:url('hero-slides/slide4.jpg')"></div>
+      <div class="hero-slide"        style="background-image:url('hero-slides/slide5.jpg')"></div>
+      <div class="hero-slide"        style="background-image:url('hero-slides/slide6.jpg')"></div>
+    </div>
   </div>
-
-  <div class="hero-step-label" id="hero-step-label"></div>
-
-  <div class="hero-brand">
-    <span class="hero-brand-name">Only Bird Nerds</span>
-    <span class="hero-brand-sub">Community birding platform</span>
-  </div>
-
-  <div class="hero-banner">
-    <p class="hero-banner-text">Upload your observations.<br>Watch it come alive on your map.</p>
-    <a href="app.html" class="btn-primary">Try your map &rarr;</a>
-  </div>
+  <p class="slide-caption" id="slide-caption">Create your Only Bird Nerds interactive map!</p>
+  <a href="app.html" class="btn-primary">Try your map &rarr;</a>
 </section>
 
 
@@ -821,29 +764,35 @@
 
   // Hero slideshow
   (function() {
-    var slides   = document.querySelectorAll('.hero-slide');
-    var label    = document.getElementById('hero-step-label');
-    var current  = 0;
+    var slides  = document.querySelectorAll('.hero-slide');
+    var caption = document.getElementById('slide-caption');
+    var current = 0;
 
     var STEPS = [
-      { hold: 3500, text: '' },
-      { hold: 3000, text: 'STEP 01 / 06  —  Download your eBird data' },
-      { hold: 3000, text: 'STEP 02 / 06  —  Drop your CSV on the site' },
-      { hold: 3000, text: 'STEP 03 / 06  —  Your personalized map is built!' },
-      { hold: 3000, text: 'STEP 04 / 06  —  Click any hotspot to explore' },
-      { hold: 3000, text: 'STEP 05 / 06  —  Quest on!' },
-      { hold: 4500, text: 'STEP 06 / 06  —  Build a profile & share' },
+      { hold: 3500, text: 'Create your Only Bird Nerds interactive map!' },
+      { hold: 3000, text: 'Download your bird observation data from Ebird' },
+      { hold: 3000, text: 'Add the Ebird csv to the site (no data is shared publicly)' },
+      { hold: 3000, text: 'The map is built!' },
+      { hold: 3000, text: 'Zoom in to see the observations at any scale!' },
+      { hold: 3000, text: 'Earn badges & complete quests!' },
+      { hold: 4500, text: 'Share trips or select observations!' },
     ];
+
+    function setCaption(text) {
+      if (!caption) return;
+      caption.style.opacity = '0';
+      setTimeout(function() {
+        caption.textContent = text;
+        caption.style.opacity = '1';
+      }, 220);
+    }
 
     function goTo(idx) {
       slides[current].classList.remove('active');
       current = idx % slides.length;
       slides[current].classList.add('active');
       var step = STEPS[current];
-      if (label) {
-        label.textContent = step.text;
-        label.classList.toggle('visible', step.text !== '');
-      }
+      setCaption(step.text);
       setTimeout(function() { goTo(current + 1); }, step.hold);
     }
 
