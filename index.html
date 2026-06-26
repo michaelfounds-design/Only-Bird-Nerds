@@ -106,11 +106,10 @@
       gap: 1.75rem;
     }
 
-    /* Square box — 80% of viewport width, never taller than visible space */
+    /* Slideshow box — 80% of screen width, proportional height */
     .hero-box {
-      --box: min(80vw, calc(100vh - 210px));
-      width: var(--box);
-      height: var(--box);
+      width: 80vw;
+      aspect-ratio: 16 / 10;
       position: relative;
       background: #0a100b;
       border-radius: 10px;
@@ -671,7 +670,7 @@
       .nav-links a:not(.nav-cta):not([href="about.html"]) { display: none; }
 
       .hero { padding: 1.5rem 1rem 2.5rem; gap: 1.25rem; }
-      .hero-box { --box: min(92vw, calc(100vh - 180px)); }
+      .hero-box { width: 96vw; }
       .slide-caption { font-size: clamp(0.95rem, 4vw, 1.1rem); }
 
       .email-section { padding: 4rem 1.25rem; }
