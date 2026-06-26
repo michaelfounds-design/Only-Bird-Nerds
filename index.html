@@ -137,18 +137,24 @@
 
     .hero-slide.active { opacity: 1; }
 
-    /* Caption below the box — updates with each slide */
+    /* Caption at the top of the box, overlaid on the image */
     .slide-caption {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
       font-family: 'Syne', sans-serif;
-      font-size: clamp(1rem, 1.8vw, 1.4rem);
+      font-size: clamp(0.85rem, 1.5vw, 1.2rem);
       font-weight: 800;
       color: var(--cream);
       text-align: center;
       margin: 0;
       letter-spacing: -0.01em;
       line-height: 1.3;
-      max-width: 80vw;
-      min-height: 1.8em;
+      padding: 0.75rem 1.5rem;
+      background: rgba(8, 14, 9, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(122,171,136,0.18);
       transition: opacity 0.25s ease;
     }
 
@@ -696,6 +702,7 @@
 <!-- ─── HERO ─── -->
 <section class="hero">
   <div class="hero-box">
+    <p class="slide-caption" id="slide-caption">Create your Only Bird Nerds interactive map!</p>
     <div class="hero-slides">
       <div class="hero-slide active" style="background-image:url('hero-slides/slide0.jpg')"></div>
       <div class="hero-slide"        style="background-image:url('hero-slides/slide1.jpg')"></div>
@@ -706,7 +713,6 @@
       <div class="hero-slide"        style="background-image:url('hero-slides/slide6.jpg')"></div>
     </div>
   </div>
-  <p class="slide-caption" id="slide-caption">Create your Only Bird Nerds interactive map!</p>
   <a href="app.html" class="btn-primary">Try your map &rarr;</a>
 </section>
 
