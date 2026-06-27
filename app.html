@@ -881,7 +881,50 @@
       /* Photo dialog — full width */
       #photo-dialog { width: 94vw; left: 50%; }
     }
+    /* ── Auth form in profile panel ── */
+    #auth-section { padding: 0.5rem 0 1rem; }
+    #auth-section p { font-size: 0.72rem; color: rgba(200,221,208,0.65); margin-bottom: 1rem; line-height: 1.6; }
+    .auth-input {
+      width: 100%; padding: 0.55rem 0.75rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(122,171,136,0.25);
+      border-radius: 7px; color: var(--cream);
+      font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      margin-bottom: 0.5rem; outline: none;
+    }
+    .auth-input:focus { border-color: var(--sage); }
+    .auth-btn-row { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+    .auth-btn {
+      flex: 1; padding: 0.55rem 0.5rem;
+      border: none; border-radius: 7px; cursor: pointer;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      transition: background 0.2s;
+    }
+    #auth-signin-btn { background: var(--fern); color: var(--cream); }
+    #auth-signin-btn:hover { background: var(--moss); }
+    #auth-signup-btn { background: transparent; color: var(--sage); border: 1px solid rgba(122,171,136,0.3); }
+    #auth-signup-btn:hover { border-color: var(--sage); color: var(--cream); }
+    #auth-msg { font-size: 0.68rem; margin-top: 0.6rem; color: var(--sage); min-height: 1em; }
+    #auth-msg.error { color: #e57373; }
+    #auth-user-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 0.75rem; margin-bottom: 1rem;
+      background: rgba(74,124,89,0.1);
+      border: 1px solid rgba(122,171,136,0.2);
+      border-radius: 8px; gap: 0.5rem;
+    }
+    #auth-user-email { font-size: 0.65rem; color: var(--sage); font-family: 'DM Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #auth-signout-btn {
+      background: none; border: 1px solid rgba(122,171,136,0.25);
+      color: rgba(200,221,208,0.6); border-radius: 5px;
+      padding: 0.3rem 0.6rem; cursor: pointer;
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    #auth-signout-btn:hover { border-color: var(--sage); color: var(--cream); }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -1033,6 +1076,25 @@
 
   <!-- Profile tab -->
   <div class="ptab-body" id="ptab-profile">
+
+    <!-- Logged-out: auth form -->
+    <div id="auth-section">
+      <p>Sign in to save your customizations across devices and share your maps.</p>
+      <input class="auth-input" id="auth-email"    type="email"    placeholder="Email" autocomplete="email" />
+      <input class="auth-input" id="auth-password" type="password" placeholder="Password" autocomplete="current-password" />
+      <div class="auth-btn-row">
+        <button id="auth-signin-btn">Sign in</button>
+        <button id="auth-signup-btn">Sign up</button>
+      </div>
+      <p id="auth-msg"></p>
+    </div>
+
+    <!-- Logged-in: user bar -->
+    <div id="auth-user-bar" style="display:none">
+      <span id="auth-user-email"></span>
+      <button id="auth-signout-btn">Sign out</button>
+    </div>
+
     <div id="avatar-wrap">
       <div id="avatar-circle">
         <img id="avatar-img" src="" alt="" />
@@ -1187,6 +1249,13 @@ var photoManifest  = {};  // commonName → local path (from bird-photos/manifes
 var photoCache     = {};  // commonName → url (iNat fetched this session)
 var photoOverrides = {};  // commonName → url (user-set, persisted in localStorage)
 var locationPins   = {};  // rKey → pinned species name (persisted in localStorage)
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
+var _sb = window.supabase.createClient(
+  'https://xztnsuiyimhgsuoosdfp.supabase.co',
+  'sb_publishable_otg8GcWo5xOOUTOyet9Htg_CepqJwEG'
+);
+var currentUser = null;
 var photoQueue     = [];
 var photoFetching  = false;
 var photoTotal     = 0;
@@ -1207,8 +1276,14 @@ function loadOverrides() {
 }
 
 function saveOverrides() {
-  try { localStorage.setItem('obn_overrides', JSON.stringify(photoOverrides)); }
-  catch(e) {}
+  try { localStorage.setItem('obn_overrides', JSON.stringify(photoOverrides)); } catch(e) {}
+  if (!currentUser) return;
+  var rows = Object.keys(photoOverrides).map(function(sp) {
+    return { user_id: currentUser.id, species_name: sp, photo_url: photoOverrides[sp] };
+  });
+  _sb.from('photo_overrides').delete().eq('user_id', currentUser.id).then(function() {
+    if (rows.length) _sb.from('photo_overrides').insert(rows);
+  });
 }
 
 function getPhoto(name) {
@@ -1220,8 +1295,14 @@ function loadPins() {
   catch(e) { locationPins = {}; }
 }
 function savePins() {
-  try { localStorage.setItem('obn_pins', JSON.stringify(locationPins)); }
-  catch(e) {}
+  try { localStorage.setItem('obn_pins', JSON.stringify(locationPins)); } catch(e) {}
+  if (!currentUser) return;
+  var rows = Object.keys(locationPins).map(function(rkey) {
+    return { user_id: currentUser.id, rkey: rkey, species_name: locationPins[rkey] };
+  });
+  _sb.from('location_pins').delete().eq('user_id', currentUser.id).then(function() {
+    if (rows.length) _sb.from('location_pins').insert(rows);
+  });
 }
 // Like bestPhoto but respects a pinned species for a specific marker
 function markerPhoto(sm, rKey) {
@@ -2504,10 +2585,88 @@ document.getElementById('avatar-input').addEventListener('change', function() {
   };
   reader.readAsDataURL(file);
 });
+// ── Auth & cloud sync ─────────────────────────────────────────────────────────
+function updateAuthUI() {
+  var loggedIn = !!currentUser;
+  document.getElementById('auth-section').style.display  = loggedIn ? 'none' : '';
+  document.getElementById('auth-user-bar').style.display = loggedIn ? ''     : 'none';
+  if (currentUser) {
+    document.getElementById('auth-user-email').textContent = currentUser.email;
+  }
+}
+
+function showAuthMsg(text, isError) {
+  var el = document.getElementById('auth-msg');
+  el.textContent = text;
+  el.className = isError ? 'error' : '';
+}
+
+document.getElementById('auth-signin-btn').addEventListener('click', function() {
+  var email    = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  if (!email || !password) { showAuthMsg('Enter email and password.', true); return; }
+  showAuthMsg('Signing in…', false);
+  _sb.auth.signInWithPassword({ email: email, password: password }).then(function(res) {
+    if (res.error) showAuthMsg(res.error.message, true);
+    else showAuthMsg('', false);
+  });
+});
+
+document.getElementById('auth-signup-btn').addEventListener('click', function() {
+  var email    = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  if (!email || !password) { showAuthMsg('Enter email and password.', true); return; }
+  showAuthMsg('Creating account…', false);
+  _sb.auth.signUp({ email: email, password: password }).then(function(res) {
+    if (res.error) showAuthMsg(res.error.message, true);
+    else showAuthMsg('Check your email to confirm your account.', false);
+  });
+});
+
+document.getElementById('auth-signout-btn').addEventListener('click', function() {
+  _sb.auth.signOut().then(function() {
+    currentUser = null;
+    updateAuthUI();
+  });
+});
+
+function syncFromCloud() {
+  if (!currentUser) return;
+  _sb.from('photo_overrides').select('species_name, photo_url').then(function(res) {
+    if (res.data) {
+      res.data.forEach(function(row) { photoOverrides[row.species_name] = row.photo_url; });
+      try { localStorage.setItem('obn_overrides', JSON.stringify(photoOverrides)); } catch(e) {}
+    }
+  });
+  _sb.from('location_pins').select('rkey, species_name').then(function(res) {
+    if (res.data) {
+      res.data.forEach(function(row) { locationPins[row.rkey] = row.species_name; });
+      try { localStorage.setItem('obn_pins', JSON.stringify(locationPins)); } catch(e) {}
+    }
+  });
+  _sb.from('profiles').select('display_name').eq('id', currentUser.id).single().then(function(res) {
+    if (res.data && res.data.display_name) {
+      profileData.name = res.data.display_name;
+      loadProfileUI();
+    }
+  });
+}
+
+// Listen for login / logout
+_sb.auth.onAuthStateChange(function(event, session) {
+  currentUser = session ? session.user : null;
+  updateAuthUI();
+  if (currentUser) syncFromCloud();
+});
+
+// Profile save → also write to Supabase
 document.getElementById('profile-save-btn').addEventListener('click', function() {
   profileData.name = document.getElementById('profile-name').value.trim();
   profileData.bio  = document.getElementById('profile-bio').value.trim();
   localStorage.setItem('obn_profile', JSON.stringify(profileData));
+  if (currentUser) {
+    _sb.from('profiles').upsert({ id: currentUser.id, display_name: profileData.name });
+  }
   var msg = document.getElementById('profile-saved-msg');
   msg.style.opacity = '1';
   setTimeout(function() { msg.style.opacity = '0'; }, 1800);
