@@ -504,7 +504,7 @@
       font-family: 'DM Mono', monospace;
       font-size: 0.7rem; letter-spacing: 0.05em;
       cursor: pointer; white-space: nowrap;
-      display: none; align-items: center; justify-content: center; gap: 0.45rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.45rem;
       transition: border-color 0.2s, background 0.2s;
     }
     #profile-btn:hover { border-color: rgba(122,171,136,0.45); background: rgba(20,36,24,0.95); }
@@ -2303,7 +2303,7 @@ function showApp() {
   document.getElementById('upload-screen').style.display = 'none';
   document.getElementById('app-screen').style.display    = 'block';
   document.getElementById('layer-bar').style.display     = 'flex';
-  document.getElementById('profile-btn').style.display   = 'flex';
+
   document.getElementById('panel-toggle').classList.add('visible');
 }
 
@@ -2805,10 +2805,6 @@ function buildDownloadHTML(locs, stats) {
 loadOverrides();
 loadPins();
 
-// Auto-open profile panel if linked from landing page
-if (new URLSearchParams(window.location.search).get('profile') === '1') {
-  openProfilePanel('profile');
-}
 
 // Pick up CSV dropped on the landing page hero zone
 (function() {
