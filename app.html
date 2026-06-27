@@ -494,20 +494,45 @@
     .share-action.works h4 { color: var(--sage); }
     /* Profile trigger button */
     #profile-btn {
-      position: fixed; top: 12px; right: 14px;
+      position: fixed; top: 10px; right: 14px;
       z-index: 1000;
-      width: 34px; height: 34px; border-radius: 50%;
+      height: 40px; padding: 0 16px;
+      border-radius: 100px;
       background: rgba(10,16,11,0.92);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(200,221,208,0.7);
-      font-size: 1rem; cursor: pointer;
-      display: none; align-items: center; justify-content: center;
-      transition: border-color 0.2s, color 0.2s;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(200,221,208,0.85);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem; letter-spacing: 0.05em;
+      cursor: pointer; white-space: nowrap;
+      display: none; align-items: center; justify-content: center; gap: 0.45rem;
+      transition: border-color 0.2s, background 0.2s;
     }
-    #profile-btn:hover { border-color: rgba(122,171,136,0.5); color: var(--sage); }
+    #profile-btn:hover { border-color: rgba(122,171,136,0.45); background: rgba(20,36,24,0.95); }
+    #profile-btn .btn-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(200,221,208,0.3); flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    #profile-btn.signed-in { border-color: rgba(122,171,136,0.35); }
+    #profile-btn.signed-in .btn-dot { background: var(--sage); }
+
+    /* Cloud-save toast */
+    #cloud-toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      z-index: 3000;
+      background: rgba(10,16,11,0.95);
+      border: 1px solid rgba(122,171,136,0.28);
+      border-radius: 8px; padding: 0.5rem 1rem;
+      font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--sage);
+      pointer-events: none; opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    #cloud-toast.show { opacity: 1; transform: translateY(0); }
+
     @media (max-width: 768px) {
       #profile-panel { width: 100%; }
-      #profile-btn { top: 10px; right: 10px; }
+      #profile-btn { top: 8px; right: 10px; height: 36px; padding: 0 12px; }
     }
 
     /* ── Layer bar ── */
@@ -1061,7 +1086,11 @@
 </div>
 
 <!-- ── Profile trigger ── -->
-<button id="profile-btn" title="Profile &amp; Sharing">👤</button>
+<button id="profile-btn" title="Profile &amp; Sharing">
+  <span class="btn-dot"></span>
+  <span id="profile-btn-label">Sign In</span>
+</button>
+<div id="cloud-toast">✓ Saved to cloud</div>
 
 <!-- ── Profile panel ── -->
 <div id="profile-overlay"></div>
@@ -1278,6 +1307,7 @@ function loadOverrides() {
 function saveOverrides() {
   try { localStorage.setItem('obn_overrides', JSON.stringify(photoOverrides)); } catch(e) {}
   if (!currentUser) return;
+  showCloudToast();
   var rows = Object.keys(photoOverrides).map(function(sp) {
     return { user_id: currentUser.id, species_name: sp, photo_url: photoOverrides[sp] };
   });
@@ -1297,6 +1327,7 @@ function loadPins() {
 function savePins() {
   try { localStorage.setItem('obn_pins', JSON.stringify(locationPins)); } catch(e) {}
   if (!currentUser) return;
+  showCloudToast();
   var rows = Object.keys(locationPins).map(function(rkey) {
     return { user_id: currentUser.id, rkey: rkey, species_name: locationPins[rkey] };
   });
@@ -2590,9 +2621,24 @@ function updateAuthUI() {
   var loggedIn = !!currentUser;
   document.getElementById('auth-section').style.display  = loggedIn ? 'none' : '';
   document.getElementById('auth-user-bar').style.display = loggedIn ? ''     : 'none';
-  if (currentUser) {
+  var btn   = document.getElementById('profile-btn');
+  var label = document.getElementById('profile-btn-label');
+  if (loggedIn) {
+    btn.classList.add('signed-in');
+    label.textContent = 'Profile';
     document.getElementById('auth-user-email').textContent = currentUser.email;
+  } else {
+    btn.classList.remove('signed-in');
+    label.textContent = 'Sign In';
   }
+}
+
+var _toastTimer;
+function showCloudToast() {
+  var el = document.getElementById('cloud-toast');
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2200);
 }
 
 function showAuthMsg(text, isError) {
@@ -2758,6 +2804,11 @@ function buildDownloadHTML(locs, stats) {
 // ─────────────────────────────────────────
 loadOverrides();
 loadPins();
+
+// Auto-open profile panel if linked from landing page
+if (new URLSearchParams(window.location.search).get('profile') === '1') {
+  openProfilePanel('profile');
+}
 
 // Pick up CSV dropped on the landing page hero zone
 (function() {
