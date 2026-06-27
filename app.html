@@ -976,6 +976,12 @@
 
     <input type="file" id="csv-input" accept=".csv" />
     <p class="upload-note">In eBird: My eBird → Download My Data → MyEBirdData.csv</p>
+
+    <div id="csv-loading" style="display:none; margin-top:2rem; text-align:center;">
+      <p style="font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--sage); letter-spacing:0.08em;">
+        Loading your saved map…
+      </p>
+    </div>
   </div>
 </div>
 
@@ -1427,29 +1433,32 @@ function fetchInat(name, retries, cb) {
 // ─────────────────────────────────────────
 // CSV PARSING
 // ─────────────────────────────────────────
+function onCSVParsed(res) {
+  allRecords = normalize(res.data);
+  computeLifers(allRecords);
+  computeGlobalFreq(allRecords);
+  speciesList = uniqueSpecies(allRecords);
+  buildStateCountyMap(allRecords);
+  currentStats = computeStats(allRecords);
+  showApp();
+  buildAutocomplete();
+  buildDropdowns();
+  renderPanelQB();
+  setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
+}
+
 function parseCSV(file) {
+  // Save to Supabase Storage so signed-in users don't need to re-upload
+  if (currentUser) {
+    _sb.storage.from('BirdNerd_1.0')
+      .upload(currentUser.id + '/MyEBirdData.csv', file, { upsert: true })
+      .then(function(res) {
+        if (!res.error) showCloudToast('✓ Map saved to cloud');
+      });
+  }
   Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: function(res) {
-      allRecords = normalize(res.data);
-      computeLifers(allRecords);
-      computeGlobalFreq(allRecords);
-      speciesList = uniqueSpecies(allRecords);
-      buildStateCountyMap(allRecords);
-      currentStats = computeStats(allRecords);
-      showApp();
-      buildAutocomplete();
-      buildDropdowns();
-      renderPanelQB();
-      // Defer map init so the browser has time to lay out the flex container
-      // before Leaflet reads its dimensions
-      setTimeout(function() {
-        initMap();
-        updateMap();
-        queuePhotos(speciesList.slice());
-      }, 50);
-    },
+    header: true, skipEmptyLines: true,
+    complete: onCSVParsed,
     error: function(e) { alert('Could not read CSV: ' + e.message); }
   });
 }
@@ -2696,6 +2705,26 @@ function syncFromCloud() {
       loadProfileUI();
     }
   });
+  fetchStoredCSV();
+}
+
+function fetchStoredCSV() {
+  if (!currentUser) return;
+  var loadingEl = document.getElementById('csv-loading');
+  if (loadingEl) loadingEl.style.display = 'block';
+  _sb.storage.from('BirdNerd_1.0')
+    .download(currentUser.id + '/MyEBirdData.csv')
+    .then(function(res) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (res.error || !res.data) return; // no stored CSV yet
+      res.data.text().then(function(text) {
+        Papa.parse(text, {
+          header: true, skipEmptyLines: true,
+          complete: onCSVParsed,
+          error: function(e) { console.warn('Auto-load failed:', e.message); }
+        });
+      });
+    });
 }
 
 // Listen for login / logout
@@ -2811,22 +2840,7 @@ loadPins();
   var pending = null;
   try { pending = sessionStorage.getItem('pendingCSV'); sessionStorage.removeItem('pendingCSV'); } catch(e) {}
   if (pending) {
-    Papa.parse(pending, {
-      header: true, skipEmptyLines: true,
-      complete: function(res) {
-        allRecords = normalize(res.data);
-        computeLifers(allRecords);
-        computeGlobalFreq(allRecords);
-        speciesList = uniqueSpecies(allRecords);
-        buildStateCountyMap(allRecords);
-        currentStats = computeStats(allRecords);
-        showApp();
-        buildAutocomplete();
-        buildDropdowns();
-        renderPanelQB();
-        setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
-      }
-    });
+    Papa.parse(pending, { header: true, skipEmptyLines: true, complete: onCSVParsed });
   }
 })();
 </script>
