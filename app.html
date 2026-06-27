@@ -1195,18 +1195,12 @@
     <img id="photo-preview" src="" alt="preview" />
   </div>
 
-  <div class="dlg-label">Macaulay Library asset ID</div>
+  <div class="dlg-label">Macaulay Library link or any image URL</div>
   <div class="dlg-row">
-    <input class="dlg-input" id="dlg-asset-id" type="text" placeholder="e.g. 630168151"
-           oninput="photoDialog.previewAsset(this.value)" />
-    <button class="dlg-btn" onclick="photoDialog.applyAsset()">Use</button>
-  </div>
-
-  <div class="dlg-label">Or paste any image URL</div>
-  <div class="dlg-row">
-    <input class="dlg-input" id="dlg-url" type="text" placeholder="https://…"
-           oninput="photoDialog.previewUrl(this.value)" />
-    <button class="dlg-btn" onclick="photoDialog.applyUrl()">Apply</button>
+    <input class="dlg-input" id="dlg-photo-input" type="text"
+           placeholder="https://macaulaylibrary.org/asset/…"
+           oninput="photoDialog.previewInput(this.value)" />
+    <button class="dlg-btn" onclick="photoDialog.applyInput()">Use</button>
   </div>
 
   <div class="dlg-footer">
@@ -2252,12 +2246,21 @@ var photoDialog = (function() {
     if (map) map.closePopup();
   }
 
+  function resolveInput(v) {
+    v = v.trim();
+    if (!v) return null;
+    // Extract numeric asset ID from any Macaulay Library URL or bare ID
+    var m = v.match(/(?:asset[\/=])(\d{4,})|^(\d{4,})$/);
+    if (m) return mlUrl(m[1] || m[2]);
+    // Fall back to direct image URL
+    return v.startsWith('http') ? v : null;
+  }
+
   return {
     open: function(name) {
       sp = name;
       document.getElementById('photo-dialog-sp').textContent = name;
-      document.getElementById('dlg-asset-id').value = '';
-      document.getElementById('dlg-url').value       = '';
+      document.getElementById('dlg-photo-input').value = '';
       showPrev(getPhoto(name));
       document.getElementById('photo-dialog').style.display    = 'block';
       document.getElementById('photo-dialog-bg').style.display = 'block';
@@ -2267,16 +2270,12 @@ var photoDialog = (function() {
       document.getElementById('photo-dialog-bg').style.display = 'none';
       sp = null;
     },
-    previewAsset: function(v) {
-      if (/^\d+$/.test(v.trim())) showPrev(mlUrl(v));
+    previewInput: function(v) {
+      var url = resolveInput(v);
+      if (url) showPrev(url);
     },
-    applyAsset: function() {
-      var id = document.getElementById('dlg-asset-id').value.trim();
-      if (id && sp) { apply(sp, mlUrl(id)); this.close(); }
-    },
-    previewUrl: function(v) { if (v.trim()) showPrev(v.trim()); },
-    applyUrl: function() {
-      var url = document.getElementById('dlg-url').value.trim();
+    applyInput: function() {
+      var url = resolveInput(document.getElementById('dlg-photo-input').value);
       if (url && sp) { apply(sp, url); this.close(); }
     },
     reset: function() {
@@ -2687,12 +2686,7 @@ document.getElementById('auth-signout-btn').addEventListener('click', function()
 
 function syncFromCloud() {
   if (!currentUser) return;
-  _sb.from('photo_overrides').select('species_name, photo_url').then(function(res) {
-    if (res.data) {
-      res.data.forEach(function(row) { photoOverrides[row.species_name] = row.photo_url; });
-      try { localStorage.setItem('obn_overrides', JSON.stringify(photoOverrides)); } catch(e) {}
-    }
-  });
+  // Load pins and profile in parallel (don't block CSV load)
   _sb.from('location_pins').select('rkey, species_name').then(function(res) {
     if (res.data) {
       res.data.forEach(function(row) { locationPins[row.rkey] = row.species_name; });
@@ -2705,7 +2699,14 @@ function syncFromCloud() {
       loadProfileUI();
     }
   });
-  fetchStoredCSV();
+  // Load overrides FIRST, then fetch CSV so markers are built with correct photos
+  _sb.from('photo_overrides').select('species_name, photo_url').then(function(res) {
+    if (res.data) {
+      res.data.forEach(function(row) { photoOverrides[row.species_name] = row.photo_url; });
+      try { localStorage.setItem('obn_overrides', JSON.stringify(photoOverrides)); } catch(e) {}
+    }
+    fetchStoredCSV();
+  });
 }
 
 function fetchStoredCSV() {
