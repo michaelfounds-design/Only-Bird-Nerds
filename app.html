@@ -594,6 +594,161 @@
       transition: all 0.15s;
     }
     .map-action-btn:hover { background: rgba(45,90,61,0.95); color: var(--cream); border-color: var(--sage); }
+    /* ════════════════════════════════════════
+       MY AVIARY OVERLAY
+    ════════════════════════════════════════ */
+    #aviary-overlay {
+      display: none; position: fixed; inset: 0;
+      z-index: 2500; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      align-items: flex-start; justify-content: center;
+      overflow-y: auto;
+    }
+    #aviary-overlay.open { display: flex; }
+    #aviary-panel {
+      width: 100%; max-width: 900px;
+      min-height: 100vh;
+      background: #060d08;
+      padding: 0 0 4rem;
+      position: relative;
+    }
+    /* Header */
+    .av-hdr {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      padding: 2.2rem 2rem 1.4rem;
+      border-bottom: 1px solid rgba(122,171,136,0.1);
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(6,13,8,0.97); backdrop-filter: blur(12px);
+    }
+    .av-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: 0.55rem;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--sage); margin-bottom: 0.25rem;
+    }
+    .av-title {
+      font-family: 'Syne', sans-serif; font-size: 1.8rem;
+      font-weight: 800; color: var(--cream); letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .av-subtitle {
+      font-family: 'Lora', serif; font-style: italic;
+      font-size: 0.85rem; color: rgba(200,221,208,0.45); margin-top: 0.3rem;
+    }
+    #aviary-close {
+      background: none; border: 1px solid rgba(122,171,136,0.22);
+      color: rgba(200,221,208,0.5); border-radius: 50%;
+      width: 36px; height: 36px; cursor: pointer; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    #aviary-close:hover { color: var(--cream); border-color: var(--sage); }
+    /* Aviary trigger */
+    #aviary-btn {
+      display: none; width: calc(100% - 1.8rem);
+      margin: 0.55rem 0.9rem 0;
+      background: rgba(74,124,89,0.1);
+      border: 1px solid rgba(122,171,136,0.22);
+      border-radius: 8px;
+      color: var(--sage); font-family: 'DM Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.55rem 0.75rem;
+      cursor: pointer; text-align: left;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    #aviary-btn:hover { background: rgba(74,124,89,0.18); border-color: rgba(122,171,136,0.4); color: var(--cream); }
+    /* Hero stats */
+    .av-heroes {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px; background: rgba(122,171,136,0.08);
+      border-bottom: 1px solid rgba(122,171,136,0.08);
+      margin-bottom: 0;
+    }
+    .av-hero {
+      padding: 1.5rem 1.2rem;
+      background: #060d08;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+    .av-hero-icon { font-size: 1.4rem; margin-bottom: 0.5rem; line-height: 1; }
+    .av-hero-val {
+      font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
+      color: var(--sun); line-height: 1; margin-bottom: 0.2rem;
+    }
+    .av-hero-lbl {
+      font-family: 'DM Mono', monospace; font-size: 0.5rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(200,221,208,0.4);
+    }
+    /* Body layout */
+    .av-body { padding: 1.6rem 1.4rem 0; display: flex; flex-direction: column; gap: 1.4rem; }
+    .av-section {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(122,171,136,0.1);
+      border-radius: 12px; padding: 1.2rem 1.3rem;
+    }
+    .av-section-label {
+      font-family: 'DM Mono', monospace; font-size: 0.52rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--sage); margin-bottom: 0.9rem;
+    }
+    .av-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+    .av-three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+    /* SVG charts */
+    .av-chart { width: 100%; display: block; overflow: visible; }
+    /* Bar list rows */
+    .av-bar-row { margin-bottom: 0.55rem; }
+    .av-bar-row:last-child { margin-bottom: 0; }
+    .av-bar-meta {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 0.2rem;
+    }
+    .av-bar-name {
+      font-family: 'Lora', serif; font-size: 0.75rem; color: var(--cream);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72%;
+    }
+    .av-bar-val {
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      color: rgba(200,221,208,0.45); flex-shrink: 0;
+    }
+    .av-bar-track {
+      height: 3px; background: rgba(122,171,136,0.1);
+      border-radius: 2px; overflow: hidden;
+    }
+    .av-bar-fill { height: 100%; border-radius: 2px; }
+    /* Rarest list */
+    .av-rare-row {
+      display: flex; align-items: center; gap: 0.55rem;
+      padding: 0.3rem 0; border-bottom: 1px solid rgba(122,171,136,0.07);
+    }
+    .av-rare-row:last-child { border-bottom: none; }
+    .av-rare-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .av-rare-name {
+      font-family: 'Lora', serif; font-size: 0.76rem; color: var(--cream);
+      flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .av-rare-pct {
+      font-family: 'DM Mono', monospace; font-size: 0.56rem;
+      color: rgba(200,221,208,0.35);
+    }
+    /* Best year callout */
+    .av-best-year {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(240,180,41,0.08); border: 1px solid rgba(240,180,41,0.2);
+      border-radius: 100px; padding: 0.25rem 0.75rem; margin-bottom: 0.9rem;
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.06em; color: var(--sun);
+    }
+    /* Mobile */
+    @media (max-width: 600px) {
+      .av-hdr { padding: 1.4rem 1rem 1rem; }
+      .av-title { font-size: 1.4rem; }
+      .av-body { padding: 1rem 0.75rem 0; gap: 1rem; }
+      .av-heroes { grid-template-columns: repeat(2, 1fr); }
+      .av-hero { padding: 1.1rem 0.75rem; }
+      .av-hero-val { font-size: 1.6rem; }
+      .av-two-col, .av-three-col { grid-template-columns: 1fr; }
+    }
     /* ── Trip dialog public checkbox ── */
     .trip-public-row {
       display: flex; align-items: center; gap: 0.55rem;
@@ -1187,6 +1342,7 @@
         <div class="stat-lbl">Lists</div>
       </div>
     </div>
+    <button id="aviary-btn" onclick="openAviary()">🦅 My Aviary — your birding in numbers →</button>
 
     <div class="panel-scroll">
       <div class="sec-label">Species Search</div>
@@ -1340,6 +1496,22 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── My Aviary overlay ── -->
+<div id="aviary-overlay">
+  <div id="aviary-panel">
+    <div class="av-hdr">
+      <div>
+        <div class="av-eyebrow">Only Bird Nerds</div>
+        <div class="av-title">My Aviary</div>
+        <div class="av-subtitle" id="aviary-subtitle"></div>
+      </div>
+      <button id="aviary-close" onclick="closeAviary()">✕</button>
+    </div>
+    <div id="aviary-heroes" class="av-heroes"></div>
+    <div class="av-body" id="aviary-body"></div>
   </div>
 </div>
 
@@ -2665,7 +2837,10 @@ function showApp() {
   document.getElementById('app-screen').style.display    = 'block';
   document.getElementById('layer-bar').style.display     = 'flex';
   document.getElementById('panel-toggle').classList.add('visible');
-  if (!_tripViewMode) document.getElementById('map-actions').classList.add('visible');
+  if (!_tripViewMode) {
+    document.getElementById('map-actions').classList.add('visible');
+    document.getElementById('aviary-btn').style.display = 'block';
+  }
 }
 
 // ─────────────────────────────────────────
@@ -2887,6 +3062,310 @@ function renderPanelQB() {
   document.getElementById('panel-badges-grid').innerHTML = bHtml;
 
   document.getElementById('panel-qb').style.display = 'block';
+}
+
+// ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// MY AVIARY
+// ─────────────────────────────────────────
+
+function openAviary() {
+  if (!allRecords.length) return;
+  var data = computeAviary();
+  renderAviaryHeroes(data);
+  document.getElementById('aviary-body').innerHTML = renderAviaryBody(data);
+  var dates = allRecords.map(function(r){return r.date;}).filter(Boolean).sort();
+  var sub = '';
+  if (dates.length) {
+    var y0 = dates[0].slice(0,4), y1 = dates[dates.length-1].slice(0,4);
+    sub = y0 === y1 ? y0 : y0 + ' – ' + y1;
+  }
+  document.getElementById('aviary-subtitle').textContent = sub;
+  document.getElementById('aviary-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAviary() {
+  document.getElementById('aviary-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAviary();
+});
+document.getElementById('aviary-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeAviary();
+});
+
+function computeAviary() {
+  var totalObs = allRecords.length;
+  var totalSp  = speciesList.length;
+  var totalLf  = Object.keys(liferSet).length;
+
+  // First-seen date per species → year of first sighting
+  var firstSeen = {};
+  allRecords.forEach(function(r) {
+    if (!r.date || !r.name) return;
+    if (!firstSeen[r.name] || r.date < firstSeen[r.name]) firstSeen[r.name] = r.date;
+  });
+
+  // Per-year buckets
+  var yearBuckets = {};
+  allRecords.forEach(function(r) {
+    if (!r.year) return;
+    var y = String(r.year);
+    if (!yearBuckets[y]) yearBuckets[y] = { obs: 0, sp: {}, newSp: 0 };
+    yearBuckets[y].obs++;
+    yearBuckets[y].sp[r.name] = true;
+  });
+  // New species per year
+  Object.keys(firstSeen).forEach(function(sp) {
+    var yr = firstSeen[sp].slice(0,4);
+    if (yearBuckets[yr]) yearBuckets[yr].newSp++;
+  });
+  var sortedYears = Object.keys(yearBuckets).sort();
+  var cum = 0;
+  var yearRows = sortedYears.map(function(y) {
+    cum += yearBuckets[y].newSp;
+    return { year: y, obs: yearBuckets[y].obs,
+             sp: Object.keys(yearBuckets[y].sp).length,
+             newSp: yearBuckets[y].newSp, cumSp: cum };
+  });
+
+  // Monthly species count (unique species per month across all years)
+  var monthSp = {};
+  for (var m = 1; m <= 12; m++) monthSp[m] = {};
+  allRecords.forEach(function(r) {
+    if (r.month) monthSp[r.month][r.name] = true;
+  });
+  var monthlyCounts = [];
+  for (var m = 1; m <= 12; m++) monthlyCounts.push(Object.keys(monthSp[m]).length);
+
+  // Top states
+  var stateSp = {};
+  allRecords.forEach(function(r) {
+    if (!r.state) return;
+    if (!stateSp[r.state]) stateSp[r.state] = {};
+    stateSp[r.state][r.name] = true;
+  });
+  var topStates = Object.keys(stateSp)
+    .map(function(s) { return { label: s, value: Object.keys(stateSp[s]).length }; })
+    .sort(function(a,b){return b.value-a.value;}).slice(0,8);
+
+  // Top locations
+  var locSp = {};
+  allRecords.forEach(function(r) {
+    var key = r.location || (r.county && r.state ? r.county+', '+r.state : r.state || '?');
+    if (!key) return;
+    if (!locSp[key]) locSp[key] = {};
+    locSp[key][r.name] = true;
+  });
+  var topLocs = Object.keys(locSp)
+    .map(function(l) { return { label: l, value: Object.keys(locSp[l]).length }; })
+    .sort(function(a,b){return b.value-a.value;}).slice(0,8);
+
+  // Rarest lifers (lowest globalFreq = seen least often in your own data)
+  var maxFreq = Math.max.apply(null, Object.values(globalFreq).concat([1]));
+  var rarestFinds = speciesList
+    .filter(function(sp) { return liferSet[sp]; })
+    .map(function(sp) { return { name: sp, freq: globalFreq[sp] || 0 }; })
+    .sort(function(a,b){return a.freq-b.freq;})
+    .slice(0,12);
+
+  // Best year for new species
+  var bestYear = yearRows.reduce(function(best,y){
+    return y.newSp > (best ? best.newSp : 0) ? y : best;
+  }, null);
+
+  return { totalObs, totalSp, totalLf, sortedYears, yearRows,
+           monthlyCounts, topStates, topLocs, rarestFinds, bestYear, maxFreq };
+}
+
+function renderAviaryHeroes(d) {
+  var el = document.getElementById('aviary-heroes');
+  el.innerHTML = [
+    { icon:'🐦', val: d.totalSp,  lbl:'Species'     },
+    { icon:'⭐', val: d.totalLf,  lbl:'Lifers'       },
+    { icon:'📋', val: d.totalObs, lbl:'Observations' },
+    { icon:'📅', val: d.sortedYears.length, lbl:'Years Active' },
+  ].map(function(h) {
+    return '<div class="av-hero">'
+      + '<div class="av-hero-icon">' + h.icon + '</div>'
+      + '<div class="av-hero-val">' + h.val.toLocaleString() + '</div>'
+      + '<div class="av-hero-lbl">' + h.lbl + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderAviaryBody(d) {
+  var html = '';
+
+  // ── Life List Growth (line chart) ──
+  if (d.yearRows.length > 1) {
+    html += '<div class="av-section">';
+    html += '<div class="av-section-label">Life List Growth</div>';
+    if (d.bestYear) {
+      html += '<div class="av-best-year">🏆 Best year: ' + d.bestYear.year
+            + ' — ' + d.bestYear.newSp + ' new species</div>';
+    }
+    html += avLineChart(d.yearRows);
+    html += '</div>';
+  }
+
+  // ── Year by Year | Monthly Rhythm ──
+  html += '<div class="av-two-col">';
+
+  // Year breakdown (horizontal bars — new species per year)
+  html += '<div class="av-section">';
+  html += '<div class="av-section-label">New Species Per Year</div>';
+  var maxNew = Math.max.apply(null, d.yearRows.map(function(y){return y.newSp;}));
+  d.yearRows.slice().reverse().forEach(function(y) {
+    var pct = maxNew > 0 ? (y.newSp / maxNew * 100).toFixed(1) : 0;
+    var col = y.newSp > 50 ? '#f0b429' : y.newSp > 20 ? '#7aab88' : '#4a7c59';
+    html += '<div class="av-bar-row">'
+      + '<div class="av-bar-meta">'
+      + '<span class="av-bar-name">' + y.year + '</span>'
+      + '<span class="av-bar-val">+' + y.newSp + ' sp · ' + y.obs.toLocaleString() + ' obs</span>'
+      + '</div>'
+      + '<div class="av-bar-track"><div class="av-bar-fill" style="width:' + pct + '%;background:' + col + '"></div></div>'
+      + '</div>';
+  });
+  html += '</div>';
+
+  // Monthly rhythm
+  html += '<div class="av-section">';
+  html += '<div class="av-section-label">Monthly Rhythm</div>';
+  html += avMonthChart(d.monthlyCounts);
+  html += '</div>';
+
+  html += '</div>'; // end av-two-col
+
+  // ── Top States | Top Spots | Rarest Finds ──
+  html += '<div class="av-three-col">';
+
+  html += '<div class="av-section">';
+  html += '<div class="av-section-label">Top States & Regions</div>';
+  html += avBarList(d.topStates, '#7aab88', 'sp');
+  html += '</div>';
+
+  html += '<div class="av-section">';
+  html += '<div class="av-section-label">Hottest Spots</div>';
+  html += avBarList(d.topLocs, '#c97d22', 'sp');
+  html += '</div>';
+
+  html += '<div class="av-section">';
+  html += '<div class="av-section-label">Rarest Finds ✦</div>';
+  html += avRarestList(d.rarestFinds, d.totalObs);
+  html += '</div>';
+
+  html += '</div>'; // end av-three-col
+
+  return html;
+}
+
+// SVG line chart — cumulative lifers by year
+function avLineChart(rows) {
+  var W = 560, H = 160;
+  var padL = 40, padB = 28, padT = 12, padR = 10;
+  var cw = W - padL - padR, ch = H - padT - padB;
+  var maxY = rows[rows.length - 1].cumSp || 1;
+
+  var pts = rows.map(function(r, i) {
+    return {
+      x: padL + (i / (rows.length - 1)) * cw,
+      y: padT + (1 - r.cumSp / maxY) * ch,
+      row: r
+    };
+  });
+
+  var pathD = pts.map(function(p,i){ return (i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1); }).join(' ');
+  var fillD = pathD + ' L'+pts[pts.length-1].x.toFixed(1)+' '+(padT+ch)+' L'+pts[0].x.toFixed(1)+' '+(padT+ch)+' Z';
+
+  // Y-axis labels (3 ticks)
+  var yLabels = [0, Math.round(maxY/2), maxY].map(function(v) {
+    var y = padT + (1 - v/maxY) * ch;
+    return '<text x="'+(padL-4)+'" y="'+(y+4)+'" text-anchor="end" fill="rgba(200,221,208,0.3)" font-size="9">'+v+'</text>';
+  }).join('');
+
+  // X-axis labels — show every N-th year so they don't crowd
+  var step = rows.length > 12 ? 3 : rows.length > 6 ? 2 : 1;
+  var xLabels = pts.filter(function(_,i){return i%step===0||i===pts.length-1;}).map(function(p) {
+    return '<text x="'+p.x.toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" fill="rgba(200,221,208,0.3)" font-size="9">'+p.row.year+'</text>';
+  }).join('');
+
+  // Dots
+  var dots = pts.map(function(p) {
+    return '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3" fill="#f0b429" stroke="#060d08" stroke-width="1.5">'
+      + '<title>'+p.row.year+': '+p.row.cumSp+' species (+'+p.row.newSp+')</title></circle>';
+  }).join('');
+
+  return '<svg class="av-chart" viewBox="0 0 '+W+' '+H+'">'
+    + '<defs><linearGradient id="avgrad" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="#f0b429" stop-opacity="0.22"/>'
+    + '<stop offset="100%" stop-color="#f0b429" stop-opacity="0"/>'
+    + '</linearGradient></defs>'
+    + '<path d="'+fillD+'" fill="url(#avgrad)"/>'
+    + '<path d="'+pathD+'" fill="none" stroke="#f0b429" stroke-width="2" stroke-linejoin="round"/>'
+    + '<line x1="'+padL+'" y1="'+padT+'" x2="'+padL+'" y2="'+(padT+ch)+'" stroke="rgba(122,171,136,0.15)" stroke-width="1"/>'
+    + '<line x1="'+padL+'" y1="'+(padT+ch)+'" x2="'+(padL+cw)+'" y2="'+(padT+ch)+'" stroke="rgba(122,171,136,0.15)" stroke-width="1"/>'
+    + yLabels + xLabels + dots
+    + '</svg>';
+}
+
+// SVG vertical bar chart — monthly species counts
+function avMonthChart(counts) {
+  var W = 560, H = 130;
+  var padL = 6, padB = 22, padT = 8, padR = 6;
+  var cw = W - padL - padR, ch = H - padT - padB;
+  var maxC = Math.max.apply(null, counts.concat([1]));
+  var barW = (cw / 12) * 0.72;
+  var months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  var bars = counts.map(function(c, i) {
+    var x = padL + (i / 12) * cw + ((cw/12) - barW) / 2;
+    var bh = (c / maxC) * ch;
+    var y = padT + ch - bh;
+    var bright = c === maxC;
+    return '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'"'
+      + ' fill="'+(bright?'#f0b429':'rgba(122,171,136,0.55)')+'" rx="2">'
+      + '<title>'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]+': '+c+' species</title></rect>'
+      + '<text x="'+(x+barW/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" fill="rgba(200,221,208,0.4)" font-size="9">'+months[i]+'</text>';
+  }).join('');
+
+  return '<svg class="av-chart" viewBox="0 0 '+W+' '+H+'">' + bars + '</svg>';
+}
+
+// Horizontal bar list
+function avBarList(items, color, unit) {
+  if (!items.length) return '<p class="pb-empty">No data</p>';
+  var max = items[0].value || 1;
+  return items.map(function(item) {
+    var pct = (item.value / max * 100).toFixed(1);
+    return '<div class="av-bar-row">'
+      + '<div class="av-bar-meta">'
+      + '<span class="av-bar-name">' + escStr(item.label) + '</span>'
+      + '<span class="av-bar-val">' + item.value + ' ' + unit + '</span>'
+      + '</div>'
+      + '<div class="av-bar-track"><div class="av-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>'
+      + '</div>';
+  }).join('');
+}
+
+// Rarest finds list
+function avRarestList(items, totalObs) {
+  var colors = ['#d4622a','#f0b429','#c97d22','#7aab88'];
+  return items.map(function(item, i) {
+    var pct = totalObs > 0 ? (item.freq / totalObs * 100).toFixed(1) : '?';
+    var col = i < 3 ? colors[0] : i < 6 ? colors[1] : i < 9 ? colors[2] : colors[3];
+    return '<div class="av-rare-row">'
+      + '<div class="av-rare-dot" style="background:'+col+'"></div>'
+      + '<span class="av-rare-name">' + escStr(item.name) + '</span>'
+      + '<span class="av-rare-pct">' + item.freq + '×</span>'
+      + '</div>';
+  }).join('');
+}
+
+function escStr(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ─────────────────────────────────────────
