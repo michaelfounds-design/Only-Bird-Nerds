@@ -492,6 +492,75 @@
     }
     .share-action.works { border-color: rgba(74,124,89,0.3); }
     .share-action.works h4 { color: var(--sage); }
+    /* ── Trip dialog ── */
+    #trip-dialog-bg {
+      display: none; position: fixed; inset: 0;
+      z-index: 3999; background: rgba(0,0,0,0.52);
+    }
+    #trip-dialog {
+      display: none;
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      z-index: 4000;
+      background: var(--cream); border-radius: 14px;
+      padding: 1.5rem 1.6rem 1.3rem; width: 360px; max-width: 95vw;
+      box-shadow: 0 10px 48px rgba(0,0,0,0.55);
+    }
+    #trip-dialog h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700; color: var(--forest);
+      margin-bottom: 1rem;
+    }
+    .trip-date-row { display: flex; gap: 0.5rem; }
+    .trip-date-row .profile-field { flex: 1; margin-bottom: 0.55rem; }
+    #trip-geo-opts { margin: 0.1rem 0 0.7rem; }
+    .trip-radio-lbl {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-family: 'DM Mono', monospace; font-size: 0.63rem;
+      color: var(--forest); margin-bottom: 0.3rem; cursor: pointer;
+    }
+    .trip-preview {
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      color: var(--warm-gray); letter-spacing: 0.02em;
+      padding: 0.45rem 0.65rem; border-radius: 6px;
+      background: rgba(27,58,45,0.06); min-height: 2rem;
+      margin-bottom: 0.4rem;
+    }
+    /* ── Trip cards in panel ── */
+    #trip-list { margin-bottom: 0.5rem; }
+    .trip-card {
+      border: 1px solid rgba(122,171,136,0.2);
+      border-radius: 9px; padding: 0.65rem 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .trip-card-name {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.8rem; color: var(--cream); margin-bottom: 0.15rem;
+    }
+    .trip-card-meta {
+      font-family: 'DM Mono', monospace; font-size: 0.57rem;
+      color: rgba(200,221,208,0.5); margin-bottom: 0.5rem;
+    }
+    .trip-card-url {
+      font-family: 'DM Mono', monospace; font-size: 0.54rem;
+      color: rgba(122,171,136,0.45); margin-bottom: 0.5rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .trip-card-actions { display: flex; gap: 0.4rem; }
+    .trip-btn {
+      font-family: 'DM Mono', monospace; font-size: 0.55rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.28rem 0.65rem; border-radius: 5px; cursor: pointer;
+      border: 1px solid rgba(122,171,136,0.3);
+      background: rgba(122,171,136,0.08); color: var(--sage);
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .trip-btn:hover { background: rgba(122,171,136,0.18); color: var(--cream); }
+    .trip-btn.danger {
+      border-color: rgba(212,98,42,0.3); color: rgba(212,98,42,0.7);
+      background: rgba(212,98,42,0.05);
+    }
+    .trip-btn.danger:hover { background: rgba(212,98,42,0.12); color: #d4622a; }
     /* Profile trigger button */
     #profile-btn {
       position: fixed; top: 10px; right: 14px;
@@ -1152,36 +1221,72 @@
 
   <!-- Shared Data tab -->
   <div class="ptab-body" id="ptab-shared" style="display:none">
-    <p class="shared-section-lbl">Your shared maps</p>
-    <p class="shared-empty">No shared maps yet.</p>
+    <p class="shared-section-lbl">Your trips</p>
+    <div id="trip-list"><p class="shared-empty">No trips yet.</p></div>
 
-    <p class="shared-section-lbl" style="margin-top:1rem">Create</p>
+    <p class="shared-section-lbl" style="margin-top:0.75rem">Create</p>
 
-    <div class="share-action">
+    <div class="share-action works" id="share-trip-btn">
       <span class="share-action-icon">🗺️</span>
       <div class="share-action-body">
         <h4>Share a Trip</h4>
-        <p>Select specific observations — a day, a trip, your local patch.</p>
+        <p>Filter by date or location — share a link anyone can view.</p>
       </div>
-      <span class="share-soon">Soon</span>
-    </div>
-
-    <div class="share-action">
-      <span class="share-action-icon">🌎</span>
-      <div class="share-action-body">
-        <h4>Share All Observations</h4>
-        <p>Make your full life map public for other birders to explore.</p>
-      </div>
-      <span class="share-soon">Soon</span>
     </div>
 
     <div class="share-action works" id="share-download-btn">
       <span class="share-action-icon">⬇</span>
       <div class="share-action-body">
-        <h4>Download Data</h4>
+        <h4>Download Map</h4>
         <p>Standalone HTML file with all your locations baked in.</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ── Trip creation dialog ── -->
+<div id="trip-dialog-bg" onclick="closeTripDialog()"></div>
+<div id="trip-dialog">
+  <h3>Create Trip</h3>
+
+  <div class="profile-field">
+    <label>Trip name</label>
+    <input id="trip-name-input" type="text" placeholder="e.g. Point Reyes May 2025"
+           oninput="updateTripPreview()" />
+  </div>
+
+  <div class="trip-date-row">
+    <div class="profile-field">
+      <label>Start date</label>
+      <input id="trip-start" type="date" oninput="updateTripPreview()" />
+    </div>
+    <div class="profile-field">
+      <label>End date</label>
+      <input id="trip-end" type="date" oninput="updateTripPreview()" />
+    </div>
+  </div>
+
+  <div class="dlg-label">Location filter</div>
+  <div id="trip-geo-opts">
+    <label class="trip-radio-lbl">
+      <input type="radio" name="trip-geo" value="all" checked onchange="updateTripPreview()">
+      All observations
+    </label>
+    <label class="trip-radio-lbl">
+      <input type="radio" name="trip-geo" value="filters" onchange="updateTripPreview()">
+      Current state / county filter
+    </label>
+    <label class="trip-radio-lbl">
+      <input type="radio" name="trip-geo" value="viewport" onchange="updateTripPreview()">
+      Current map viewport
+    </label>
+  </div>
+
+  <div id="trip-preview" class="trip-preview">Enter dates to preview.</div>
+
+  <div class="dlg-footer">
+    <button class="dlg-btn ghost" onclick="closeTripDialog()">Cancel</button>
+    <button class="dlg-btn" id="trip-create-btn" onclick="createTrip()">Create &amp; Copy Link</button>
   </div>
 </div>
 
@@ -1335,6 +1440,140 @@ function savePins() {
     if (rows.length) _sb.from('location_pins').insert(rows);
   });
 }
+// ── Trip sharing ──────────────────────────────────────────
+function openTripDialog() {
+  if (!currentUser) { openProfilePanel('profile'); return; }
+  if (!allRecords.length) { alert('Upload your eBird CSV first to create a trip.'); return; }
+  var dates = allRecords.map(function(r) { return r.date; }).filter(Boolean).sort();
+  if (dates.length) {
+    document.getElementById('trip-start').value = dates[0];
+    document.getElementById('trip-end').value   = dates[dates.length - 1];
+  }
+  document.querySelector('input[name="trip-geo"][value="all"]').checked = true;
+  updateTripPreview();
+  document.getElementById('trip-dialog-bg').style.display = 'block';
+  document.getElementById('trip-dialog').style.display    = 'block';
+}
+
+function closeTripDialog() {
+  document.getElementById('trip-dialog-bg').style.display = 'none';
+  document.getElementById('trip-dialog').style.display    = 'none';
+}
+
+function getTripFiltered() {
+  var start    = document.getElementById('trip-start').value;
+  var end      = document.getElementById('trip-end').value;
+  var geo      = document.querySelector('input[name="trip-geo"]:checked').value;
+  var stFilter = document.getElementById('state-select').value;
+  var cnFilter = document.getElementById('county-select').value;
+  return allRecords.filter(function(r) {
+    if (start && r.date && r.date < start) return false;
+    if (end   && r.date && r.date > end)   return false;
+    if (geo === 'filters') {
+      if (stFilter && r.state  !== stFilter) return false;
+      if (cnFilter && r.county !== cnFilter) return false;
+    }
+    if (geo === 'viewport') {
+      var b = map.getBounds();
+      if (r.lat < b.getSouth() || r.lat > b.getNorth()) return false;
+      if (r.lon < b.getWest()  || r.lon > b.getEast())  return false;
+    }
+    return true;
+  });
+}
+
+function updateTripPreview() {
+  var recs = getTripFiltered();
+  var sp   = {};
+  recs.forEach(function(r) { sp[r.name] = true; });
+  var el = document.getElementById('trip-preview');
+  if (!recs.length) { el.textContent = 'No observations match those filters.'; return; }
+  el.textContent = recs.length + ' observations · ' + Object.keys(sp).length + ' species';
+}
+
+function createTrip() {
+  if (!currentUser) return;
+  var name = document.getElementById('trip-name-input').value.trim();
+  if (!name) { document.getElementById('trip-name-input').focus(); return; }
+  var recs = getTripFiltered();
+  if (!recs.length) { updateTripPreview(); return; }
+  var obs = recs.map(function(r) {
+    return { name: r.name, lat: r.lat, lon: r.lon, date: r.date, state: r.state };
+  });
+  var id  = Math.random().toString(36).slice(2, 11);
+  var btn = document.getElementById('trip-create-btn');
+  btn.textContent = 'Saving…';
+  btn.disabled    = true;
+  _sb.from('trips').insert({ id: id, user_id: currentUser.id, name: name, observations: obs })
+    .then(function(res) {
+      btn.textContent = 'Create & Copy Link';
+      btn.disabled    = false;
+      if (res.error) { alert('Save failed: ' + res.error.message); return; }
+      var url = location.origin + '/shared.html?id=' + id;
+      try { navigator.clipboard.writeText(url); } catch(e) {}
+      closeTripDialog();
+      loadUserTrips();
+      showCloudToast('Trip created — link copied!');
+    });
+}
+
+function loadUserTrips() {
+  if (!currentUser) return;
+  _sb.from('trips').select('id, name, created_at, observations')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false })
+    .then(function(res) {
+      var el = document.getElementById('trip-list');
+      if (!res.data || !res.data.length) {
+        el.innerHTML = '<p class="shared-empty">No trips yet.</p>';
+        return;
+      }
+      el.innerHTML = res.data.map(function(t) {
+        var obs  = t.observations || [];
+        var sp   = {};
+        obs.forEach(function(o) { sp[o.name] = true; });
+        var dates = obs.map(function(o) { return o.date; }).filter(Boolean).sort();
+        var dr = '';
+        if (dates.length) {
+          dr = tripFmtDate(dates[0]);
+          if (dates[dates.length-1] !== dates[0]) dr += ' – ' + tripFmtDate(dates[dates.length-1]);
+        }
+        var url = location.origin + '/shared.html?id=' + t.id;
+        return '<div class="trip-card">' +
+          '<div class="trip-card-name">' + tripEsc(t.name) + '</div>' +
+          '<div class="trip-card-meta">' + Object.keys(sp).length + ' species · ' + dr + '</div>' +
+          '<div class="trip-card-url">' + url + '</div>' +
+          '<div class="trip-card-actions">' +
+            '<button class="trip-btn" onclick="copyTripLink(\'' + t.id + '\')">Copy link</button>' +
+            '<a class="trip-btn" href="' + url + '" target="_blank">View</a>' +
+            '<button class="trip-btn danger" onclick="deleteTrip(\'' + t.id + '\',this)">Delete</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    });
+}
+
+function copyTripLink(id) {
+  var url = location.origin + '/shared.html?id=' + id;
+  try { navigator.clipboard.writeText(url).then(function() { showCloudToast('Link copied!'); }); } catch(e) {}
+}
+
+function deleteTrip(id, btn) {
+  if (!confirm('Delete this trip? The shared link will stop working.')) return;
+  btn.textContent = '…';
+  _sb.from('trips').delete().eq('id', id).eq('user_id', currentUser.id).then(function() { loadUserTrips(); });
+}
+
+function tripFmtDate(d) {
+  if (!d) return '';
+  var dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function tripEsc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // Like bestPhoto but respects a pinned species for a specific marker
 function markerPhoto(sm, rKey) {
   var pinned = locationPins[rKey];
@@ -2699,6 +2938,7 @@ function syncFromCloud() {
       loadProfileUI();
     }
   });
+  loadUserTrips();
   // Load overrides FIRST, then fetch CSV so markers are built with correct photos
   _sb.from('photo_overrides').select('species_name, photo_url').then(function(res) {
     if (res.data) {
@@ -2755,6 +2995,7 @@ document.getElementById('profile-close-btn').addEventListener('click', closeProf
 document.getElementById('profile-overlay').addEventListener('click', closeProfilePanel);
 document.getElementById('profile-btn').addEventListener('click', function() { openProfilePanel('profile'); });
 document.getElementById('share-download-btn').addEventListener('click', downloadMap);
+document.getElementById('share-trip-btn').addEventListener('click', openTripDialog);
 
 // ─────────────────────────────────────────
 // MOBILE PANEL
