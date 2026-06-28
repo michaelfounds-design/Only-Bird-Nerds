@@ -682,7 +682,18 @@
 
     @media (max-width: 768px) {
       #profile-panel { width: 100%; }
-      #profile-btn { top: 8px; right: 10px; height: 36px; padding: 0 12px; }
+      #profile-btn { top: 8px; right: 10px; height: 36px; padding: 0 12px; font-size: 0.65rem; }
+      /* Share button: move below profile btn, left side to avoid layer bar */
+      #map-actions { top: auto; bottom: 5.5rem; right: 1.25rem; flex-direction: row; }
+      /* Trip dialog: full width, scrollable on short screens */
+      #trip-dialog {
+        width: 96vw; max-height: 90vh; overflow-y: auto;
+        top: auto; bottom: 0; left: 0; right: 0;
+        transform: none; border-radius: 18px 18px 0 0;
+        padding: 1.2rem 1.1rem 1.5rem;
+      }
+      /* Photo dialog: full width */
+      #photo-dialog { width: 94vw; left: 50%; }
     }
 
     /* ── Layer bar ── */
@@ -2046,7 +2057,7 @@ function buildPopup(title, sm, rKey, extra) {
     return b.count - a.count;
   });
 
-  var h = '<div style="font-family:Arial,sans-serif;font-size:12px;min-width:260px">';
+  var h = '<div style="font-family:Arial,sans-serif;font-size:12px;width:min(280px,82vw)">';
   h += '<b style="font-size:14px;color:#1b3a2d">' + title + '</b><br>';
   h += '<span style="color:#888;font-size:11px">' + total + ' species';
   if (extra)  h += ' · ' + extra;
@@ -2093,8 +2104,8 @@ function buildPopup(title, sm, rKey, extra) {
     h += '<td style="padding:2px 3px;vertical-align:middle">'
       + '<button onclick="photoDialog.open(\'' + spEsc + '\')" '
       + 'title="Set custom photo" '
-      + 'style="background:none;border:1px solid #ddd;border-radius:3px;'
-      + 'cursor:pointer;padding:2px 5px;font-size:11px;">📷</button></td>';
+      + 'style="background:none;border:1px solid #ddd;border-radius:5px;'
+      + 'cursor:pointer;padding:5px 7px;font-size:13px;touch-action:manipulation;min-width:32px;min-height:32px;">📷</button></td>';
 
     // Pin button — pins this species' photo to this marker
     var isPinned  = rKey && locationPins[rKey] === e.name;
@@ -2104,8 +2115,8 @@ function buildPopup(title, sm, rKey, extra) {
       + '<button data-pin-rkey="' + rKeyAttr + '" data-pin-sp="' + spPinAttr + '" '
       + 'title="' + (isPinned ? 'Unpin bird from marker' : 'Pin this bird to marker') + '" '
       + 'style="background:' + (isPinned ? '#fff3cd' : 'none') + ';'
-      + 'border:1px solid ' + (isPinned ? '#f0b429' : '#ddd') + ';border-radius:3px;'
-      + 'cursor:pointer;padding:2px 5px;font-size:11px;">📌</button></td>';
+      + 'border:1px solid ' + (isPinned ? '#f0b429' : '#ddd') + ';border-radius:5px;'
+      + 'cursor:pointer;padding:5px 7px;font-size:13px;touch-action:manipulation;min-width:32px;min-height:32px;">📌</button></td>';
 
     h += '</tr>';
   });
