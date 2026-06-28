@@ -233,6 +233,7 @@ if (tripId) {
   document.getElementById('listing-view').style.display = 'flex';
 
   _sb.from('trips').select('id,name,description,user_id,created_at,observations')
+    .eq('is_public', true)
     .order('created_at', { ascending: false })
     .then(function(res) {
       if (res.error || !res.data || !res.data.length) {

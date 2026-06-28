@@ -594,6 +594,22 @@
       transition: all 0.15s;
     }
     .map-action-btn:hover { background: rgba(45,90,61,0.95); color: var(--cream); border-color: var(--sage); }
+    /* ── Trip dialog public checkbox ── */
+    .trip-public-row {
+      display: flex; align-items: center; gap: 0.55rem;
+      margin: 0.75rem 0 0.2rem; cursor: pointer;
+      font-family: 'DM Mono', monospace; font-size: 0.65rem;
+      color: var(--cream); letter-spacing: 0.02em;
+    }
+    .trip-public-row input[type="checkbox"] {
+      width: 15px; height: 15px; flex-shrink: 0;
+      accent-color: var(--fern); cursor: pointer;
+    }
+    .trip-public-note {
+      font-family: 'DM Mono', monospace; font-size: 0.57rem;
+      color: rgba(200,221,208,0.35); letter-spacing: 0.03em;
+      line-height: 1.5; margin-bottom: 0.2rem;
+    }
     /* ── Creator card in trip view ── */
     #trip-creator-card {
       display: none; padding: 0.75rem 1rem;
@@ -785,8 +801,12 @@
     /* ── Inline quests/badges panel ── */
     #panel-qb {
       flex-shrink: 0;
+      max-height: 52%;
+      overflow-y: auto;
       border-top: 1px solid rgba(122,171,136,0.12);
     }
+    #panel-qb::-webkit-scrollbar { width: 3px; }
+    #panel-qb::-webkit-scrollbar-thumb { background: rgba(122,171,136,0.18); }
     .pqb-section { padding: 0.75rem 0.9rem 0.6rem; }
     .pqb-section + .pqb-section { border-top: 1px solid rgba(122,171,136,0.08); }
     .pqb-hdr {
@@ -1193,12 +1213,6 @@
         <div id="photo-progress"></div>
       </div>
 
-      <div class="sec-label" style="margin-top:1rem">Photo overrides</div>
-      <div style="display:flex;gap:0.4rem">
-        <button class="clear-btn" id="export-btn" style="flex:1;margin-top:0">Export</button>
-        <button class="clear-btn" id="import-btn" style="flex:1;margin-top:0">Import</button>
-      </div>
-      <input type="file" id="import-input" accept=".json" style="display:none" />
     </div>
 
     <div id="panel-qb" style="display:none">
@@ -1315,13 +1329,6 @@
       </div>
     </div>
 
-    <div class="share-action works" id="share-download-btn">
-      <span class="share-action-icon">⬇</span>
-      <div class="share-action-body">
-        <h4>Download Map</h4>
-        <p>Standalone HTML file with all your locations baked in.</p>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -1369,6 +1376,12 @@
     <label>Notes (optional)</label>
     <textarea id="trip-desc-input" placeholder="What made this trip special?" style="height:64px"></textarea>
   </div>
+
+  <label class="trip-public-row">
+    <input type="checkbox" id="trip-public-chk" />
+    <span>Add to Only Bird Nerds Community Shared Maps</span>
+  </label>
+  <p class="trip-public-note">Deleting a trip from your profile also removes the public link.</p>
 
   <div class="dlg-footer">
     <button class="dlg-btn ghost" onclick="closeTripDialog()">Cancel</button>
@@ -1545,6 +1558,7 @@ function closeTripDialog() {
   document.getElementById('trip-dialog-bg').style.display = 'none';
   document.getElementById('trip-dialog').style.display    = 'none';
   document.getElementById('trip-desc-input').value = '';
+  document.getElementById('trip-public-chk').checked = false;
 }
 
 function getTripFiltered() {
@@ -1591,8 +1605,9 @@ function createTrip() {
   var btn = document.getElementById('trip-create-btn');
   btn.textContent = 'Saving…';
   btn.disabled    = true;
-  var desc = (document.getElementById('trip-desc-input').value || '').trim();
-  _sb.from('trips').insert({ id: id, user_id: currentUser.id, name: name, description: desc || null, observations: obs })
+  var desc     = (document.getElementById('trip-desc-input').value || '').trim();
+  var isPublic = document.getElementById('trip-public-chk').checked;
+  _sb.from('trips').insert({ id: id, user_id: currentUser.id, name: name, description: desc || null, is_public: isPublic, observations: obs })
     .then(function(res) {
       btn.textContent = 'Create & Copy Link';
       btn.disabled    = false;
@@ -2709,45 +2724,6 @@ csvInput.addEventListener('change', function() {
 });
 
 // ─────────────────────────────────────────
-// EXPORT / IMPORT PHOTO OVERRIDES
-// ─────────────────────────────────────────
-document.getElementById('export-btn').addEventListener('click', function() {
-  var data = JSON.stringify(photoOverrides, null, 2);
-  var blob = new Blob([data], { type: 'application/json' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'obn_photo_overrides.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
-
-document.getElementById('import-btn').addEventListener('click', function() {
-  document.getElementById('import-input').click();
-});
-
-document.getElementById('import-input').addEventListener('change', function() {
-  var file = this.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var imported = JSON.parse(e.target.result);
-      // Merge: imported values overwrite existing ones
-      Object.keys(imported).forEach(function(k) {
-        photoOverrides[k] = imported[k];
-        photoCache[k]     = imported[k];
-      });
-      saveOverrides();
-      // Refresh all markers to show newly imported photos
-      Object.keys(imported).forEach(function(k) { refreshMarkersForSpecies(k); });
-      alert('Imported ' + Object.keys(imported).length + ' photo overrides.');
-    } catch(err) {
-      alert('Could not read file: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-  this.value = ''; // reset so same file can be re-imported
-});
 
 // ─────────────────────────────────────────
 // ─────────────────────────────────────────
@@ -2858,7 +2834,7 @@ function renderPanelQB() {
     .filter(function(q) { return q.total > 0 && q.progress > 0; })
     .map(function(q) { return Object.assign({}, q, { pct: q.progress / q.total }); })
     .sort(function(a, b) { return b.pct - a.pct; })
-    .slice(0, 3);
+    .slice(0, 5);
 
   var tierColors = ['#7aab88','#c97d22','#4a7c59','#d4622a','#f0b429'];
 
@@ -2885,14 +2861,14 @@ function renderPanelQB() {
   // Badges
   var bHtml = '';
   if (earned.length) {
-    earned.slice(0, 4).forEach(function(q) {
+    earned.slice(0, 8).forEach(function(q) {
       var tier = TIERS[q.tier - 1];
       var col  = tierColors[q.tier - 1] || '#7aab88';
       bHtml += '<span class="pb-chip" style="color:' + col + ';border-color:' + col + '33" title="' + q.desc + '">'
         + tier.icon + ' ' + q.name + '</span>';
     });
-    if (earned.length > 4) {
-      bHtml += '<span class="pb-chip" style="color:rgba(122,171,136,0.5);border-color:rgba(122,171,136,0.18)">+' + (earned.length - 4) + ' more</span>';
+    if (earned.length > 8) {
+      bHtml += '<span class="pb-chip" style="color:rgba(122,171,136,0.5);border-color:rgba(122,171,136,0.18)">+' + (earned.length - 8) + ' more</span>';
     }
   } else {
     bHtml = '<p class="pb-empty">No badges earned yet</p>';
@@ -3104,7 +3080,6 @@ document.getElementById('profile-btn').addEventListener('click', function() {
   if (_tripViewMode) { location.href = 'shared.html'; return; }
   openProfilePanel('profile');
 });
-document.getElementById('share-download-btn').addEventListener('click', downloadMap);
 document.getElementById('share-trip-btn').addEventListener('click', openTripDialog);
 document.getElementById('map-action-share').addEventListener('click', openTripDialog);
 
