@@ -2016,7 +2016,7 @@ function refreshMarkersForSpecies(name) {
   Object.keys(markerRefs).forEach(function(rKey) {
     var ref = markerRefs[rKey];
     if (!ref.sm[name]) return;
-    var p = bestPhoto(ref.sm);
+    var p = markerPhoto(ref.sm, rKey);
     if (!p) return;
     ref.marker.setIcon(makeIcon(p, ref.radius, ref.label, ref.spCount, ref.liferCount));
   });
