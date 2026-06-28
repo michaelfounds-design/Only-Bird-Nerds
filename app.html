@@ -2999,7 +2999,10 @@ document.querySelectorAll('.ptab').forEach(function(btn) {
 });
 document.getElementById('profile-close-btn').addEventListener('click', closeProfilePanel);
 document.getElementById('profile-overlay').addEventListener('click', closeProfilePanel);
-document.getElementById('profile-btn').addEventListener('click', function() { openProfilePanel('profile'); });
+document.getElementById('profile-btn').addEventListener('click', function() {
+  if (_tripViewMode) { location.href = 'shared.html'; return; }
+  openProfilePanel('profile');
+});
 document.getElementById('share-download-btn').addEventListener('click', downloadMap);
 document.getElementById('share-trip-btn').addEventListener('click', openTripDialog);
 
@@ -3077,11 +3080,82 @@ function buildDownloadHTML(locs, stats) {
 }
 
 // ─────────────────────────────────────────
+// SHARED TRIP VIEW MODE
+// ─────────────────────────────────────────
+var _tripViewMode = false;
+
+function tripToRecords(obs) {
+  return (obs || []).reduce(function(out, o) {
+    var lat  = parseFloat(o.lat);
+    var lon  = parseFloat(o.lon);
+    var name = (o.name || '').trim();
+    if (!name || isNaN(lat) || isNaN(lon)) return out;
+    var dateStr = (o.date || '').trim();
+    var year = '', month = 0;
+    if (dateStr) {
+      var d = new Date(dateStr + 'T12:00:00');
+      if (!isNaN(d)) { year = String(d.getFullYear()); month = d.getMonth() + 1; }
+    }
+    out.push({
+      subId: '', name: name, sci: '', state: o.state || '',
+      county: '', location: '', lat: lat, lon: lon,
+      date: dateStr, year: year, month: month,
+      time: '', protocol: '', allObs: false, breeding: '', lifer: false,
+    });
+    return out;
+  }, []);
+}
+
+function loadSharedTrip(id) {
+  _tripViewMode = true;
+  var loadEl = document.getElementById('csv-loading');
+  if (loadEl) {
+    loadEl.style.display = 'block';
+    loadEl.querySelector('p').textContent = 'Loading shared trip…';
+  }
+  _sb.from('trips').select('id,name,observations').eq('id', id).single()
+    .then(function(res) {
+      if (res.error || !res.data) {
+        if (loadEl) loadEl.querySelector('p').textContent = 'Trip not found.';
+        return;
+      }
+      var trip = res.data;
+      allRecords = tripToRecords(trip.observations);
+      computeLifers(allRecords);
+      computeGlobalFreq(allRecords);
+      speciesList = uniqueSpecies(allRecords);
+      buildStateCountyMap(allRecords);
+      currentStats = computeStats(allRecords);
+      showApp();
+      buildAutocomplete();
+      buildDropdowns();
+      renderPanelQB();
+      setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
+
+      // Update panel header subtitle to show trip name
+      var panelSub = document.querySelector('.panel-sub');
+      if (panelSub) panelSub.textContent = trip.name;
+
+      // Repurpose profile button as "← Trips" back link
+      var lbl = document.getElementById('profile-btn-label');
+      var dot = document.querySelector('#profile-btn .btn-dot');
+      if (lbl) lbl.textContent = '← Trips';
+      if (dot) dot.style.display = 'none';
+    });
+}
+
+// ─────────────────────────────────────────
 // BOOT
 // ─────────────────────────────────────────
 loadOverrides();
 loadPins();
 
+
+// Shared trip view mode — load trip from URL param
+(function() {
+  var tid = new URLSearchParams(location.search).get('trip');
+  if (tid) loadSharedTrip(tid);
+})();
 
 // Pick up CSV dropped on the landing page hero zone
 (function() {
