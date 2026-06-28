@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bird Trip — Only Bird Nerds</title>
+  <title>Shared Maps — Only Bird Nerds</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+    html, body { height: 100%; }
 
     :root {
       --forest:    #1b3a2d;
@@ -32,17 +31,16 @@
       --panel:     rgba(12,19,14,0.97);
     }
 
-    body { display: flex; flex-direction: column; background: #08120c; }
-
-    /* ── Top nav ── */
+    /* ════════════════════════════════════
+       SHARED NAV
+    ════════════════════════════════════ */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 500;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.7rem 1.4rem;
+      padding: 0.7rem 1.6rem;
       background: rgba(15,26,18,0.92);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid rgba(122,171,136,0.15);
-      flex-shrink: 0;
     }
     .nav-logo {
       display: flex; align-items: center; gap: 0.45rem;
@@ -62,13 +60,133 @@
     }
     .nav-cta:hover { background: var(--mist); }
 
-    /* ── Main layout ── */
-    #main {
-      display: flex; flex: 1;
-      padding-top: 53px; height: 100vh;
+    /* ════════════════════════════════════
+       LISTING VIEW
+    ════════════════════════════════════ */
+    #listing-view {
+      display: none;
+      min-height: 100vh;
+      background: var(--forest);
+      color: var(--cream);
+      flex-direction: column;
     }
 
-    /* ── Left panel ── */
+    .listing-hero {
+      padding: 6rem 2rem 3rem;
+      text-align: center;
+    }
+    .listing-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--sage);
+      margin-bottom: 1.2rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.7rem;
+    }
+    .listing-eyebrow::before, .listing-eyebrow::after {
+      content: ''; width: 28px; height: 2px;
+      background: var(--fern); border-radius: 2px; display: inline-block;
+    }
+    .listing-hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800; line-height: 1.08;
+      letter-spacing: -0.03em; color: var(--cream);
+      margin-bottom: 0.8rem;
+    }
+    .listing-hero h1 em {
+      font-family: 'Lora', serif; font-style: italic;
+      font-weight: 400; color: var(--sage);
+    }
+    .listing-hero p {
+      font-size: 1rem; color: rgba(200,221,208,0.55);
+      max-width: 440px; margin: 0 auto;
+    }
+
+    #trip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.1rem;
+      padding: 0 2rem 4rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .trip-listing-card {
+      background: rgba(45,90,61,0.18);
+      border: 1px solid rgba(122,171,136,0.18);
+      border-radius: 14px;
+      padding: 1.3rem 1.4rem 1.1rem;
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; gap: 0.6rem;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+    .trip-listing-card:hover {
+      border-color: rgba(122,171,136,0.4);
+      background: rgba(45,90,61,0.28);
+      transform: translateY(-2px);
+    }
+
+    .tlc-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+    .tlc-name {
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: 1.05rem; color: var(--cream); line-height: 1.2;
+    }
+    .tlc-sp-badge {
+      flex-shrink: 0;
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      background: rgba(240,180,41,0.12);
+      color: var(--sun);
+      border: 1px solid rgba(240,180,41,0.25);
+      border-radius: 100px; padding: 0.2rem 0.6rem;
+      white-space: nowrap;
+    }
+    .tlc-creator {
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      color: var(--sage); letter-spacing: 0.04em;
+    }
+    .tlc-dates {
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      color: rgba(200,221,208,0.4); letter-spacing: 0.03em;
+    }
+    .tlc-footer {
+      margin-top: 0.3rem;
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(122,171,136,0.5);
+    }
+    .tlc-footer span { color: var(--sage); }
+
+    #listing-loading, #listing-empty {
+      text-align: center; padding: 3rem 2rem;
+      font-family: 'DM Mono', monospace; font-size: 0.75rem;
+      color: rgba(122,171,136,0.5); letter-spacing: 0.07em;
+      grid-column: 1 / -1;
+    }
+
+    listing-footer {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid rgba(122,171,136,0.1);
+      text-align: center;
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      color: rgba(122,171,136,0.35);
+    }
+
+    /* ════════════════════════════════════
+       TRIP VIEWER
+    ════════════════════════════════════ */
+    #trip-view {
+      display: none;
+      height: 100vh; overflow: hidden;
+    }
+
+    #viewer-inner {
+      display: flex; height: 100%;
+      padding-top: 53px;
+    }
+
     #panel {
       width: 300px; flex-shrink: 0;
       background: var(--panel);
@@ -94,7 +212,7 @@
     }
 
     #panel-stats {
-      display: flex; gap: 0; flex-shrink: 0;
+      display: flex; flex-shrink: 0;
       border-bottom: 1px solid rgba(122,171,136,0.1);
     }
     .stat-cell {
@@ -113,10 +231,7 @@
       color: rgba(122,171,136,0.6); margin-top: 0.15rem;
     }
 
-    #species-list {
-      flex: 1; overflow-y: auto;
-      padding: 0.6rem 0;
-    }
+    #species-list { flex: 1; overflow-y: auto; padding: 0.6rem 0; }
     #species-list::-webkit-scrollbar { width: 3px; }
     #species-list::-webkit-scrollbar-thumb { background: rgba(122,171,136,0.18); }
 
@@ -129,7 +244,6 @@
     .sp-thumb {
       width: 36px; height: 36px; border-radius: 50%;
       object-fit: cover; flex-shrink: 0;
-      background: rgba(74,124,89,0.15);
       border: 1px solid rgba(122,171,136,0.15);
     }
     .sp-thumb-placeholder {
@@ -163,24 +277,25 @@
     }
     #panel-footer a:hover { background: rgba(122,171,136,0.1); color: var(--cream); }
 
-    /* ── Map ── */
     #map { flex: 1; }
 
-    /* ── Loading / error ── */
+    /* Loading overlay (viewer mode) */
     #state-overlay {
       position: fixed; inset: 0; z-index: 200;
       background: #08120c;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 0.9rem;
+      align-items: center; justify-content: center; gap: 0.9rem;
     }
     #state-overlay p {
       font-family: 'DM Mono', monospace; font-size: 0.75rem;
       color: var(--sage); letter-spacing: 0.08em;
     }
-    #state-overlay .err { color: var(--coral); font-size: 0.7rem; max-width: 320px; text-align: center; line-height: 1.6; }
+    #state-overlay .err {
+      color: var(--coral); font-size: 0.7rem;
+      max-width: 320px; text-align: center; line-height: 1.6;
+    }
 
-    /* ── Leaflet overrides ── */
+    /* Leaflet overrides */
     .leaflet-popup-content-wrapper {
       background: rgba(12,24,16,0.97) !important;
       border: 1px solid rgba(122,171,136,0.25) !important;
@@ -190,8 +305,7 @@
     .leaflet-popup-content {
       color: var(--cream) !important;
       font-family: 'DM Mono', monospace !important;
-      font-size: 0.68rem !important;
-      line-height: 1.75 !important;
+      font-size: 0.68rem !important; line-height: 1.75 !important;
       margin: 10px 14px !important;
     }
     .leaflet-popup-content strong {
@@ -202,10 +316,11 @@
     .leaflet-popup-close-button { color: var(--sage) !important; }
 
     @media (max-width: 600px) {
+      #trip-grid { padding: 0 1rem 3rem; }
       #panel { width: 100%; position: absolute; bottom: 0; left: 0; right: 0;
                height: 42vh; z-index: 300; border-right: none;
                border-top: 1px solid rgba(122,171,136,0.2); }
-      #main { flex-direction: column; }
+      #viewer-inner { flex-direction: column; }
       #map { height: 58vh; }
     }
   </style>
@@ -220,27 +335,47 @@
   <a class="nav-cta" href="app.html">Build your map</a>
 </nav>
 
-<div id="state-overlay">
-  <p id="state-msg">Loading trip…</p>
+<!-- ═══════════════════════════════════
+     LISTING VIEW
+═══════════════════════════════════ -->
+<div id="listing-view">
+  <div class="listing-hero">
+    <p class="listing-eyebrow">Community</p>
+    <h1>Birding trips<br>shared by the <em>community.</em></h1>
+    <p>Explore bird sightings from birders around the world.</p>
+  </div>
+
+  <div id="trip-grid">
+    <div id="listing-loading">Loading trips…</div>
+  </div>
 </div>
 
-<div id="main">
-  <div id="panel">
-    <div id="panel-header">
-      <div id="trip-title">—</div>
-      <div id="trip-meta">Loading…</div>
-    </div>
-    <div id="panel-stats">
-      <div class="stat-cell"><div class="stat-n" id="stat-sp">—</div><div class="stat-l">Species</div></div>
-      <div class="stat-cell"><div class="stat-n" id="stat-obs">—</div><div class="stat-l">Observations</div></div>
-      <div class="stat-cell"><div class="stat-n" id="stat-loc">—</div><div class="stat-l">Locations</div></div>
-    </div>
-    <div id="species-list"></div>
-    <div id="panel-footer">
-      <a href="app.html">Build your own bird map →</a>
-    </div>
+<!-- ═══════════════════════════════════
+     TRIP VIEWER
+═══════════════════════════════════ -->
+<div id="trip-view">
+  <div id="state-overlay">
+    <p id="state-msg">Loading trip…</p>
   </div>
-  <div id="map"></div>
+
+  <div id="viewer-inner">
+    <div id="panel">
+      <div id="panel-header">
+        <div id="trip-title">—</div>
+        <div id="trip-meta">Loading…</div>
+      </div>
+      <div id="panel-stats">
+        <div class="stat-cell"><div class="stat-n" id="stat-sp">—</div><div class="stat-l">Species</div></div>
+        <div class="stat-cell"><div class="stat-n" id="stat-obs">—</div><div class="stat-l">Observations</div></div>
+        <div class="stat-cell"><div class="stat-n" id="stat-loc">—</div><div class="stat-l">Locations</div></div>
+      </div>
+      <div id="species-list"></div>
+      <div id="panel-footer">
+        <a href="shared.html">← See all shared trips</a>
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
 </div>
 
 <script>
@@ -255,154 +390,175 @@ fetch('bird-photos/manifest.json')
   .then(function(d) { photoManifest = d; })
   .catch(function() {});
 
-var map = L.map('map', {
-  center: [39, -98], zoom: 4,
-  zoomControl: true,
-});
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OpenStreetMap © CARTO',
-  maxZoom: 19,
-}).addTo(map);
-
 function fmtDate(d) {
   if (!d) return '';
   var dt = new Date(d + 'T12:00:00');
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
-
-function getParam(key) {
-  return new URLSearchParams(location.search).get(key);
+function fmtDateShort(d) {
+  if (!d) return '';
+  var dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
 }
-
-function setState(msg, isErr) {
-  var el = document.getElementById('state-msg');
-  el.textContent = msg;
-  if (isErr) el.classList.add('err');
-}
-
-function hideOverlay() {
-  document.getElementById('state-overlay').style.display = 'none';
-}
-
-// ── Load trip ──────────────────────────────────────────
-var tripId = getParam('id');
-if (!tripId) {
-  setState('No trip ID found in the URL.', true);
-} else {
-  _sb.from('trips').select('id, name, user_id, created_at, observations')
-    .eq('id', tripId).single()
-    .then(function(res) {
-      if (res.error || !res.data) {
-        setState('Trip not found or has been deleted.', true);
-        return;
-      }
-      renderTrip(res.data);
-    });
-}
-
-function renderTrip(trip) {
-  var obs  = trip.observations || [];
-  var userId = trip.user_id;
-
-  // Fetch creator display name (best-effort)
-  _sb.from('profiles').select('display_name').eq('id', userId).single()
-    .then(function(res) {
-      var name = (res.data && res.data.display_name) ? res.data.display_name : null;
-      buildMeta(trip, obs, name);
-    })
-    .catch(function() { buildMeta(trip, obs, null); });
-
-  buildMap(obs);
-  buildSidebar(obs);
-  document.title = trip.name + ' — Only Bird Nerds';
-  hideOverlay();
-}
-
-function buildMeta(trip, obs, creatorName) {
-  document.getElementById('trip-title').textContent = trip.name;
-  var dates = obs.map(function(o) { return o.date; }).filter(Boolean).sort();
-  var dr = '';
-  if (dates.length) {
-    dr = fmtDate(dates[0]);
-    if (dates[dates.length-1] !== dates[0]) dr += ' – ' + fmtDate(dates[dates.length-1]);
-  }
-  var meta = dr;
-  if (creatorName) meta = (meta ? meta + '  ·  ' : '') + 'by ' + creatorName;
-  document.getElementById('trip-meta').textContent = meta || 'Bird trip';
-}
-
-function buildMap(obs) {
-  // Group by unique location
-  var locMap = {};
-  obs.forEach(function(o) {
-    if (!o.lat || !o.lon) return;
-    var key = o.lat.toFixed(4) + ',' + o.lon.toFixed(4);
-    if (!locMap[key]) locMap[key] = { lat: o.lat, lon: o.lon, sp: {}, dates: [] };
-    locMap[key].sp[o.name] = true;
-    if (o.date) locMap[key].dates.push(o.date);
-  });
-
-  var locs = Object.values(locMap);
-  var maxSp = locs.reduce(function(m, l) { return Math.max(m, Object.keys(l.sp).length); }, 1);
-
-  locs.forEach(function(loc) {
-    var spList   = Object.keys(loc.sp);
-    var t        = spList.length / maxSp;
-    var radius   = 5 + Math.round(t * 12);
-    var color    = t < 0.35 ? '#4a7c59' : t < 0.65 ? '#f0b429' : '#d4622a';
-    var dates    = loc.dates.slice().sort();
-    var dateInfo = dates.length ? fmtDate(dates[0]) + (dates[dates.length-1] !== dates[0] ? ' – ' + fmtDate(dates[dates.length-1]) : '') : '';
-
-    var marker = L.circleMarker([loc.lat, loc.lon], {
-      radius: radius, fillColor: color,
-      color: 'rgba(255,255,255,0.2)', weight: 1.5, fillOpacity: 0.8,
-    }).addTo(map);
-
-    var topSp = spList.slice(0, 6).join('<br>');
-    var more  = spList.length > 6 ? '<br><span style="color:rgba(200,221,208,0.45)">+ ' + (spList.length - 6) + ' more</span>' : '';
-    marker.bindPopup(
-      '<strong>' + spList.length + ' species</strong>' +
-      (dateInfo ? '<span style="color:rgba(200,221,208,0.5)">' + dateInfo + '</span><br>' : '') +
-      topSp + more
-    );
-  });
-
-  if (locs.length) {
-    map.fitBounds(L.latLngBounds(locs.map(function(l) { return [l.lat, l.lon]; })), { padding: [40, 40] });
-  }
-
-  // Stats
-  var spAll  = {};
-  obs.forEach(function(o) { spAll[o.name] = true; });
-  document.getElementById('stat-sp').textContent  = Object.keys(spAll).length;
-  document.getElementById('stat-obs').textContent = obs.length;
-  document.getElementById('stat-loc').textContent = locs.length;
-}
-
-function buildSidebar(obs) {
-  // Count per species, sorted by count desc
-  var counts = {};
-  obs.forEach(function(o) { counts[o.name] = (counts[o.name] || 0) + 1; });
-  var sorted = Object.keys(counts).sort(function(a, b) { return counts[b] - counts[a]; });
-
-  var list = document.getElementById('species-list');
-  list.innerHTML = sorted.map(function(name) {
-    var photoUrl = photoManifest[name] || '';
-    var imgHtml  = photoUrl
-      ? '<img class="sp-thumb" src="' + photoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
-        '<div class="sp-thumb-placeholder" style="display:none">🐦</div>'
-      : '<div class="sp-thumb-placeholder">🐦</div>';
-    return '<div class="sp-row">' + imgHtml +
-      '<div class="sp-info">' +
-        '<div class="sp-name">' + escHtml(name) + '</div>' +
-        '<div class="sp-count">' + counts[name] + ' observation' + (counts[name] !== 1 ? 's' : '') + '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
+function getParam(k) { return new URLSearchParams(location.search).get(k); }
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+var tripId = getParam('id');
+
+if (tripId) {
+  // ── VIEWER MODE ────────────────────────────────
+  document.title = 'Bird Trip — Only Bird Nerds';
+  document.getElementById('trip-view').style.display = 'block';
+
+  var map = L.map('map', { center: [39,-98], zoom: 4 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', maxZoom: 19,
+  }).addTo(map);
+
+  function setState(msg, isErr) {
+    var el = document.getElementById('state-msg');
+    el.textContent = msg;
+    if (isErr) el.classList.add('err');
+  }
+  function hideOverlay() { document.getElementById('state-overlay').style.display = 'none'; }
+
+  _sb.from('trips').select('id,name,user_id,created_at,observations')
+    .eq('id', tripId).single()
+    .then(function(res) {
+      if (res.error || !res.data) { setState('Trip not found or has been deleted.', true); return; }
+      renderTrip(res.data);
+    });
+
+  function renderTrip(trip) {
+    var obs = trip.observations || [];
+    _sb.from('profiles').select('display_name').eq('id', trip.user_id).single()
+      .then(function(res) { buildMeta(trip, obs, res.data && res.data.display_name); })
+      .catch(function() { buildMeta(trip, obs, null); });
+    buildMap(obs);
+    buildSidebar(obs);
+    document.title = trip.name + ' — Only Bird Nerds';
+    hideOverlay();
+  }
+
+  function buildMeta(trip, obs, creatorName) {
+    document.getElementById('trip-title').textContent = trip.name;
+    var dates = obs.map(function(o) { return o.date; }).filter(Boolean).sort();
+    var dr = '';
+    if (dates.length) {
+      dr = fmtDate(dates[0]);
+      if (dates[dates.length-1] !== dates[0]) dr += ' – ' + fmtDate(dates[dates.length-1]);
+    }
+    var meta = dr;
+    if (creatorName) meta = (meta ? meta + '  ·  ' : '') + 'by ' + creatorName;
+    document.getElementById('trip-meta').textContent = meta || 'Bird trip';
+  }
+
+  function buildMap(obs) {
+    var locMap = {};
+    obs.forEach(function(o) {
+      if (!o.lat || !o.lon) return;
+      var key = o.lat.toFixed(4) + ',' + o.lon.toFixed(4);
+      if (!locMap[key]) locMap[key] = { lat: o.lat, lon: o.lon, sp: {}, dates: [] };
+      locMap[key].sp[o.name] = true;
+      if (o.date) locMap[key].dates.push(o.date);
+    });
+    var locs  = Object.values(locMap);
+    var maxSp = locs.reduce(function(m,l) { return Math.max(m, Object.keys(l.sp).length); }, 1);
+    locs.forEach(function(loc) {
+      var spList = Object.keys(loc.sp);
+      var t      = spList.length / maxSp;
+      var radius = 5 + Math.round(t * 12);
+      var color  = t < 0.35 ? '#4a7c59' : t < 0.65 ? '#f0b429' : '#d4622a';
+      var dates  = loc.dates.slice().sort();
+      var dInfo  = dates.length ? fmtDate(dates[0]) + (dates[dates.length-1] !== dates[0] ? ' – ' + fmtDate(dates[dates.length-1]) : '') : '';
+      var topSp  = spList.slice(0,6).join('<br>');
+      var more   = spList.length > 6 ? '<br><span style="color:rgba(200,221,208,0.45)">+ ' + (spList.length-6) + ' more</span>' : '';
+      L.circleMarker([loc.lat,loc.lon], {
+        radius: radius, fillColor: color,
+        color: 'rgba(255,255,255,0.2)', weight: 1.5, fillOpacity: 0.8,
+      }).addTo(map).bindPopup(
+        '<strong>' + spList.length + ' species</strong>' +
+        (dInfo ? '<span style="color:rgba(200,221,208,0.5)">' + dInfo + '</span><br>' : '') +
+        topSp + more
+      );
+    });
+    if (locs.length) map.fitBounds(L.latLngBounds(locs.map(function(l){return[l.lat,l.lon];})), {padding:[40,40]});
+    var spAll = {};
+    obs.forEach(function(o) { spAll[o.name] = true; });
+    document.getElementById('stat-sp').textContent  = Object.keys(spAll).length;
+    document.getElementById('stat-obs').textContent = obs.length;
+    document.getElementById('stat-loc').textContent = locs.length;
+  }
+
+  function buildSidebar(obs) {
+    var counts = {};
+    obs.forEach(function(o) { counts[o.name] = (counts[o.name] || 0) + 1; });
+    var sorted = Object.keys(counts).sort(function(a,b) { return counts[b]-counts[a]; });
+    document.getElementById('species-list').innerHTML = sorted.map(function(name) {
+      var url = photoManifest[name] || '';
+      var img = url
+        ? '<img class="sp-thumb" src="' + url + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+          '<div class="sp-thumb-placeholder" style="display:none">🐦</div>'
+        : '<div class="sp-thumb-placeholder">🐦</div>';
+      return '<div class="sp-row">' + img +
+        '<div class="sp-info">' +
+          '<div class="sp-name">' + escHtml(name) + '</div>' +
+          '<div class="sp-count">' + counts[name] + ' obs</div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+} else {
+  // ── LISTING MODE ───────────────────────────────
+  document.getElementById('listing-view').style.display = 'flex';
+
+  _sb.from('trips').select('id,name,user_id,created_at,observations')
+    .order('created_at', { ascending: false })
+    .then(function(res) {
+      if (res.error || !res.data || !res.data.length) {
+        document.getElementById('listing-loading').textContent = 'No shared trips yet.';
+        return;
+      }
+      var trips = res.data;
+      // Batch-fetch creator names
+      var uids = trips.map(function(t){return t.user_id;}).filter(function(v,i,a){return a.indexOf(v)===i;});
+      _sb.from('profiles').select('id,display_name').in('id', uids)
+        .then(function(pres) {
+          var pm = {};
+          if (pres.data) pres.data.forEach(function(p) { pm[p.id] = p.display_name; });
+          renderListing(trips, pm);
+        })
+        .catch(function() { renderListing(trips, {}); });
+    });
+
+  function renderListing(trips, profileMap) {
+    var grid = document.getElementById('trip-grid');
+    grid.innerHTML = trips.map(function(t) {
+      var obs    = t.observations || [];
+      var sp     = {};
+      obs.forEach(function(o) { sp[o.name] = true; });
+      var spCount = Object.keys(sp).length;
+      var dates   = obs.map(function(o){return o.date;}).filter(Boolean).sort();
+      var dr = '';
+      if (dates.length) {
+        dr = fmtDateShort(dates[0]);
+        if (dates[dates.length-1] !== dates[0]) dr += ' – ' + fmtDateShort(dates[dates.length-1]);
+      }
+      var creator = profileMap[t.user_id] || 'Birder';
+      var url     = 'shared.html?id=' + t.id;
+      return '<a class="trip-listing-card" href="' + url + '">' +
+        '<div class="tlc-header">' +
+          '<div class="tlc-name">' + escHtml(t.name) + '</div>' +
+          '<div class="tlc-sp-badge">' + spCount + ' sp</div>' +
+        '</div>' +
+        '<div class="tlc-creator">by ' + escHtml(creator) + '</div>' +
+        (dr ? '<div class="tlc-dates">' + dr + '</div>' : '') +
+        '<div class="tlc-footer"><span>' + obs.length + ' observations</span></div>' +
+      '</a>';
+    }).join('');
+  }
 }
 </script>
 </body>
