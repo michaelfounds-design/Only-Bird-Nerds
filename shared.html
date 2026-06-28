@@ -145,6 +145,10 @@
       font-family: 'DM Mono', monospace; font-size: 0.6rem;
       color: var(--sage); letter-spacing: 0.04em;
     }
+    .tlc-desc {
+      font-family: 'Lora', serif; font-style: italic; font-size: 0.72rem;
+      color: rgba(200,221,208,0.55); line-height: 1.45;
+    }
     .tlc-dates {
       font-family: 'DM Mono', monospace; font-size: 0.58rem;
       color: rgba(200,221,208,0.4); letter-spacing: 0.03em;
@@ -228,7 +232,7 @@ if (tripId) {
   // ── LISTING MODE ───────────────────────────────
   document.getElementById('listing-view').style.display = 'flex';
 
-  _sb.from('trips').select('id,name,user_id,created_at,observations')
+  _sb.from('trips').select('id,name,description,user_id,created_at,observations')
     .order('created_at', { ascending: false })
     .then(function(res) {
       if (res.error || !res.data || !res.data.length) {
@@ -268,6 +272,7 @@ if (tripId) {
           '<div class="tlc-sp-badge">' + spCount + ' sp</div>' +
         '</div>' +
         '<div class="tlc-creator">by ' + escHtml(creator) + '</div>' +
+        (t.description ? '<div class="tlc-desc">' + escHtml(t.description) + '</div>' : '') +
         (dr ? '<div class="tlc-dates">' + dr + '</div>' : '') +
         '<div class="tlc-footer"><span>' + obs.length + ' observations</span></div>' +
       '</a>';
