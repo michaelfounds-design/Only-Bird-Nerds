@@ -582,12 +582,14 @@
     }
     #map-actions.visible { display: flex; }
     .map-action-btn {
-      width: 40px; height: 40px;
+      height: 40px; padding: 0 16px;
       background: rgba(15,26,18,0.92);
       border: 1px solid rgba(122,171,136,0.28);
-      border-radius: 50%; color: var(--sage);
-      font-size: 1.05rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      border-radius: 100px; color: var(--sage);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem; letter-spacing: 0.05em;
+      cursor: pointer; white-space: nowrap;
+      display: flex; align-items: center; gap: 0.4rem;
       backdrop-filter: blur(12px);
       transition: all 0.15s;
     }
@@ -1239,10 +1241,9 @@
   <span id="profile-btn-label">Sign In</span>
 </button>
 
-<!-- ── Map quick actions (share + download) ── -->
+<!-- ── Map quick actions ── -->
 <div id="map-actions">
-  <button class="map-action-btn" id="map-action-share" title="Share a trip">&#128172;</button>
-  <button class="map-action-btn" id="map-action-download" title="Download map">&#11015;</button>
+  <button class="map-action-btn" id="map-action-share" title="Share a trip">&#128279; Share</button>
 </div>
 
 <div id="cloud-toast">✓ Saved to cloud</div>
@@ -3106,7 +3107,6 @@ document.getElementById('profile-btn').addEventListener('click', function() {
 document.getElementById('share-download-btn').addEventListener('click', downloadMap);
 document.getElementById('share-trip-btn').addEventListener('click', openTripDialog);
 document.getElementById('map-action-share').addEventListener('click', openTripDialog);
-document.getElementById('map-action-download').addEventListener('click', downloadMap);
 
 // ─────────────────────────────────────────
 // MOBILE PANEL
