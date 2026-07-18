@@ -22,15 +22,31 @@ OUT   = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'iucn_data.json
 
 
 def fetch_status(sci):
-    url = ('https://apiv3.iucnredlist.org/api/v3/species/'
-           + urllib.parse.quote(sci) + '?token=' + TOKEN)
+    # Try IUCN API v4 (newer tokens use Authorization header)
+    url = 'https://api.iucnredlist.org/api/v4/taxa/scientific_name?scientific_name=' + urllib.parse.quote(sci)
+    req = urllib.request.Request(url, headers={'Authorization': 'Token ' + TOKEN})
     try:
-        with urllib.request.urlopen(url, timeout=12) as r:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            d = json.loads(r.read())
+            # v4 response: {"taxon": {"sis_taxon_id":..., "red_list_category": {"code": "NT"}}}
+            taxon = d.get('taxon') or (d.get('taxa') and d['taxa'][0] if d.get('taxa') else None)
+            if taxon:
+                cat = (taxon.get('red_list_category') or {}).get('code')
+                if cat:
+                    return cat
+    except Exception as e:
+        pass
+
+    # Fallback: try IUCN API v3 (older token format, token as query param)
+    url3 = ('https://apiv3.iucnredlist.org/api/v3/species/'
+            + urllib.parse.quote(sci) + '?token=' + TOKEN)
+    try:
+        with urllib.request.urlopen(url3, timeout=12) as r:
             d = json.loads(r.read())
             if d.get('result'):
                 return d['result'][0].get('category')
     except Exception as e:
-        print(f'    error: {e}')
+        print('    error: ' + str(e))
     return None
 
 
@@ -55,9 +71,9 @@ def main():
         tag = f'  [{i:>3}/{len(names)}] {sci}'
         if cat and cat != 'LC':
             result[sci] = cat
-            print(f'{tag}  →  {cat}')
+            print(f'{tag}  ->  {cat}')
         else:
-            print(f'{tag}  →  LC')
+            print(f'{tag}  ->  LC')
         time.sleep(0.35)
 
     with open(OUT, 'w') as f:
