@@ -668,6 +668,25 @@
       transition: background 0.15s, border-color 0.15s;
     }
     #aviary-btn:hover { background: rgba(74,124,89,0.18); border-color: rgba(122,171,136,0.4); color: var(--cream); }
+    #data-meta-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 0.35rem 0.9rem 0;
+      padding: 0.35rem 0.6rem;
+      background: rgba(122,171,136,0.05);
+      border-radius: 7px;
+    }
+    #data-meta-date {
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.04em; color: rgba(122,171,136,0.55);
+    }
+    #refresh-data-btn {
+      background: none; border: none;
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--sage); cursor: pointer; padding: 0.15rem 0.4rem;
+      border-radius: 5px; transition: color 0.15s, background 0.15s;
+    }
+    #refresh-data-btn:hover { color: var(--cream); background: rgba(74,124,89,0.2); }
     /* Hero stats */
     .av-heroes {
       display: grid; grid-template-columns: repeat(4, 1fr);
@@ -1356,6 +1375,12 @@
     </div>
     <button id="aviary-btn" onclick="openAviary()">🦅 My Aviary — your birding in numbers →</button>
 
+    <div id="data-meta-row" style="display:none">
+      <span id="data-meta-date"></span>
+      <button id="refresh-data-btn">↻ Refresh data</button>
+    </div>
+    <input type="file" id="refresh-csv-input" accept=".csv" style="display:none" />
+
     <div class="panel-scroll">
       <div class="sec-label">Species Search</div>
       <div class="search-wrap">
@@ -1971,16 +1996,74 @@ function fetchInat(name, retries, cb) {
 // ─────────────────────────────────────────
 function onCSVParsed(res) {
   allRecords = normalize(res.data);
+  _finalizeLoad(true);
+}
+
+function onRefreshParsed(res) {
+  var newRecs = normalize(res.data);
+  // Upsert by subId: update existing, add new
+  var bySubId = {};
+  allRecords.forEach(function(r) { bySubId[r.subId] = r; });
+  var added = 0, updated = 0;
+  newRecs.forEach(function(r) {
+    if (bySubId[r.subId]) { updated++; }
+    else { bySubId[r.subId] = r; added++; }
+  });
+  allRecords = Object.keys(bySubId).map(function(k) { return bySubId[k]; });
+  _finalizeLoad(false);
+  showCloudToast('+ ' + added + ' new · ' + updated + ' updated');
+}
+
+function _finalizeLoad(firstLoad) {
   computeLifers(allRecords);
   computeGlobalFreq(allRecords);
   speciesList = uniqueSpecies(allRecords);
   buildStateCountyMap(allRecords);
   currentStats = computeStats(allRecords);
-  showApp();
+  _saveToStorage();
+  updateDataMeta();
+  if (firstLoad) showApp();
   buildAutocomplete();
   buildDropdowns();
   renderPanelQB();
   setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
+}
+
+function _saveToStorage() {
+  try {
+    localStorage.setItem('obn_records', JSON.stringify(allRecords));
+    localStorage.setItem('obn_csv_date', new Date().toISOString());
+  } catch(e) {
+    localStorage.removeItem('obn_records');
+  }
+}
+
+function updateDataMeta() {
+  var row  = document.getElementById('data-meta-row');
+  var span = document.getElementById('data-meta-date');
+  if (!row || !span) return;
+  var iso = localStorage.getItem('obn_csv_date');
+  if (iso) {
+    var d = new Date(iso);
+    var label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    span.textContent = 'Updated ' + label;
+  } else {
+    span.textContent = '';
+  }
+  row.style.display = allRecords.length ? 'flex' : 'none';
+}
+
+function tryAutoLoad() {
+  if (_tripViewMode || allRecords.length) return;
+  var stored = localStorage.getItem('obn_records');
+  if (!stored) return;
+  try {
+    var recs = JSON.parse(stored);
+    if (recs && recs.length) {
+      allRecords = recs;
+      _finalizeLoad(true);
+    }
+  } catch(e) { localStorage.removeItem('obn_records'); }
 }
 
 function parseCSV(file) {
@@ -2862,6 +2945,7 @@ function showApp() {
   if (!_tripViewMode) {
     document.getElementById('map-actions').classList.add('visible');
     document.getElementById('aviary-btn').style.display = 'block';
+    updateDataMeta();
   }
 }
 
@@ -2929,6 +3013,21 @@ dropZone.addEventListener('drop', function(e) {
 });
 csvInput.addEventListener('change', function() {
   if (this.files[0]) parseCSV(this.files[0]);
+  this.value = '';
+});
+
+var refreshCsvInput = document.getElementById('refresh-csv-input');
+document.getElementById('refresh-data-btn').addEventListener('click', function() {
+  refreshCsvInput.click();
+});
+refreshCsvInput.addEventListener('change', function() {
+  if (!this.files[0]) return;
+  Papa.parse(this.files[0], {
+    header: true, skipEmptyLines: true,
+    complete: onRefreshParsed,
+    error: function(e) { alert('Could not read CSV: ' + e.message); }
+  });
+  this.value = '';
 });
 
 // ─────────────────────────────────────────
@@ -3576,6 +3675,9 @@ _sb.auth.onAuthStateChange(function(event, session) {
   updateAuthUI();
   if (currentUser) syncFromCloud();
 });
+
+// Auto-load persisted CSV data on page start
+setTimeout(tryAutoLoad, 200);
 
 // Profile save → also write to Supabase
 document.getElementById('profile-save-btn').addEventListener('click', function() {
