@@ -437,6 +437,18 @@
       border-color: rgba(122,171,136,0.45);
     }
     .profile-field textarea { resize: vertical; min-height: 72px; }
+    #edit-profile-toggle-btn {
+      width: 100%; padding: 0.5rem;
+      background: transparent;
+      border: 1px solid rgba(122,171,136,0.3);
+      border-radius: 8px;
+      color: var(--sage);
+      font-family: 'DM Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+      margin-bottom: 1rem;
+    }
+    #edit-profile-toggle-btn:hover { border-color: var(--sage); color: var(--cream); }
     #profile-save-btn {
       width: 100%; padding: 0.55rem;
       background: rgba(74,124,89,0.2);
@@ -1461,25 +1473,28 @@
         <span id="auth-user-email"></span>
         <button id="auth-signout-btn">Sign out</button>
       </div>
+      <button id="edit-profile-toggle-btn">Edit Profile</button>
 
-      <div id="avatar-wrap">
-        <div id="avatar-circle">
-          <img id="avatar-img" src="" alt="" />
-          <span id="avatar-placeholder">👤</span>
+      <div id="profile-fields" style="display:none">
+        <div id="avatar-wrap">
+          <div id="avatar-circle">
+            <img id="avatar-img" src="" alt="" />
+            <span id="avatar-placeholder">👤</span>
+          </div>
+          <span id="avatar-edit-hint">Click to upload photo</span>
+          <input type="file" id="avatar-input" accept="image/*" style="display:none" />
         </div>
-        <span id="avatar-edit-hint">Click to upload photo</span>
-        <input type="file" id="avatar-input" accept="image/*" style="display:none" />
+        <div class="profile-field">
+          <label>Display name</label>
+          <input type="text" id="profile-name" placeholder="Your name" maxlength="60" />
+        </div>
+        <div class="profile-field">
+          <label>About you</label>
+          <textarea id="profile-bio" placeholder="A little about your birding journey…" maxlength="280"></textarea>
+        </div>
+        <button id="profile-save-btn">Save profile</button>
+        <div id="profile-saved-msg">Saved!</div>
       </div>
-      <div class="profile-field">
-        <label>Display name</label>
-        <input type="text" id="profile-name" placeholder="Your name" maxlength="60" />
-      </div>
-      <div class="profile-field">
-        <label>About you</label>
-        <textarea id="profile-bio" placeholder="A little about your birding journey…" maxlength="280"></textarea>
-      </div>
-      <button id="profile-save-btn">Save profile</button>
-      <div id="profile-saved-msg">Saved!</div>
     </div>
   </div>
 
@@ -3424,6 +3439,10 @@ function updateAuthUI() {
   var loggedIn = !!currentUser;
   document.getElementById('auth-section').style.display   = loggedIn ? 'none' : '';
   document.getElementById('profile-editor').style.display = loggedIn ? ''     : 'none';
+  if (!loggedIn) {
+    document.getElementById('profile-fields').style.display = 'none';
+    document.getElementById('edit-profile-toggle-btn').textContent = 'Edit Profile';
+  }
   var btn   = document.getElementById('profile-btn');
   var label = document.getElementById('profile-btn-label');
   if (loggedIn) {
@@ -3484,8 +3503,17 @@ document.getElementById('auth-signup-btn').addEventListener('click', function() 
 document.getElementById('auth-signout-btn').addEventListener('click', function() {
   _sb.auth.signOut().then(function() {
     currentUser = null;
+    document.getElementById('profile-fields').style.display = 'none';
+    document.getElementById('edit-profile-toggle-btn').textContent = 'Edit Profile';
     updateAuthUI();
   });
+});
+
+document.getElementById('edit-profile-toggle-btn').addEventListener('click', function() {
+  var fields = document.getElementById('profile-fields');
+  var open = fields.style.display !== 'none';
+  fields.style.display = open ? 'none' : '';
+  this.textContent = open ? 'Edit Profile' : 'Close';
 });
 
 function syncFromCloud() {
