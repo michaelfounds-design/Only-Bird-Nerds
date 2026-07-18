@@ -2012,40 +2012,25 @@ function onCSVParsed(res) {
 
 function onRefreshParsed(res) {
   var newRecs = normalize(res.data);
+  var oldCount = allRecords.length;
 
-  // Snapshot existing data so the user can undo if something looks wrong
+  // Backup current data before replacing
   try {
     localStorage.setItem('obn_records_backup', localStorage.getItem('obn_records') || '');
     localStorage.setItem('obn_csv_date_backup', localStorage.getItem('obn_csv_date') || '');
   } catch(e) {}
 
-  // Deduplicate by (subId + name) — each eBird row is one species per checklist
-  var existing = {};
-  allRecords.forEach(function(r) { existing[r.subId + '\x00' + r.name] = true; });
-
-  var added = 0;
-  var newChecklists = {};
-  newRecs.forEach(function(r) {
-    var key = r.subId + '\x00' + r.name;
-    if (!existing[key]) {
-      allRecords.push(r);
-      existing[key] = true;
-      added++;
-      newChecklists[r.subId] = true;
-    }
-  });
-
+  allRecords = newRecs;
   _finalizeLoad(false);
 
-  var chkCount = Object.keys(newChecklists).length;
-  var msg = added > 0
-    ? '+ ' + added + ' observations across ' + chkCount + ' new checklists'
-    : 'No new observations found';
+  var diff = allRecords.length - oldCount;
+  var msg = diff > 0
+    ? '+' + diff + ' new observations · ' + allRecords.length.toLocaleString() + ' total'
+    : 'Reloaded · ' + allRecords.length.toLocaleString() + ' observations';
   showCloudToast(msg);
 
-  // Show undo button
   var undoBtn = document.getElementById('undo-refresh-btn');
-  if (undoBtn) undoBtn.style.display = added > 0 ? 'inline-block' : 'none';
+  if (undoBtn) undoBtn.style.display = oldCount > 0 ? 'inline-block' : 'none';
 }
 
 function _finalizeLoad(firstLoad) {
