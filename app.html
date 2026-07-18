@@ -1469,6 +1469,7 @@
   <button class="lbtn on" id="btn-hotspots">📍 Locations</button>
   <button class="lbtn on" id="btn-regions">🗺 Regions</button>
   <button class="lbtn on" id="btn-heat">🔥 Heat</button>
+  <button class="lbtn" id="btn-conservation">🌿 Conservation</button>
 </div>
 
 <!-- ── Profile trigger ── -->
@@ -1711,6 +1712,12 @@ var showHotspots  = true;
 var showRegions   = true;
 var showHeat      = true;
 var heatLayer     = null;
+var showProtected       = false;
+var protectedAreasLayer = null;
+// Free IUCN token: https://apiv3.iucnredlist.org/api/v3/token
+var IUCN_TOKEN = '';
+var iucnCache  = {};
+var sciNameMap = {};
 
 // markerRefs: regionKey → {marker, radius, label, spCount, liferCount, sm}
 // rebuilt on every updateMap() call
@@ -2041,10 +2048,37 @@ function onRefreshParsed(res) {
   if (undoBtn) undoBtn.style.display = oldCount > 0 ? 'inline-block' : 'none';
 }
 
+var IUCN_COLORS = {
+  NT:'#7cb342', VU:'#f9a825', EN:'#ef6c00', CR:'#c62828',
+  EW:'#6a1b9a', EX:'#37474f', DD:'#78909c'
+};
+
+function iucnBadgeHtml(cat) {
+  var c = IUCN_COLORS[cat] || '#78909c';
+  return '<span title="IUCN: ' + cat + '" style="display:inline-block;padding:1px 5px;border-radius:3px;'
+    + 'font-size:9px;font-weight:700;font-family:\'DM Mono\',monospace;'
+    + 'letter-spacing:0.04em;background:' + c + ';color:#fff">' + cat + '</span>';
+}
+
+function fetchIUCNStatus(sci, cb) {
+  if (iucnCache[sci] !== undefined) { cb(iucnCache[sci]); return; }
+  iucnCache[sci] = null;
+  fetch('https://apiv3.iucnredlist.org/api/v3/species/' + encodeURIComponent(sci) + '?token=' + IUCN_TOKEN)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var cat = (d.result && d.result[0]) ? d.result[0].category : null;
+      iucnCache[sci] = cat;
+      cb(cat);
+    })
+    .catch(function() { iucnCache[sci] = null; });
+}
+
 function _finalizeLoad(firstLoad) {
   computeLifers(allRecords);
   computeGlobalFreq(allRecords);
   speciesList = uniqueSpecies(allRecords);
+  sciNameMap = {};
+  allRecords.forEach(function(r) { if (r.sci && !sciNameMap[r.name]) sciNameMap[r.name] = r.sci; });
   buildStateCountyMap(allRecords);
   currentStats = computeStats(allRecords);
   _saveToStorage();
@@ -2217,6 +2251,12 @@ function initMap() {
   countyLayer = L.layerGroup();
   stateLayer  = L.layerGroup();
 
+  protectedAreasLayer = L.tileLayer(
+    'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/WDPA_protected_areas/MapServer/tile/{z}/{y}/{x}',
+    { attribution: '© UNEP-WCMC & IUCN · <a href="https://www.protectedplanet.net" target="_blank">Protected Planet</a>',
+      opacity: 0.55, maxZoom: 19 }
+  );
+
   map.on('zoomend', handleZoom);
 
   // When a popup opens, move its species to the front of the photo queue
@@ -2238,6 +2278,16 @@ function initMap() {
         pinToMarker(btn.getAttribute('data-pin-rkey'), btn.getAttribute('data-pin-sp'));
       });
     });
+    // Fetch IUCN conservation status for each species row
+    if (IUCN_TOKEN) {
+      el.querySelectorAll('[data-iucn-sci]').forEach(function(span) {
+        var sci = span.getAttribute('data-iucn-sci');
+        if (!sci) return;
+        fetchIUCNStatus(sci, function(cat) {
+          if (cat && cat !== 'LC') span.innerHTML = iucnBadgeHtml(cat);
+        });
+      });
+    }
   });
 
   // Force Leaflet to re-read container size after flex layout settles
@@ -2421,6 +2471,12 @@ function buildPopup(title, sm, rKey, extra) {
       + 'style="background:' + (isPinned ? '#fff3cd' : 'none') + ';'
       + 'border:1px solid ' + (isPinned ? '#f0b429' : '#ddd') + ';border-radius:5px;'
       + 'cursor:pointer;padding:5px 7px;font-size:13px;touch-action:manipulation;min-width:32px;min-height:32px;">📌</button></td>';
+
+    // IUCN conservation status badge (filled async via popupopen handler)
+    var sciAttr = (sciNameMap[e.name] || '').replace(/"/g, '&quot;');
+    h += '<td style="padding:2px 4px;vertical-align:middle;min-width:30px">'
+      + (sciAttr ? '<span data-iucn-sci="' + sciAttr + '"></span>' : '')
+      + '</td>';
 
     h += '</tr>';
   });
@@ -2769,10 +2825,11 @@ function handleZoom() {
 
   // Rebuild heat with zoom-appropriate radius then show/hide
   if (showHeat && _heatPts.length) updateHeat();
-  setL(heatLayer,    showHeat);
-  setL(clusterGroup, showHotspots && z >= ZOOM_LOCATION);
-  setL(countyLayer,  showRegions  && z >= ZOOM_COUNTY && z < ZOOM_LOCATION);
-  setL(stateLayer,   showRegions  && z < ZOOM_COUNTY);
+  setL(heatLayer,           showHeat);
+  setL(clusterGroup,        showHotspots && z >= ZOOM_LOCATION);
+  setL(countyLayer,         showRegions  && z >= ZOOM_COUNTY && z < ZOOM_LOCATION);
+  setL(stateLayer,          showRegions  && z < ZOOM_COUNTY);
+  setL(protectedAreasLayer, showProtected);
 }
 
 // ─────────────────────────────────────────
@@ -2996,6 +3053,15 @@ document.getElementById('btn-heat').addEventListener('click', function() {
   this.classList.toggle('on', showHeat);
   updateHeat(getFiltered());
   handleZoom();
+});
+
+document.getElementById('btn-conservation').addEventListener('click', function() {
+  showProtected = !showProtected;
+  this.classList.toggle('on', showProtected);
+  if (map) {
+    if (showProtected) map.addLayer(protectedAreasLayer);
+    else map.removeLayer(protectedAreasLayer);
+  }
 });
 
 document.getElementById('photo-dialog-bg').addEventListener('click', function() { photoDialog.close(); });
