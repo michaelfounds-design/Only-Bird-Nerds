@@ -2054,12 +2054,22 @@ var IUCN_COLORS = {
   NT:'#7cb342', VU:'#f9a825', EN:'#ef6c00', CR:'#c62828',
   EW:'#6a1b9a', EX:'#37474f', DD:'#78909c'
 };
+var IUCN_LABELS = {
+  NT:'Near Threatened', VU:'Vulnerable', EN:'Endangered',
+  CR:'Critically Endangered', EW:'Extinct in the Wild',
+  EX:'Extinct', DD:'Data Deficient'
+};
 
-function iucnBadgeHtml(cat) {
-  var c = IUCN_COLORS[cat] || '#78909c';
-  return '<span title="IUCN: ' + cat + '" style="display:inline-block;padding:1px 5px;border-radius:3px;'
+function iucnBadgeHtml(cat, sci) {
+  var c     = IUCN_COLORS[cat] || '#78909c';
+  var label = IUCN_LABELS[cat] || cat;
+  var url   = 'https://www.iucnredlist.org/search?query=' + encodeURIComponent(sci || '');
+  return '<a href="' + url + '" target="_blank" rel="noopener" '
+    + 'title="IUCN Red List: ' + label + '" '
+    + 'style="display:inline-block;padding:1px 5px;border-radius:3px;'
     + 'font-size:9px;font-weight:700;font-family:\'DM Mono\',monospace;'
-    + 'letter-spacing:0.04em;background:' + c + ';color:#fff">' + cat + '</span>';
+    + 'letter-spacing:0.04em;background:' + c + ';color:#fff;text-decoration:none;">'
+    + cat + '</a>';
 }
 
 function _loadIUCNData(cb) {
@@ -2296,7 +2306,7 @@ function initMap() {
       var sci = span.getAttribute('data-iucn-sci');
       if (!sci) return;
       fetchIUCNStatus(sci, function(cat) {
-        if (cat && cat !== 'LC') span.innerHTML = iucnBadgeHtml(cat);
+        if (cat && cat !== 'LC') span.innerHTML = iucnBadgeHtml(cat, sci);
       });
     });
   });
