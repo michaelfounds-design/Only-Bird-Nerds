@@ -1714,10 +1714,12 @@ var showHeat      = true;
 var heatLayer     = null;
 var showProtected       = false;
 var protectedAreasLayer = null;
-var WDPA_TOKEN  = '';
-var IUCN_TOKEN  = 'bWx1CLru5ipmfp1myry31UP5YG4nbJ3VGdxk';
-var iucnCache   = {};
-var sciNameMap  = {};
+var WDPA_TOKEN   = '';
+var iucnCache    = {};
+var sciNameMap   = {};
+var _iucnData    = null;
+var _iucnLoading = false;
+var _iucnQueue   = [];
 
 // markerRefs: regionKey → {marker, radius, label, spCount, liferCount, sm}
 // rebuilt on every updateMap() call
@@ -2060,17 +2062,28 @@ function iucnBadgeHtml(cat) {
     + 'letter-spacing:0.04em;background:' + c + ';color:#fff">' + cat + '</span>';
 }
 
+function _loadIUCNData(cb) {
+  if (_iucnData)    { cb(_iucnData); return; }
+  _iucnQueue.push(cb);
+  if (_iucnLoading) return;
+  _iucnLoading = true;
+  fetch('/iucn_data.json')
+    .then(function(r) { return r.json(); })
+    .then(function(d) { _iucnData = d; })
+    .catch(function()  { _iucnData = {}; })
+    .finally(function() {
+      _iucnQueue.forEach(function(fn) { fn(_iucnData); });
+      _iucnQueue = [];
+    });
+}
+
 function fetchIUCNStatus(sci, cb) {
   if (iucnCache[sci] !== undefined) { cb(iucnCache[sci]); return; }
-  iucnCache[sci] = null;
-  fetch('https://apiv3.iucnredlist.org/api/v3/species/' + encodeURIComponent(sci) + '?token=' + IUCN_TOKEN)
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      var cat = (d.result && d.result[0]) ? d.result[0].category : null;
-      iucnCache[sci] = cat;
-      cb(cat);
-    })
-    .catch(function() { iucnCache[sci] = null; });
+  _loadIUCNData(function(data) {
+    var cat = data[sci] || null;
+    iucnCache[sci] = cat;
+    cb(cat);
+  });
 }
 
 function _finalizeLoad(firstLoad) {
