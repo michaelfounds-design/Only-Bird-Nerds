@@ -687,6 +687,14 @@
       border-radius: 5px; transition: color 0.15s, background 0.15s;
     }
     #refresh-data-btn:hover { color: var(--cream); background: rgba(74,124,89,0.2); }
+    #undo-refresh-btn {
+      background: none; border: none;
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--coral); cursor: pointer; padding: 0.15rem 0.4rem;
+      border-radius: 5px; transition: color 0.15s, background 0.15s;
+    }
+    #undo-refresh-btn:hover { color: #fff; background: rgba(212,98,42,0.2); }
     /* Hero stats */
     .av-heroes {
       display: grid; grid-template-columns: repeat(4, 1fr);
@@ -1377,7 +1385,10 @@
 
     <div id="data-meta-row" style="display:none">
       <span id="data-meta-date"></span>
-      <button id="refresh-data-btn">↻ Refresh data</button>
+      <div style="display:flex;gap:0.4rem;align-items:center">
+        <button id="undo-refresh-btn" style="display:none">↩ Undo</button>
+        <button id="refresh-data-btn">↻ Refresh data</button>
+      </div>
     </div>
     <input type="file" id="refresh-csv-input" accept=".csv" style="display:none" />
 
@@ -2001,17 +2012,40 @@ function onCSVParsed(res) {
 
 function onRefreshParsed(res) {
   var newRecs = normalize(res.data);
-  // Upsert by subId: update existing, add new
-  var bySubId = {};
-  allRecords.forEach(function(r) { bySubId[r.subId] = r; });
-  var added = 0, updated = 0;
+
+  // Snapshot existing data so the user can undo if something looks wrong
+  try {
+    localStorage.setItem('obn_records_backup', localStorage.getItem('obn_records') || '');
+    localStorage.setItem('obn_csv_date_backup', localStorage.getItem('obn_csv_date') || '');
+  } catch(e) {}
+
+  // Deduplicate by (subId + name) — each eBird row is one species per checklist
+  var existing = {};
+  allRecords.forEach(function(r) { existing[r.subId + '\x00' + r.name] = true; });
+
+  var added = 0;
+  var newChecklists = {};
   newRecs.forEach(function(r) {
-    if (bySubId[r.subId]) { updated++; }
-    else { bySubId[r.subId] = r; added++; }
+    var key = r.subId + '\x00' + r.name;
+    if (!existing[key]) {
+      allRecords.push(r);
+      existing[key] = true;
+      added++;
+      newChecklists[r.subId] = true;
+    }
   });
-  allRecords = Object.keys(bySubId).map(function(k) { return bySubId[k]; });
+
   _finalizeLoad(false);
-  showCloudToast('+ ' + added + ' new · ' + updated + ' updated');
+
+  var chkCount = Object.keys(newChecklists).length;
+  var msg = added > 0
+    ? '+ ' + added + ' observations across ' + chkCount + ' new checklists'
+    : 'No new observations found';
+  showCloudToast(msg);
+
+  // Show undo button
+  var undoBtn = document.getElementById('undo-refresh-btn');
+  if (undoBtn) undoBtn.style.display = added > 0 ? 'inline-block' : 'none';
 }
 
 function _finalizeLoad(firstLoad) {
@@ -3019,6 +3053,24 @@ csvInput.addEventListener('change', function() {
 var refreshCsvInput = document.getElementById('refresh-csv-input');
 document.getElementById('refresh-data-btn').addEventListener('click', function() {
   refreshCsvInput.click();
+});
+
+document.getElementById('undo-refresh-btn').addEventListener('click', function() {
+  var backup = localStorage.getItem('obn_records_backup');
+  if (!backup) return;
+  try {
+    var recs = JSON.parse(backup);
+    if (!recs || !recs.length) return;
+    allRecords = recs;
+    localStorage.setItem('obn_records', backup);
+    var dateBackup = localStorage.getItem('obn_csv_date_backup');
+    if (dateBackup) localStorage.setItem('obn_csv_date', dateBackup);
+    localStorage.removeItem('obn_records_backup');
+    localStorage.removeItem('obn_csv_date_backup');
+    _finalizeLoad(false);
+    document.getElementById('undo-refresh-btn').style.display = 'none';
+    showCloudToast('Restored to previous data');
+  } catch(e) { alert('Could not restore backup.'); }
 });
 refreshCsvInput.addEventListener('change', function() {
   if (!this.files[0]) return;
