@@ -1714,10 +1714,10 @@ var showHeat      = true;
 var heatLayer     = null;
 var showProtected       = false;
 var protectedAreasLayer = null;
-// Free WDPA token: register at https://www.protectedplanet.net/api
-var WDPA_TOKEN = '';
-var iucnCache  = {};
-var sciNameMap = {};
+var WDPA_TOKEN  = '';
+var IUCN_TOKEN  = 'bWx1CLru5ipmfp1myry31UP5YG4nbJ3VGdxk';
+var iucnCache   = {};
+var sciNameMap  = {};
 
 // markerRefs: regionKey → {marker, radius, label, spCount, liferCount, sm}
 // rebuilt on every updateMap() call
@@ -2063,7 +2063,7 @@ function iucnBadgeHtml(cat) {
 function fetchIUCNStatus(sci, cb) {
   if (iucnCache[sci] !== undefined) { cb(iucnCache[sci]); return; }
   iucnCache[sci] = null;
-  fetch('/.netlify/functions/iucn?sci=' + encodeURIComponent(sci))
+  fetch('https://apiv3.iucnredlist.org/api/v3/species/' + encodeURIComponent(sci) + '?token=' + IUCN_TOKEN)
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var cat = (d.result && d.result[0]) ? d.result[0].category : null;
