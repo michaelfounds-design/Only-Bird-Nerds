@@ -2006,26 +2006,31 @@ function normalize(rows) {
     var name = (row['Common Name'] || '').trim();
     if (!name || isNaN(lat) || isNaN(lon)) return out;
     var dateStr = (row['Date'] || '').trim();
-    var year = '', month = 0;
+    var year = '', month = 0, day = 0;
     if (dateStr) {
       var d = new Date(dateStr);
-      if (!isNaN(d)) { year = String(d.getFullYear()); month = d.getMonth() + 1; }
+      if (!isNaN(d)) { year = String(d.getFullYear()); month = d.getMonth() + 1; day = d.getDate(); }
     }
     out.push({
       subId:    row['Submission ID'] || '',
       name:     name,
-      sci:      (row['Scientific Name']     || '').trim(),
-      state:    (row['State/Province']      || '').trim(),
-      county:   (row['County']              || '').trim(),
-      location: (row['Location']            || '').trim(),
+      sci:      (row['Scientific Name']      || '').trim(),
+      state:    (row['State/Province']       || '').trim(),
+      county:   (row['County']               || '').trim(),
+      location: (row['Location']             || '').trim(),
       lat: lat, lon: lon,
       date:     dateStr,
       year:     year,
       month:    month,
-      time:     (row['Time']                || '').trim(),
-      protocol: (row['Protocol']            || '').trim(),
+      day:      day,
+      time:     (row['Time']                 || '').trim(),
+      protocol: (row['Protocol']             || '').trim(),
+      duration: parseInt(row['Duration (Min)']          || '') || 0,
+      distance: parseFloat(row['Distance Traveled (km)']|| '') || 0,
+      count:    (row['Count']                || '').trim(),
+      speciesComments: (row['Species Comments'] || '').trim(),
       allObs:   row['All Obs Reported'] === '1',
-      breeding: (row['Breeding Code']       || '').trim(),
+      breeding: (row['Breeding Code']        || '').trim(),
       lifer: false,
     });
     return out;

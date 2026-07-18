@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// OnlyBirdNerds — Quest & Badge System  v2
+// OnlyBirdNerds — Quest & Badge System  v2 Expansion
 // ─────────────────────────────────────────────────────────────
 // Badges  = earned quests  (compute → earned: true)
 // Quests  = not yet earned (shown with progress bar)
@@ -21,6 +21,9 @@ var CATEGORIES = [
   { id: 'temporal',  label: 'Temporal',    icon: '⏰' },
   { id: 'species',   label: 'Species',     icon: '🔬' },
   { id: 'regional',  label: 'Regional',    icon: '🌎' },
+  { id: 'onramp',    label: 'On-Ramp',     icon: '🌱' },
+  { id: 'quirk',     label: 'Quirk',       icon: '🎲' },
+  { id: 'pnw_pack',  label: 'PNW Pack',    icon: '🌲' },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -41,12 +44,31 @@ function computeStats(records) {
   var preEightSubs  = {};
 
   // Regional county sets  (eBird uses US-XX codes)
-  var pnwCounties     = {};  // US-OR + US-WA
-  var caCounties      = {};  // US-CA
-  var desertCounties  = {};  // US-AZ + US-NV + US-UT + US-NM
-  var txCounties      = {};  // US-TX
-  var flCounties      = {};  // US-FL
-  var rockiesCounties = {};  // US-CO + US-ID + US-MT + US-WY
+  var pnwCounties     = {};
+  var caCounties      = {};
+  var desertCounties  = {};
+  var txCounties      = {};
+  var flCounties      = {};
+  var rockiesCounties = {};
+
+  // v2 accumulators
+  var locationSubIds   = {};  // location → { subId: true }
+  var speciesSubIds    = {};  // name → { subId: true }
+  var locationMonths   = {};  // location → { month: true }
+  var janFirstYears    = {};  // year → true
+  var midnightSubs     = {};  // subId → true (00:00–02:59)
+  var migYearSp        = {};  // year → { name: true } (Apr+May only)
+  var winterSeasSp     = {};  // "Y1-Y2" → { name: true }
+  var breedingSp       = {};  // name → true
+  var subIdAllObs      = {};  // subId → bool
+  var subIdHasX        = {};  // subId → true if any row has count 'X'
+  var subIdDuration    = {};  // subId → duration (min)
+  var subIdDistance    = {};  // subId → distance (km)
+  var subIdProtocol    = {};  // subId → protocol string
+  var dippersCreedSubs = {};  // subId → true (contains American Dipper)
+  var malheurSubs      = {};  // subId → true
+  var speciesCommentRows = 0;
+  var hasLeap          = false;
 
   records.forEach(function(r) {
     speciesSeen[r.name]   = true;
@@ -88,9 +110,73 @@ function computeStats(records) {
       var mins = _parseTimeMins(r.time);
       if (mins >= 0 && mins < 360) preSixSubs[r.subId]   = true;
       if (mins >= 0 && mins < 480) preEightSubs[r.subId] = true;
+      if (mins >= 0 && mins < 180) midnightSubs[r.subId] = true;
+    }
+
+    // v2: location loyalty + phenology
+    if (r.location && r.subId) {
+      if (!locationSubIds[r.location]) locationSubIds[r.location] = {};
+      locationSubIds[r.location][r.subId] = true;
+      if (r.month) {
+        if (!locationMonths[r.location]) locationMonths[r.location] = {};
+        locationMonths[r.location][r.month] = true;
+      }
+    }
+
+    // v2: species loyalty
+    if (r.name && r.subId) {
+      if (!speciesSubIds[r.name]) speciesSubIds[r.name] = {};
+      speciesSubIds[r.name][r.subId] = true;
+    }
+
+    // v2: Jan 1 streak
+    if (r.month === 1 && r.day === 1 && r.year) janFirstYears[r.year] = true;
+
+    // v2: Leap Lister
+    if (r.month === 2 && r.day === 29) hasLeap = true;
+
+    // v2: Migration Rider (Apr + May)
+    if (r.year && (r.month === 4 || r.month === 5)) {
+      if (!migYearSp[r.year]) migYearSp[r.year] = {};
+      migYearSp[r.year][r.name] = true;
+    }
+
+    // v2: Winter Holdout (Dec of year Y + Jan of year Y+1 = winter Y/Y+1)
+    if (r.year && (r.month === 12 || r.month === 1)) {
+      var wk = r.month === 12
+        ? (r.year + '-' + (parseInt(r.year) + 1))
+        : ((parseInt(r.year) - 1) + '-' + r.year);
+      if (!winterSeasSp[wk]) winterSeasSp[wk] = {};
+      winterSeasSp[wk][r.name] = true;
+    }
+
+    // v2: Breeding Witness
+    if (r.breeding && r.name) breedingSp[r.name] = true;
+
+    // v2: per-checklist fields
+    if (r.subId) {
+      if (subIdAllObs[r.subId] === undefined) subIdAllObs[r.subId] = true;
+      if (!r.allObs) subIdAllObs[r.subId] = false;
+      if (r.count === 'X' || r.count === 'x') subIdHasX[r.subId] = true;
+      if (r.duration && !subIdDuration[r.subId]) subIdDuration[r.subId] = r.duration;
+      if (r.distance && !subIdDistance[r.subId]) subIdDistance[r.subId] = r.distance;
+      if (r.protocol && !subIdProtocol[r.subId]) subIdProtocol[r.subId] = r.protocol;
+    }
+
+    // v2: Species Comments
+    if (r.speciesComments) speciesCommentRows++;
+
+    // v2: PNW pack — Dipper's Creed
+    if (r.name === 'American Dipper' && r.subId) dippersCreedSubs[r.subId] = true;
+
+    // v2: PNW pack — Malheur Pilgrimage
+    if (r.subId && r.state === 'US-OR' && r.county === 'Harney' &&
+        r.location && r.location.toLowerCase().indexOf('malheur') !== -1) {
+      malheurSubs[r.subId] = true;
     }
   });
 
+  // ── Post-forEach: existing ──
   var bestYearCount = 0, bestYearLabel = '';
   Object.keys(yearSpecies).forEach(function(y) {
     var n = Object.keys(yearSpecies[y]).length;
@@ -106,27 +192,115 @@ function computeStats(records) {
     return Object.keys(yearMonths[y]).length >= 12;
   }).length;
 
+  // ── Post-forEach: v2 ──
+
+  // Max checklists at single location
+  var maxPatchChk = 0;
+  Object.keys(locationSubIds).forEach(function(loc) {
+    var n = Object.keys(locationSubIds[loc]).length;
+    if (n > maxPatchChk) maxPatchChk = n;
+  });
+
+  // Loyalist: species appearing on the most checklists
+  var loyCount = 0, loyName = '';
+  Object.keys(speciesSubIds).forEach(function(name) {
+    var n = Object.keys(speciesSubIds[name]).length;
+    if (n > loyCount) { loyCount = n; loyName = name; }
+  });
+
+  // Phenologist: best single-location month coverage
+  var bestLocMonths = 0, locsWithAll12 = 0;
+  Object.keys(locationMonths).forEach(function(loc) {
+    var n = Object.keys(locationMonths[loc]).length;
+    if (n > bestLocMonths) bestLocMonths = n;
+    if (n >= 12) locsWithAll12++;
+  });
+
+  // New Year's Devotee: longest streak of consecutive Jan 1 years
+  var janYears = Object.keys(janFirstYears).map(Number).sort();
+  var maxJanStreak = 0, curJanStreak = 0, prevJanYear = -99;
+  janYears.forEach(function(y) {
+    curJanStreak = (y === prevJanYear + 1) ? curJanStreak + 1 : 1;
+    if (curJanStreak > maxJanStreak) maxJanStreak = curJanStreak;
+    prevJanYear = y;
+  });
+
+  // Migration max
+  var maxMigSp = 0;
+  Object.keys(migYearSp).forEach(function(y) {
+    var n = Object.keys(migYearSp[y]).length;
+    if (n > maxMigSp) maxMigSp = n;
+  });
+
+  // Winter max
+  var maxWinterSp = 0;
+  Object.keys(winterSeasSp).forEach(function(wk) {
+    var n = Object.keys(winterSeasSp[wk]).length;
+    if (n > maxWinterSp) maxWinterSp = n;
+  });
+
+  // Big Sit (stationary duration) + Death March (traveling distance)
+  var maxStatDur = 0, maxTravDist = 0;
+  Object.keys(subIdDuration).forEach(function(sid) {
+    var proto = (subIdProtocol[sid] || '').toLowerCase();
+    var dur   = subIdDuration[sid] || 0;
+    if (proto.indexOf('stationary') !== -1 && dur > maxStatDur) maxStatDur = dur;
+  });
+  Object.keys(subIdDistance).forEach(function(sid) {
+    var proto = (subIdProtocol[sid] || '').toLowerCase();
+    var dist  = subIdDistance[sid] || 0;
+    if (proto.indexOf('traveling') !== -1 && dist > maxTravDist) maxTravDist = dist;
+  });
+
+  // Completionist
+  var completeChks = 0, totalWithAllObs = Object.keys(subIdAllObs).length;
+  Object.keys(subIdAllObs).forEach(function(sid) { if (subIdAllObs[sid]) completeChks++; });
+
+  // All-numeric checklists (no 'X' count)
+  var totalChkCount = Object.keys(checklistIds).length;
+  var numericChks = totalChkCount - Object.keys(subIdHasX).length;
+
   return {
-    _speciesSeen:       speciesSeen,
-    totalSpecies:       Object.keys(speciesSeen).length,
-    totalChecklists:    Object.keys(checklistIds).length,
-    bestYearCount:      bestYearCount,
-    bestYearLabel:      bestYearLabel,
-    activeMonths:       Object.keys(monthsActive).length,
-    seasonsWithBirding: Object.keys(seasonsActive).length,
-    yearsWithAllMonths: yearsAllMonths,
-    preSixChecklists:   Object.keys(preSixSubs).length,
-    preEightChecklists: Object.keys(preEightSubs).length,
-    stateCount:         Object.keys(states).length,
-    countyCount:        Object.keys(counties).length,
-    countryCount:       Object.keys(countries).length,
-    maxSpeciesInDay:    maxDay,
-    pnwCounties:        Object.keys(pnwCounties).length,
-    caCounties:         Object.keys(caCounties).length,
-    desertCounties:     Object.keys(desertCounties).length,
-    txCounties:         Object.keys(txCounties).length,
-    flCounties:         Object.keys(flCounties).length,
-    rockiesCounties:    Object.keys(rockiesCounties).length,
+    _speciesSeen:        speciesSeen,
+    totalSpecies:        Object.keys(speciesSeen).length,
+    totalChecklists:     totalChkCount,
+    bestYearCount:       bestYearCount,
+    bestYearLabel:       bestYearLabel,
+    activeMonths:        Object.keys(monthsActive).length,
+    seasonsWithBirding:  Object.keys(seasonsActive).length,
+    yearsWithAllMonths:  yearsAllMonths,
+    preSixChecklists:    Object.keys(preSixSubs).length,
+    preEightChecklists:  Object.keys(preEightSubs).length,
+    stateCount:          Object.keys(states).length,
+    countyCount:         Object.keys(counties).length,
+    countryCount:        Object.keys(countries).length,
+    maxSpeciesInDay:     maxDay,
+    pnwCounties:         Object.keys(pnwCounties).length,
+    caCounties:          Object.keys(caCounties).length,
+    desertCounties:      Object.keys(desertCounties).length,
+    txCounties:          Object.keys(txCounties).length,
+    flCounties:          Object.keys(flCounties).length,
+    rockiesCounties:     Object.keys(rockiesCounties).length,
+    // v2
+    midnightChecklists:  Object.keys(midnightSubs).length,
+    maxMigrationSp:      maxMigSp,
+    maxWinterSp:         maxWinterSp,
+    breedingSpCount:     Object.keys(breedingSp).length,
+    maxPatchChecklists:  maxPatchChk,
+    loyalistCount:       loyCount,
+    loyalistSpecies:     loyName,
+    bestLocationMonths:  bestLocMonths,
+    locsWithAllMonths:   locsWithAll12,
+    newYearStreak:       maxJanStreak,
+    hasLeapLister:       hasLeap,
+    speciesCommentRows:  speciesCommentRows,
+    allNumericChklists:  numericChks,
+    completeChklists:    completeChks,
+    totalWithAllObs:     totalWithAllObs,
+    maxStatDuration:     maxStatDur,
+    maxTravelDist:       maxTravDist,
+    dippersCreedCount:   Object.keys(dippersCreedSubs).length,
+    malheurCount:        Object.keys(malheurSubs).length,
   };
 }
 
@@ -150,6 +324,12 @@ function _nameMatch(speciesSeen, keywords) {
     var l = name.toLowerCase();
     if (keywords.some(function(k) { return l.indexOf(k) !== -1; })) n++;
   });
+  return n;
+}
+
+function _speciesFromList(speciesSeen, list) {
+  var n = 0;
+  list.forEach(function(name) { if (speciesSeen[name]) n++; });
   return n;
 }
 
@@ -408,13 +588,65 @@ var QUESTS = [
     desc:'300 species in one year. The movie was based on people like you.',
     compute:function(s){ return{earned:s.bestYearCount>=300, progress:Math.min(s.bestYearCount,300), total:300, detail:_yr(s)}; }},
 
+  // ⏰  TEMPORAL — v2: Migration Rider (Apr–May)
+  { id:'tmp_mig1', category:'temporal', tier:1, icon:'🦋',
+    name:'First Wave',
+    desc:'40 distinct species in your best April–May window. Migration has arrived.',
+    compute:function(s){ return{earned:s.maxMigrationSp>=40,  progress:Math.min(s.maxMigrationSp,40),  total:40,  detail:'Best spring: '+s.maxMigrationSp+' sp'}; }},
+  { id:'tmp_mig2', category:'temporal', tier:2, icon:'🦋',
+    name:'Migration Rider',
+    desc:'60 spring species in one year. You\'re out every weekend.',
+    compute:function(s){ return{earned:s.maxMigrationSp>=60,  progress:Math.min(s.maxMigrationSp,60),  total:60,  detail:'Best spring: '+s.maxMigrationSp+' sp'}; }},
+  { id:'tmp_mig3', category:'temporal', tier:3, icon:'🦋',
+    name:'Full Flood',
+    desc:'75 species during spring migration. The flyways are flowing.',
+    compute:function(s){ return{earned:s.maxMigrationSp>=75,  progress:Math.min(s.maxMigrationSp,75),  total:75,  detail:'Best spring: '+s.maxMigrationSp+' sp'}; }},
+  { id:'tmp_mig4', category:'temporal', tier:5, icon:'🦋',
+    name:'Rides the River',
+    desc:'125 species in Apr–May. You exist for these two months.',
+    compute:function(s){ return{earned:s.maxMigrationSp>=125, progress:Math.min(s.maxMigrationSp,125), total:125, detail:'Best spring: '+s.maxMigrationSp+' sp'}; }},
+
+  // ⏰  TEMPORAL — v2: Winter Holdout (Dec–Jan)
+  { id:'tmp_win1', category:'temporal', tier:1, icon:'❄️',
+    name:'Cold Enough',
+    desc:'20 species in a single Dec–Jan winter. You don\'t stop for the cold.',
+    compute:function(s){ return{earned:s.maxWinterSp>=20, progress:Math.min(s.maxWinterSp,20), total:20, detail:'Best winter: '+s.maxWinterSp+' sp'}; }},
+  { id:'tmp_win2', category:'temporal', tier:2, icon:'❄️',
+    name:'Winter Holdout',
+    desc:'30 winter species (Dec–Jan). You have a thermos and a strategy.',
+    compute:function(s){ return{earned:s.maxWinterSp>=30, progress:Math.min(s.maxWinterSp,30), total:30, detail:'Best winter: '+s.maxWinterSp+' sp'}; }},
+  { id:'tmp_win3', category:'temporal', tier:3, icon:'❄️',
+    name:'Frozen But Here',
+    desc:'40 winter species in a single season.',
+    compute:function(s){ return{earned:s.maxWinterSp>=40, progress:Math.min(s.maxWinterSp,40), total:40, detail:'Best winter: '+s.maxWinterSp+' sp'}; }},
+  { id:'tmp_win4', category:'temporal', tier:5, icon:'❄️',
+    name:'Winter Devotee',
+    desc:'75 species Dec–Jan. You know where the owls roost and the irruptions go.',
+    compute:function(s){ return{earned:s.maxWinterSp>=75, progress:Math.min(s.maxWinterSp,75), total:75, detail:'Best winter: '+s.maxWinterSp+' sp'}; }},
+
+  // ⏰  TEMPORAL — v2: Midnight Communion (00:00–02:59)
+  { id:'tmp_mid1', category:'temporal', tier:1, icon:'🌙',
+    name:'Something Moves at Night',
+    desc:'First checklist started between midnight and 3 AM.',
+    compute:function(s){ return{earned:s.midnightChecklists>=1,  progress:Math.min(s.midnightChecklists,1),  total:1};  }},
+  { id:'tmp_mid2', category:'temporal', tier:2, icon:'🌙',
+    name:'Midnight Communion',
+    desc:'5 midnight-hour checklists. You\'ve committed.',
+    compute:function(s){ return{earned:s.midnightChecklists>=5,  progress:Math.min(s.midnightChecklists,5),  total:5};  }},
+  { id:'tmp_mid3', category:'temporal', tier:3, icon:'🌙',
+    name:'Owns the Dark',
+    desc:'15 checklists in the witching hours.',
+    compute:function(s){ return{earned:s.midnightChecklists>=15, progress:Math.min(s.midnightChecklists,15), total:15}; }},
+  { id:'tmp_mid4', category:'temporal', tier:5, icon:'🌙',
+    name:'No Such Thing as Bedtime',
+    desc:'50 midnight-to-3-AM checklists. You\'ve made peace with this.',
+    compute:function(s){ return{earned:s.midnightChecklists>=50, progress:Math.min(s.midnightChecklists,50), total:50}; }},
+
   // ══════════════════════════════════════════════════════════
   // 🔬  SPECIES EXPLORER
-  // Thresholds calibrated to NA species totals.
-  // Phase 1: common-name keyword matching.
   // ══════════════════════════════════════════════════════════
 
-  // — Owls (19 NA species) —
+  // — Owls —
   { id:'sp_owl1', category:'species', tier:1, icon:'🦉', name:'Who\'s There?',
     desc:'See your first owl species.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['owl','owlet']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
@@ -431,7 +663,7 @@ var QUESTS = [
     desc:'16 of the 19 NA owl species.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['owl','owlet']); return{earned:n>=16,progress:Math.min(n,16), total:16}; }},
 
-  // — Raptors (35 NA species) —
+  // — Raptors —
   { id:'sp_rap1', category:'species', tier:1, icon:'🦅', name:'Looks Up',
     desc:'Your first hawk, eagle, falcon, osprey, or vulture.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['hawk','eagle','falcon','osprey','harrier','kite','vulture','condor','merlin','kestrel']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
@@ -448,12 +680,12 @@ var QUESTS = [
     desc:'28 raptor species. You own a scope just for hawkwatching.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['hawk','eagle','falcon','osprey','harrier','kite','vulture','condor','merlin','kestrel']); return{earned:n>=28,progress:Math.min(n,28), total:28}; }},
 
-  // — Waterfowl (50+ NA species) —
+  // — Waterfowl —
   { id:'sp_wf1', category:'species', tier:1, icon:'🦆', name:'Pond Visitor',
     desc:'Your first duck, goose, or swan.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['duck','teal','goose','geese','swan','merganser','scoter','scaup','bufflehead','goldeneye','pintail','wigeon','shoveler','canvasback','redhead','mallard','gadwall','eider']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
   { id:'sp_wf2', category:'species', tier:2, icon:'🦆', name:'Duck Season',
-    desc:'10 waterfowl species — the good kind of duck season.',
+    desc:'10 waterfowl species.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['duck','teal','goose','geese','swan','merganser','scoter','scaup','bufflehead','goldeneye','pintail','wigeon','shoveler','canvasback','redhead','mallard','gadwall','eider']); return{earned:n>=10,progress:Math.min(n,10), total:10}; }},
   { id:'sp_wf3', category:'species', tier:3, icon:'🦆', name:'Knows Their Ducks',
     desc:'20 waterfowl species.',
@@ -465,7 +697,7 @@ var QUESTS = [
     desc:'40 waterfowl species. You own waders.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['duck','teal','goose','geese','swan','merganser','scoter','scaup','bufflehead','goldeneye','pintail','wigeon','shoveler','canvasback','redhead','mallard','gadwall','eider']); return{earned:n>=40,progress:Math.min(n,40), total:40}; }},
 
-  // — Warblers (54 NA species) —
+  // — Warblers —
   { id:'sp_wa1', category:'species', tier:1, icon:'🐤', name:'Spring Is Here',
     desc:'3 warbler species. You noticed they were back.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['warbler','ovenbird','waterthrush','yellowthroat','redstart','chat']); return{earned:n>=3, progress:Math.min(n,3),  total:3};  }},
@@ -482,7 +714,7 @@ var QUESTS = [
     desc:'42 warbler species. You understand why that Peterson\'s plate exists.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['warbler','ovenbird','waterthrush','yellowthroat','redstart','chat']); return{earned:n>=42,progress:Math.min(n,42), total:42}; }},
 
-  // — Shorebirds (60+ NA species) —
+  // — Shorebirds —
   { id:'sp_sh1', category:'species', tier:1, icon:'🐦', name:'Mudflat Curious',
     desc:'3 shorebird species. You stopped at the mudflat.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['sandpiper','plover','snipe','dowitcher','godwit','dunlin','phalarope','turnstone','yellowlegs','knot','curlew','whimbrel','willet','oystercatcher','avocet','stilt','tattler']); return{earned:n>=3, progress:Math.min(n,3),  total:3};  }},
@@ -499,9 +731,9 @@ var QUESTS = [
     desc:'45 shorebird species. You plan around tide tables.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['sandpiper','plover','snipe','dowitcher','godwit','dunlin','phalarope','turnstone','yellowlegs','knot','curlew','whimbrel','willet','oystercatcher','avocet','stilt','tattler']); return{earned:n>=45,progress:Math.min(n,45), total:45}; }},
 
-  // — Sparrows (35 NA species) —
+  // — Sparrows —
   { id:'sp_sp1', category:'species', tier:1, icon:'🐦', name:'LBJ Spotter',
-    desc:'3 sparrow species. LBJ: Little Brown Job — what you call the sparrow you can\'t quite ID.',
+    desc:'3 sparrow species. LBJ: Little Brown Job.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['sparrow','junco','towhee']); return{earned:n>=3, progress:Math.min(n,3),  total:3};  }},
   { id:'sp_sp2', category:'species', tier:2, icon:'🐦', name:'Brown Bird Believer',
     desc:'8 sparrow species. You don\'t call them "just a sparrow" anymore.',
@@ -516,7 +748,7 @@ var QUESTS = [
     desc:'30 sparrow species. You stop for every fencepost.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['sparrow','junco','towhee']); return{earned:n>=30,progress:Math.min(n,30), total:30}; }},
 
-  // — Hummingbirds (17 NA species) —
+  // — Hummingbirds —
   { id:'sp_hu1', category:'species', tier:1, icon:'🌺', name:'There It Is',
     desc:'Your first hummingbird.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['hummingbird','sabrewing','emerald','coquette','mango','woodnymph']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
@@ -533,7 +765,7 @@ var QUESTS = [
     desc:'14 species. You\'ve seen most of what North America offers.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['hummingbird','sabrewing','emerald','coquette','mango','woodnymph']); return{earned:n>=14,progress:Math.min(n,14), total:14}; }},
 
-  // — Woodpeckers (23 NA species) —
+  // — Woodpeckers —
   { id:'sp_wp1', category:'species', tier:1, icon:'🌳', name:'Heard It First',
     desc:'Your first woodpecker. You heard it before you saw it.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['woodpecker','sapsucker','flicker']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
@@ -550,7 +782,7 @@ var QUESTS = [
     desc:'20 of the 23 NA woodpecker species.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['woodpecker','sapsucker','flicker']); return{earned:n>=20,progress:Math.min(n,20), total:20}; }},
 
-  // — Gulls (23 NA species) —
+  // — Gulls —
   { id:'sp_gu1', category:'species', tier:1, icon:'🌊', name:'Parking Lot Bird',
     desc:'Your first gull. Every birder starts here.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['gull','kittiwake']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
@@ -567,7 +799,7 @@ var QUESTS = [
     desc:'20 of the 23 NA gull species. Third-cycle plumage holds no mystery.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['gull','kittiwake']); return{earned:n>=20,progress:Math.min(n,20), total:20}; }},
 
-  // — Flycatchers (35 regular NA species) —
+  // — Flycatchers —
   { id:'sp_fl1', category:'species', tier:1, icon:'🪲', name:'Basic Phoebe',
     desc:'Your first flycatcher. Probably an Eastern Phoebe.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['flycatcher','phoebe','kingbird','pewee','kiskadee']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
@@ -584,7 +816,7 @@ var QUESTS = [
     desc:'28 flycatcher species. Some will stay unidentified. You\'re okay with that.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['flycatcher','phoebe','kingbird','pewee','kiskadee']); return{earned:n>=28,progress:Math.min(n,28), total:28}; }},
 
-  // — Herons & Egrets (12 NA species) —
+  // — Herons & Egrets —
   { id:'sp_he1', category:'species', tier:1, icon:'🪶', name:'Standing Water',
     desc:'Your first heron or egret.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['heron','egret','bittern','night-heron']); return{earned:n>=1, progress:Math.min(n,1),  total:1};  }},
@@ -601,19 +833,61 @@ var QUESTS = [
     desc:'All 12 NA heron and egret species.',
     compute:function(s){ var n=_nameMatch(s._speciesSeen,['heron','egret','bittern','night-heron']); return{earned:n>=12,progress:Math.min(n,12), total:12}; }},
 
+  // — v2: Breeding Witness —
+  { id:'sp_bw1', category:'species', tier:1, icon:'🐣', name:'Noted Behavior',
+    desc:'Record a confirmed breeding code for 3 species. Something is nesting.',
+    compute:function(s){ return{earned:s.breedingSpCount>=3,  progress:Math.min(s.breedingSpCount,3),  total:3};  }},
+  { id:'sp_bw2', category:'species', tier:2, icon:'🐣', name:'Breeding Witness',
+    desc:'6 species with confirmed breeding codes.',
+    compute:function(s){ return{earned:s.breedingSpCount>=6,  progress:Math.min(s.breedingSpCount,6),  total:6};  }},
+  { id:'sp_bw3', category:'species', tier:3, icon:'🐣', name:'Season Keeper',
+    desc:'10 confirmed breeding species. You\'re watching the whole cycle.',
+    compute:function(s){ return{earned:s.breedingSpCount>=10, progress:Math.min(s.breedingSpCount,10), total:10}; }},
+  { id:'sp_bw4', category:'species', tier:5, icon:'🐣', name:'Nest Finder',
+    desc:'25 confirmed breeding species across your history.',
+    compute:function(s){ return{earned:s.breedingSpCount>=25, progress:Math.min(s.breedingSpCount,25), total:25}; }},
+
+  // — v2: The Marsh Phantom (Rallidae) —
+  { id:'sp_ra1', category:'species', tier:1, icon:'🪶', name:'Heard in the Reeds',
+    desc:'3 rail, coot, or gallinule species. They were calling. You were listening.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['rail','coot','gallinule','moorhen','sora','limpkin']); return{earned:n>=3, progress:Math.min(n,3),  total:3};  }},
+  { id:'sp_ra2', category:'species', tier:2, icon:'🪶', name:'The Marsh Phantom',
+    desc:'5 rallid species. You know the marshes.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['rail','coot','gallinule','moorhen','sora','limpkin']); return{earned:n>=5, progress:Math.min(n,5),  total:5};  }},
+  { id:'sp_ra3', category:'species', tier:3, icon:'🪶', name:'Fen Walker',
+    desc:'8 rallid species. You wade for these.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['rail','coot','gallinule','moorhen','sora','limpkin']); return{earned:n>=8, progress:Math.min(n,8),  total:8};  }},
+  { id:'sp_ra4', category:'species', tier:5, icon:'🪶', name:'All the Rails',
+    desc:'12 rallid species. You\'ve found them in every marsh.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['rail','coot','gallinule','moorhen','sora','limpkin']); return{earned:n>=12,progress:Math.min(n,12), total:12}; }},
+
+  // — v2: The Silent Witness (Troglodytidae — wrens) —
+  { id:'sp_wr1', category:'species', tier:1, icon:'🎵', name:'That Little Brown Voice',
+    desc:'4 wren species. Loud for their size.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['wren']); return{earned:n>=4, progress:Math.min(n,4),  total:4};  }},
+  { id:'sp_wr2', category:'species', tier:2, icon:'🎵', name:'The Silent Witness',
+    desc:'7 wren species. You\'ve been in the right thickets.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['wren']); return{earned:n>=7, progress:Math.min(n,7),  total:7};  }},
+  { id:'sp_wr3', category:'species', tier:3, icon:'🎵', name:'Thicket Oracle',
+    desc:'10 wren species.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['wren']); return{earned:n>=10,progress:Math.min(n,10), total:10}; }},
+  { id:'sp_wr4', category:'species', tier:5, icon:'🎵', name:'Heard Every Wren',
+    desc:'15 wren species. A lifetime of listening in brushy places.',
+    compute:function(s){ var n=_nameMatch(s._speciesSeen,['wren']); return{earned:n>=15,progress:Math.min(n,15), total:15}; }},
+
   // ══════════════════════════════════════════════════════════
   // 🌎  REGIONAL — depth within specific geographic regions
   // ══════════════════════════════════════════════════════════
 
-  // — Pacific Northwest (OR + WA = 75 counties) —
+  // — Pacific Northwest —
   { id:'reg_pnw1', category:'regional', tier:1, icon:'🌲', name:'Smells Like Rain',
-    desc:'2 PNW counties (Oregon or Washington). You\'ve been here. You know.',
+    desc:'2 PNW counties (Oregon or Washington).',
     compute:function(s){ return{earned:s.pnwCounties>=2,  progress:Math.min(s.pnwCounties,2),  total:2};  }},
   { id:'reg_pnw2', category:'regional', tier:2, icon:'🌲', name:'Cascade Crosser',
     desc:'8 PNW counties — you\'ve birded both sides of the mountains.',
     compute:function(s){ return{earned:s.pnwCounties>=8,  progress:Math.min(s.pnwCounties,8),  total:8};  }},
   { id:'reg_pnw3', category:'regional', tier:3, icon:'🌲', name:'Knows the Peninsula',
-    desc:'20 PNW counties. Olympic, Klamath, coast — you\'ve done the work.',
+    desc:'20 PNW counties.',
     compute:function(s){ return{earned:s.pnwCounties>=20, progress:Math.min(s.pnwCounties,20), total:20}; }},
   { id:'reg_pnw4', category:'regional', tier:4, icon:'🌲', name:'Oregon Trailed',
     desc:'40 PNW counties.',
@@ -622,83 +896,83 @@ var QUESTS = [
     desc:'65 of 75 PNW counties. You are the PNW.',
     compute:function(s){ return{earned:s.pnwCounties>=65, progress:Math.min(s.pnwCounties,65), total:65}; }},
 
-  // — California (58 counties) —
+  // — California —
   { id:'reg_ca1', category:'regional', tier:1, icon:'☀️', name:'California Dreamin\'',
-    desc:'2 California counties. You made it.',
+    desc:'2 California counties.',
     compute:function(s){ return{earned:s.caCounties>=2,  progress:Math.min(s.caCounties,2),  total:2};  }},
   { id:'reg_ca2', category:'regional', tier:2, icon:'☀️', name:'Beyond the Bay',
     desc:'8 CA counties — you left the coast bubble.',
     compute:function(s){ return{earned:s.caCounties>=8,  progress:Math.min(s.caCounties,8),  total:8};  }},
   { id:'reg_ca3', category:'regional', tier:3, icon:'☀️', name:'Central Valley Run',
-    desc:'20 CA counties. The Central Valley is the underrated gem of CA birding.',
+    desc:'20 CA counties.',
     compute:function(s){ return{earned:s.caCounties>=20, progress:Math.min(s.caCounties,20), total:20}; }},
   { id:'reg_ca4', category:'regional', tier:4, icon:'☀️', name:'Knows the Coast Highway',
-    desc:'40 CA counties. You\'ve pulled over for shorebirds more than once.',
+    desc:'40 CA counties.',
     compute:function(s){ return{earned:s.caCounties>=40, progress:Math.min(s.caCounties,40), total:40}; }},
   { id:'reg_ca5', category:'regional', tier:5, icon:'☀️', name:'All 58',
-    desc:'55 of California\'s 58 counties. The CA county list dream.',
+    desc:'55 of California\'s 58 counties.',
     compute:function(s){ return{earned:s.caCounties>=55, progress:Math.min(s.caCounties,55), total:55}; }},
 
-  // — Desert Southwest (AZ + NV + UT + NM = 94 counties) —
+  // — Desert Southwest —
   { id:'reg_ds1', category:'regional', tier:1, icon:'🏜️', name:'Heard a Cactus Wren',
     desc:'1 desert county. Welcome to the Sonoran.',
     compute:function(s){ return{earned:s.desertCounties>=1,  progress:Math.min(s.desertCounties,1),  total:1};  }},
   { id:'reg_ds2', category:'regional', tier:2, icon:'🏜️', name:'Roadrunner Country',
-    desc:'5 desert counties. You\'ve chased something in the heat.',
+    desc:'5 desert counties.',
     compute:function(s){ return{earned:s.desertCounties>=5,  progress:Math.min(s.desertCounties,5),  total:5};  }},
   { id:'reg_ds3', category:'regional', tier:3, icon:'🏜️', name:'Knows the Washes',
-    desc:'15 desert counties. That\'s where the birds hide.',
+    desc:'15 desert counties.',
     compute:function(s){ return{earned:s.desertCounties>=15, progress:Math.min(s.desertCounties,15), total:15}; }},
   { id:'reg_ds4', category:'regional', tier:4, icon:'🏜️', name:'Painted Desert Regular',
-    desc:'35 desert counties. You plan trips around the monsoon season.',
+    desc:'35 desert counties.',
     compute:function(s){ return{earned:s.desertCounties>=35, progress:Math.min(s.desertCounties,35), total:35}; }},
   { id:'reg_ds5', category:'regional', tier:5, icon:'🏜️', name:'Desert Soul',
     desc:'65 desert counties across AZ, NV, UT, and NM.',
     compute:function(s){ return{earned:s.desertCounties>=65, progress:Math.min(s.desertCounties,65), total:65}; }},
 
-  // — Texas (254 counties) —
+  // — Texas —
   { id:'reg_tx1', category:'regional', tier:1, icon:'🤠', name:'Heard a Mockingbird',
-    desc:'2 Texas counties. Texas state bird, Texas state of mind.',
+    desc:'2 Texas counties.',
     compute:function(s){ return{earned:s.txCounties>=2,   progress:Math.min(s.txCounties,2),   total:2};   }},
   { id:'reg_tx2', category:'regional', tier:2, icon:'🤠', name:'Coast to Hill Country',
-    desc:'10 TX counties — you\'ve sampled more than one biome.',
+    desc:'10 TX counties.',
     compute:function(s){ return{earned:s.txCounties>=10,  progress:Math.min(s.txCounties,10),  total:10};  }},
   { id:'reg_tx3', category:'regional', tier:3, icon:'🤠', name:'Trans-Pecos Dreamer',
-    desc:'30 TX counties. The far west is calling.',
+    desc:'30 TX counties.',
     compute:function(s){ return{earned:s.txCounties>=30,  progress:Math.min(s.txCounties,30),  total:30};  }},
   { id:'reg_tx4', category:'regional', tier:4, icon:'🤠', name:'Big Bend Regular',
-    desc:'75 TX counties. You\'ve made the drive.',
+    desc:'75 TX counties.',
     compute:function(s){ return{earned:s.txCounties>=75,  progress:Math.min(s.txCounties,75),  total:75};  }},
   { id:'reg_tx5', category:'regional', tier:5, icon:'🤠', name:'Deep in the Heart',
     desc:'150 Texas counties. It\'s big. You know.',
     compute:function(s){ return{earned:s.txCounties>=150, progress:Math.min(s.txCounties,150), total:150}; }},
 
-  // — Florida (67 counties) —
+  // — Florida —
   { id:'reg_fl1', category:'regional', tier:1, icon:'🦩', name:'Florida Man, Birder Edition',
-    desc:'2 Florida counties. Unexplainable birds await.',
+    desc:'2 Florida counties.',
     compute:function(s){ return{earned:s.flCounties>=2,  progress:Math.min(s.flCounties,2),  total:2};  }},
   { id:'reg_fl2', category:'regional', tier:2, icon:'🦩', name:'Saw a Spoonbill',
-    desc:'8 FL counties — you\'ve had the experience.',
+    desc:'8 FL counties.',
     compute:function(s){ return{earned:s.flCounties>=8,  progress:Math.min(s.flCounties,8),  total:8};  }},
   { id:'reg_fl3', category:'regional', tier:3, icon:'🦩', name:'Both Coasts',
-    desc:'20 FL counties. Gulf and Atlantic — different birds, both excellent.',
+    desc:'20 FL counties.',
     compute:function(s){ return{earned:s.flCounties>=20, progress:Math.min(s.flCounties,20), total:20}; }},
   { id:'reg_fl4', category:'regional', tier:4, icon:'🦩', name:'Knows the Keys',
     desc:'40 FL counties.',
     compute:function(s){ return{earned:s.flCounties>=40, progress:Math.min(s.flCounties,40), total:40}; }},
   { id:'reg_fl5', category:'regional', tier:5, icon:'🦩', name:'All 67',
-    desc:'60 of Florida\'s 67 counties. You\'ve birded the whole peninsula.',
+    desc:'60 of Florida\'s 67 counties.',
     compute:function(s){ return{earned:s.flCounties>=60, progress:Math.min(s.flCounties,60), total:60}; }},
 
-  // — Rocky Mountains (CO + ID + MT + WY = 187 counties) —
+  // — Rocky Mountains —
   { id:'reg_rm1', category:'regional', tier:1, icon:'⛰️', name:'Above Treeline',
-    desc:'2 Rockies counties. The altitude hits different.',
+    desc:'2 Rockies counties.',
     compute:function(s){ return{earned:s.rockiesCounties>=2,   progress:Math.min(s.rockiesCounties,2),   total:2};   }},
   { id:'reg_rm2', category:'regional', tier:2, icon:'⛰️', name:'Mountain Birder',
     desc:'10 Rockies counties.',
     compute:function(s){ return{earned:s.rockiesCounties>=10,  progress:Math.min(s.rockiesCounties,10),  total:10};  }},
   { id:'reg_rm3', category:'regional', tier:3, icon:'⛰️', name:'High Country Regular',
-    desc:'30 Rockies counties. You\'ve chased rosy-finches.',
+    desc:'30 Rockies counties.',
     compute:function(s){ return{earned:s.rockiesCounties>=30,  progress:Math.min(s.rockiesCounties,30),  total:30};  }},
   { id:'reg_rm4', category:'regional', tier:4, icon:'⛰️', name:'Summit Lister',
     desc:'70 Rockies counties.',
@@ -706,5 +980,346 @@ var QUESTS = [
   { id:'reg_rm5', category:'regional', tier:5, icon:'⛰️', name:'The Rockies Run',
     desc:'140 Rockies counties across CO, ID, MT, and WY.',
     compute:function(s){ return{earned:s.rockiesCounties>=140, progress:Math.min(s.rockiesCounties,140), total:140}; }},
+
+  // ══════════════════════════════════════════════════════════
+  // 🌱  ON-RAMP
+  // ══════════════════════════════════════════════════════════
+
+  { id:'on_comp', category:'onramp', tier:2, icon:'✅',
+    name:'The Completionist',
+    desc:'90%+ of your checklists marked "All Observations Reported" (min 20 checklists). Rewards good eBird hygiene.',
+    compute:function(s){
+      if (s.totalWithAllObs < 20) return{earned:false, progress:s.totalWithAllObs, total:20, detail:'Need 20+ checklists'};
+      var pct = Math.round(s.completeChklists / s.totalWithAllObs * 100);
+      return{earned:pct>=90, progress:Math.min(pct,90), total:90, detail:pct+'% complete checklists'};
+    }},
+
+  { id:'on_scr1', category:'onramp', tier:1, icon:'✏️',
+    name:'Field Notes',
+    desc:'10 observations with species comments. You\'re writing things down.',
+    compute:function(s){ return{earned:s.speciesCommentRows>=10,   progress:Math.min(s.speciesCommentRows,10),   total:10};   }},
+  { id:'on_scr2', category:'onramp', tier:2, icon:'✏️',
+    name:'The Scribe',
+    desc:'50 annotated observations. Details matter.',
+    compute:function(s){ return{earned:s.speciesCommentRows>=50,   progress:Math.min(s.speciesCommentRows,50),   total:50};   }},
+  { id:'on_scr3', category:'onramp', tier:3, icon:'✏️',
+    name:'Field Journal',
+    desc:'200 observations with species comments.',
+    compute:function(s){ return{earned:s.speciesCommentRows>=200,  progress:Math.min(s.speciesCommentRows,200),  total:200};  }},
+  { id:'on_scr4', category:'onramp', tier:5, icon:'✏️',
+    name:'Annotator',
+    desc:'1,000 species comments. A naturalist\'s record, not just a list.',
+    compute:function(s){ return{earned:s.speciesCommentRows>=1000, progress:Math.min(s.speciesCommentRows,1000), total:1000}; }},
+
+  { id:'on_en1', category:'onramp', tier:1, icon:'🔢',
+    name:'Actually Counting',
+    desc:'25 checklists where every count is a number — no "X" estimates.',
+    compute:function(s){ return{earned:s.allNumericChklists>=25,   progress:Math.min(s.allNumericChklists,25),   total:25};   }},
+  { id:'on_en2', category:'onramp', tier:2, icon:'🔢',
+    name:'The Enumerator',
+    desc:'100 checklists with precise counts only.',
+    compute:function(s){ return{earned:s.allNumericChklists>=100,  progress:Math.min(s.allNumericChklists,100),  total:100};  }},
+  { id:'on_en3', category:'onramp', tier:3, icon:'🔢',
+    name:'Count of It All',
+    desc:'500 checklists without a single "X" entry.',
+    compute:function(s){ return{earned:s.allNumericChklists>=500,  progress:Math.min(s.allNumericChklists,500),  total:500};  }},
+  { id:'on_en4', category:'onramp', tier:5, icon:'🔢',
+    name:'Nothing Was Estimated',
+    desc:'2,000 fully enumerated checklists.',
+    compute:function(s){ return{earned:s.allNumericChklists>=2000, progress:Math.min(s.allNumericChklists,2000), total:2000}; }},
+
+  // ══════════════════════════════════════════════════════════
+  // 🎲  QUIRK
+  // ══════════════════════════════════════════════════════════
+
+  // The Big Sit — max single stationary count duration
+  { id:'qk_sit1', category:'quirk', tier:1, icon:'🪑',
+    name:'Sitting Still',
+    desc:'A stationary count lasting at least 3 hours. Patience is underrated.',
+    compute:function(s){ return{earned:s.maxStatDuration>=180, progress:Math.min(s.maxStatDuration,180), total:180, detail:'Best: '+Math.round(s.maxStatDuration)+' min'}; }},
+  { id:'qk_sit2', category:'quirk', tier:2, icon:'🪑',
+    name:'The Big Sit',
+    desc:'5 hours stationary. You brought snacks.',
+    compute:function(s){ return{earned:s.maxStatDuration>=300, progress:Math.min(s.maxStatDuration,300), total:300, detail:'Best: '+Math.round(s.maxStatDuration)+' min'}; }},
+  { id:'qk_sit3', category:'quirk', tier:3, icon:'🪑',
+    name:'Root System',
+    desc:'8-hour stationary count. The birds know your spot.',
+    compute:function(s){ return{earned:s.maxStatDuration>=480, progress:Math.min(s.maxStatDuration,480), total:480, detail:'Best: '+Math.round(s.maxStatDuration)+' min'}; }},
+  { id:'qk_sit4', category:'quirk', tier:5, icon:'🪑',
+    name:'Could Not Be Moved',
+    desc:'12 hours stationary. Dawn to dusk, one point on the map.',
+    compute:function(s){ return{earned:s.maxStatDuration>=720, progress:Math.min(s.maxStatDuration,720), total:720, detail:'Best: '+Math.round(s.maxStatDuration)+' min'}; }},
+
+  // The Death March — max single traveling distance
+  { id:'qk_dm1', category:'quirk', tier:1, icon:'🥾',
+    name:'Walked a While',
+    desc:'A single traveling count covering 8+ km. You kept going.',
+    compute:function(s){ return{earned:s.maxTravelDist>=8,  progress:Math.min(s.maxTravelDist,8),  total:8,  detail:'Best: '+s.maxTravelDist.toFixed(1)+' km'}; }},
+  { id:'qk_dm2', category:'quirk', tier:2, icon:'🥾',
+    name:'The Death March',
+    desc:'15 km in a single traveling count.',
+    compute:function(s){ return{earned:s.maxTravelDist>=15, progress:Math.min(s.maxTravelDist,15), total:15, detail:'Best: '+s.maxTravelDist.toFixed(1)+' km'}; }},
+  { id:'qk_dm3', category:'quirk', tier:3, icon:'🥾',
+    name:'Serious Mileage',
+    desc:'25 km in a single count. That\'s a long walk with binoculars.',
+    compute:function(s){ return{earned:s.maxTravelDist>=25, progress:Math.min(s.maxTravelDist,25), total:25, detail:'Best: '+s.maxTravelDist.toFixed(1)+' km'}; }},
+  { id:'qk_dm4', category:'quirk', tier:5, icon:'🥾',
+    name:'Suffered for the List',
+    desc:'40 km in one traveling count. You will feel it tomorrow.',
+    compute:function(s){ return{earned:s.maxTravelDist>=40, progress:Math.min(s.maxTravelDist,40), total:40, detail:'Best: '+s.maxTravelDist.toFixed(1)+' km'}; }},
+
+  // The Phenologist — same location across calendar months
+  { id:'qk_phen1', category:'quirk', tier:1, icon:'🗓️',
+    name:'Seasonal Regular',
+    desc:'One location visited across 8 different calendar months.',
+    compute:function(s){ return{earned:s.bestLocationMonths>=8,  progress:Math.min(s.bestLocationMonths,8),  total:8,  detail:'Best patch: '+s.bestLocationMonths+' months'}; }},
+  { id:'qk_phen2', category:'quirk', tier:2, icon:'🗓️',
+    name:'The Phenologist',
+    desc:'10 months at one location. You\'re tracking the seasons.',
+    compute:function(s){ return{earned:s.bestLocationMonths>=10, progress:Math.min(s.bestLocationMonths,10), total:10, detail:'Best patch: '+s.bestLocationMonths+' months'}; }},
+  { id:'qk_phen3', category:'quirk', tier:3, icon:'🗓️',
+    name:'All Twelve at One Patch',
+    desc:'Every calendar month visited at a single location.',
+    compute:function(s){ return{earned:s.bestLocationMonths>=12, progress:Math.min(s.bestLocationMonths,12), total:12, detail:'Best patch: '+s.bestLocationMonths+' months'}; }},
+  { id:'qk_phen4', category:'quirk', tier:5, icon:'🗓️',
+    name:'Three Patches, All Year',
+    desc:'All 12 months covered at 3 or more different locations.',
+    compute:function(s){ return{earned:s.locsWithAllMonths>=3, progress:Math.min(s.locsWithAllMonths,3), total:3, detail:s.locsWithAllMonths+' location(s) with all 12 months'}; }},
+
+  // New Year's Devotee — consecutive Jan 1 checklist years
+  { id:'qk_ny1', category:'quirk', tier:1, icon:'🎆',
+    name:'New Year, Same Bird',
+    desc:'A Jan 1 checklist in 2 consecutive years.',
+    compute:function(s){ return{earned:s.newYearStreak>=2,  progress:Math.min(s.newYearStreak,2),  total:2,  detail:'Streak: '+s.newYearStreak+' yr'}; }},
+  { id:'qk_ny2', category:'quirk', tier:2, icon:'🎆',
+    name:'New Year\'s Devotee',
+    desc:'Jan 1 checklist in 3 straight years.',
+    compute:function(s){ return{earned:s.newYearStreak>=3,  progress:Math.min(s.newYearStreak,3),  total:3,  detail:'Streak: '+s.newYearStreak+' yr'}; }},
+  { id:'qk_ny3', category:'quirk', tier:3, icon:'🎆',
+    name:'Rite of January',
+    desc:'5 consecutive Jan 1 checklists.',
+    compute:function(s){ return{earned:s.newYearStreak>=5,  progress:Math.min(s.newYearStreak,5),  total:5,  detail:'Streak: '+s.newYearStreak+' yr'}; }},
+  { id:'qk_ny4', category:'quirk', tier:5, icon:'🎆',
+    name:'Every First of the Year',
+    desc:'Jan 1 checklist for 10 straight years. It\'s a ritual now.',
+    compute:function(s){ return{earned:s.newYearStreak>=10, progress:Math.min(s.newYearStreak,10), total:10, detail:'Streak: '+s.newYearStreak+' yr'}; }},
+
+  // The Leap Lister — any Feb 29 checklist
+  { id:'qk_leap', category:'quirk', tier:3, icon:'🐸',
+    name:'The Leap Lister',
+    desc:'A checklist on February 29th. This one only comes around every four years.',
+    compute:function(s){ return{earned:s.hasLeapLister, progress:s.hasLeapLister?1:0, total:1}; }},
+
+  // The Loyalist — one species on the most checklists
+  { id:'qk_loy1', category:'quirk', tier:1, icon:'💚',
+    name:'Your Bird',
+    desc:'One species appears on 50 of your checklists. It knows your route.',
+    compute:function(s){ var d=s.loyalistSpecies?' — '+s.loyalistSpecies:''; return{earned:s.loyalistCount>=50,  progress:Math.min(s.loyalistCount,50),  total:50,  detail:s.loyalistCount+' checklists'+d}; }},
+  { id:'qk_loy2', category:'quirk', tier:2, icon:'💚',
+    name:'The Loyalist',
+    desc:'One species on 100 of your checklists.',
+    compute:function(s){ var d=s.loyalistSpecies?' — '+s.loyalistSpecies:''; return{earned:s.loyalistCount>=100, progress:Math.min(s.loyalistCount,100), total:100, detail:s.loyalistCount+' checklists'+d}; }},
+  { id:'qk_loy3', category:'quirk', tier:3, icon:'💚',
+    name:'Constant Companion',
+    desc:'One species on 200 of your checklists.',
+    compute:function(s){ var d=s.loyalistSpecies?' — '+s.loyalistSpecies:''; return{earned:s.loyalistCount>=200, progress:Math.min(s.loyalistCount,200), total:200, detail:s.loyalistCount+' checklists'+d}; }},
+  { id:'qk_loy4', category:'quirk', tier:5, icon:'💚',
+    name:'Inseparable',
+    desc:'One species follows you on 500 checklists. Or you follow it.',
+    compute:function(s){ var d=s.loyalistSpecies?' — '+s.loyalistSpecies:''; return{earned:s.loyalistCount>=500, progress:Math.min(s.loyalistCount,500), total:500, detail:s.loyalistCount+' checklists'+d}; }},
+
+  // Location Loyalty Ladder (The Patchling → The Rooted)
+  { id:'qk_patch1', category:'quirk', tier:1, icon:'📍',
+    name:'The Patchling',
+    desc:'10 checklists at a single location. You have a patch.',
+    compute:function(s){ return{earned:s.maxPatchChecklists>=10,  progress:Math.min(s.maxPatchChecklists,10),  total:10};  }},
+  { id:'qk_patch2', category:'quirk', tier:2, icon:'📍',
+    name:'Neighborhood Naturalist',
+    desc:'25 checklists at one location. You know every corner of it.',
+    compute:function(s){ return{earned:s.maxPatchChecklists>=25,  progress:Math.min(s.maxPatchChecklists,25),  total:25};  }},
+  { id:'qk_patch3', category:'quirk', tier:3, icon:'📍',
+    name:'Patch Warden',
+    desc:'100 checklists at a single location. You are its unofficial guardian.',
+    compute:function(s){ return{earned:s.maxPatchChecklists>=100, progress:Math.min(s.maxPatchChecklists,100), total:100}; }},
+  { id:'qk_patch4', category:'quirk', tier:5, icon:'📍',
+    name:'The Rooted',
+    desc:'365 checklists at one location — an entire year\'s worth of visits.',
+    compute:function(s){ return{earned:s.maxPatchChecklists>=365, progress:Math.min(s.maxPatchChecklists,365), total:365}; }},
+
+  // ══════════════════════════════════════════════════════════
+  // 🌲  PNW PACK
+  // ══════════════════════════════════════════════════════════
+
+  // The Dipper's Creed
+  { id:'pnw_dip1', category:'pnw_pack', tier:1, icon:'💧',
+    name:'Knelt at the Riffle',
+    desc:'3 checklists including American Dipper. Cold water, fast current, one small miracle.',
+    compute:function(s){ return{earned:s.dippersCreedCount>=3,  progress:Math.min(s.dippersCreedCount,3),  total:3};  }},
+  { id:'pnw_dip2', category:'pnw_pack', tier:2, icon:'💧',
+    name:'The Dipper\'s Creed',
+    desc:'10 American Dipper checklists. You seek out the clear, cold streams.',
+    compute:function(s){ return{earned:s.dippersCreedCount>=10, progress:Math.min(s.dippersCreedCount,10), total:10}; }},
+  { id:'pnw_dip3', category:'pnw_pack', tier:3, icon:'💧',
+    name:'Stream Devotee',
+    desc:'25 checklists with the Dipper.',
+    compute:function(s){ return{earned:s.dippersCreedCount>=25, progress:Math.min(s.dippersCreedCount,25), total:25}; }},
+  { id:'pnw_dip4', category:'pnw_pack', tier:5, icon:'💧',
+    name:'River Prayer',
+    desc:'75 American Dipper checklists. You and the river have an understanding.',
+    compute:function(s){ return{earned:s.dippersCreedCount>=75, progress:Math.min(s.dippersCreedCount,75), total:75}; }},
+
+  // The Salmonberry Circuit
+  { id:'pnw_sal1', category:'pnw_pack', tier:1, icon:'🌿',
+    name:'Wet Side Birder',
+    desc:'4 of 12 west-of-the-Cascades species. Fog, moss, and birds that would rather you didn\'t see them.',
+    compute:function(s){
+      var list=['Varied Thrush','Sooty Grouse','Harlequin Duck','Black Oystercatcher','Pacific Wren','Marbled Murrelet','Chestnut-backed Chickadee','Red-breasted Sapsucker','Band-tailed Pigeon','Northern Pygmy-Owl','Hermit Warbler','American Dipper'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=4, progress:Math.min(n,4), total:4, detail:n+'/12 wet-side spp'};
+    }},
+  { id:'pnw_sal2', category:'pnw_pack', tier:2, icon:'🌿',
+    name:'The Salmonberry Circuit',
+    desc:'7 of 12 wet-side PNW species.',
+    compute:function(s){
+      var list=['Varied Thrush','Sooty Grouse','Harlequin Duck','Black Oystercatcher','Pacific Wren','Marbled Murrelet','Chestnut-backed Chickadee','Red-breasted Sapsucker','Band-tailed Pigeon','Northern Pygmy-Owl','Hermit Warbler','American Dipper'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=7, progress:Math.min(n,7), total:7, detail:n+'/12 wet-side spp'};
+    }},
+  { id:'pnw_sal3', category:'pnw_pack', tier:3, icon:'🌿',
+    name:'Deep Into the Fog',
+    desc:'10 of 12 wet-side PNW species. You\'ve found the hard ones.',
+    compute:function(s){
+      var list=['Varied Thrush','Sooty Grouse','Harlequin Duck','Black Oystercatcher','Pacific Wren','Marbled Murrelet','Chestnut-backed Chickadee','Red-breasted Sapsucker','Band-tailed Pigeon','Northern Pygmy-Owl','Hermit Warbler','American Dipper'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=10, progress:Math.min(n,10), total:10, detail:n+'/12 wet-side spp'};
+    }},
+  { id:'pnw_sal4', category:'pnw_pack', tier:5, icon:'🌿',
+    name:'Complete Circuit',
+    desc:'All 12 wet-side PNW species. Every corner of the coast range.',
+    compute:function(s){
+      var list=['Varied Thrush','Sooty Grouse','Harlequin Duck','Black Oystercatcher','Pacific Wren','Marbled Murrelet','Chestnut-backed Chickadee','Red-breasted Sapsucker','Band-tailed Pigeon','Northern Pygmy-Owl','Hermit Warbler','American Dipper'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=12, progress:Math.min(n,12), total:12, detail:n+'/12 wet-side spp'};
+    }},
+
+  // The Sagebrush Sea
+  { id:'pnw_sag1', category:'pnw_pack', tier:1, icon:'🌾',
+    name:'Crossed the Mountains',
+    desc:'3 of 10 east-side sagebrush species. Trade the ferns for silence and the smell of rain on sage.',
+    compute:function(s){
+      var list=['Greater Sage-Grouse','Sage Thrasher','Sagebrush Sparrow','Brewer\'s Sparrow','Burrowing Owl','Ferruginous Hawk','Long-billed Curlew','Loggerhead Shrike','Prairie Falcon','Rock Wren'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=3, progress:Math.min(n,3), total:3, detail:n+'/10 sagebrush spp'};
+    }},
+  { id:'pnw_sag2', category:'pnw_pack', tier:2, icon:'🌾',
+    name:'The Sagebrush Sea',
+    desc:'5 east-side sagebrush species.',
+    compute:function(s){
+      var list=['Greater Sage-Grouse','Sage Thrasher','Sagebrush Sparrow','Brewer\'s Sparrow','Burrowing Owl','Ferruginous Hawk','Long-billed Curlew','Loggerhead Shrike','Prairie Falcon','Rock Wren'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=5, progress:Math.min(n,5), total:5, detail:n+'/10 sagebrush spp'};
+    }},
+  { id:'pnw_sag3', category:'pnw_pack', tier:3, icon:'🌾',
+    name:'Desert Fluency',
+    desc:'8 sagebrush species. The high desert is speaking and you\'re listening.',
+    compute:function(s){
+      var list=['Greater Sage-Grouse','Sage Thrasher','Sagebrush Sparrow','Brewer\'s Sparrow','Burrowing Owl','Ferruginous Hawk','Long-billed Curlew','Loggerhead Shrike','Prairie Falcon','Rock Wren'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=8, progress:Math.min(n,8), total:8, detail:n+'/10 sagebrush spp'};
+    }},
+  { id:'pnw_sag4', category:'pnw_pack', tier:5, icon:'🌾',
+    name:'All Ten Sages',
+    desc:'All 10 sagebrush species. You earned the silence.',
+    compute:function(s){
+      var list=['Greater Sage-Grouse','Sage Thrasher','Sagebrush Sparrow','Brewer\'s Sparrow','Burrowing Owl','Ferruginous Hawk','Long-billed Curlew','Loggerhead Shrike','Prairie Falcon','Rock Wren'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=10, progress:Math.min(n,10), total:10, detail:n+'/10 sagebrush spp'};
+    }},
+
+  // The Alcid Ascetic
+  { id:'pnw_alc1', category:'pnw_pack', tier:1, icon:'🌊',
+    name:'Headland Watch',
+    desc:'2 PNW alcid species. Stand on the headland and squint at the swells.',
+    compute:function(s){
+      var list=['Common Murre','Pigeon Guillemot','Marbled Murrelet','Ancient Murrelet','Cassin\'s Auklet','Rhinoceros Auklet','Tufted Puffin'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=2, progress:Math.min(n,2), total:2, detail:n+'/7 alcids'};
+    }},
+  { id:'pnw_alc2', category:'pnw_pack', tier:2, icon:'🌊',
+    name:'The Alcid Ascetic',
+    desc:'4 PNW alcid species. The sea gives up its monks reluctantly.',
+    compute:function(s){
+      var list=['Common Murre','Pigeon Guillemot','Marbled Murrelet','Ancient Murrelet','Cassin\'s Auklet','Rhinoceros Auklet','Tufted Puffin'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=4, progress:Math.min(n,4), total:4, detail:n+'/7 alcids'};
+    }},
+  { id:'pnw_alc3', category:'pnw_pack', tier:3, icon:'🌊',
+    name:'Monk of the Sea',
+    desc:'6 of 7 PNW alcids.',
+    compute:function(s){
+      var list=['Common Murre','Pigeon Guillemot','Marbled Murrelet','Ancient Murrelet','Cassin\'s Auklet','Rhinoceros Auklet','Tufted Puffin'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=6, progress:Math.min(n,6), total:6, detail:n+'/7 alcids'};
+    }},
+  { id:'pnw_alc4', category:'pnw_pack', tier:5, icon:'🌊',
+    name:'Complete Order',
+    desc:'All 7 PNW alcids. Every monk accounted for.',
+    compute:function(s){
+      var list=['Common Murre','Pigeon Guillemot','Marbled Murrelet','Ancient Murrelet','Cassin\'s Auklet','Rhinoceros Auklet','Tufted Puffin'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=7, progress:Math.min(n,7), total:7, detail:n+'/7 alcids'};
+    }},
+
+  // The Malheur Pilgrimage
+  { id:'pnw_mal1', category:'pnw_pack', tier:1, icon:'🏕️',
+    name:'Paid the Debt',
+    desc:'First checklist at Malheur NWR (Harney Co., Oregon). Every PNW birder owes the high desert a spring.',
+    compute:function(s){ return{earned:s.malheurCount>=1,  progress:Math.min(s.malheurCount,1),  total:1};  }},
+  { id:'pnw_mal2', category:'pnw_pack', tier:2, icon:'🏕️',
+    name:'The Malheur Pilgrim',
+    desc:'5 checklists at Malheur NWR.',
+    compute:function(s){ return{earned:s.malheurCount>=5,  progress:Math.min(s.malheurCount,5),  total:5};  }},
+  { id:'pnw_mal3', category:'pnw_pack', tier:3, icon:'🏕️',
+    name:'Return of the Pilgrim',
+    desc:'15 Malheur checklists. You keep going back.',
+    compute:function(s){ return{earned:s.malheurCount>=15, progress:Math.min(s.malheurCount,15), total:15}; }},
+  { id:'pnw_mal4', category:'pnw_pack', tier:5, icon:'🏕️',
+    name:'Lives at Malheur',
+    desc:'50 checklists at the refuge. This is your spring ritual.',
+    compute:function(s){ return{earned:s.malheurCount>=50, progress:Math.min(s.malheurCount,50), total:50}; }},
+
+  // The Estuary Keeper
+  { id:'pnw_est1', category:'pnw_pack', tier:1, icon:'🦀',
+    name:'Mudflat Discovery',
+    desc:'3 of 8 estuary species. Where the river forgets it was ever in a hurry.',
+    compute:function(s){
+      var list=['Black-bellied Plover','Dunlin','Western Sandpiper','Marbled Godwit','Whimbrel','Greater Yellowlegs','Caspian Tern','Brant'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=3, progress:Math.min(n,3), total:3, detail:n+'/8 estuary spp'};
+    }},
+  { id:'pnw_est2', category:'pnw_pack', tier:2, icon:'🦀',
+    name:'The Estuary Keeper',
+    desc:'5 estuary species. Mudflats, tide charts, ten thousand wings.',
+    compute:function(s){
+      var list=['Black-bellied Plover','Dunlin','Western Sandpiper','Marbled Godwit','Whimbrel','Greater Yellowlegs','Caspian Tern','Brant'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=5, progress:Math.min(n,5), total:5, detail:n+'/8 estuary spp'};
+    }},
+  { id:'pnw_est3', category:'pnw_pack', tier:3, icon:'🦀',
+    name:'Tide Reader',
+    desc:'7 of 8 estuary species.',
+    compute:function(s){
+      var list=['Black-bellied Plover','Dunlin','Western Sandpiper','Marbled Godwit','Whimbrel','Greater Yellowlegs','Caspian Tern','Brant'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=7, progress:Math.min(n,7), total:7, detail:n+'/8 estuary spp'};
+    }},
+  { id:'pnw_est4', category:'pnw_pack', tier:5, icon:'🦀',
+    name:'All Eight Estuary Birds',
+    desc:'All 8 estuary species. The mudflat holds nothing back.',
+    compute:function(s){
+      var list=['Black-bellied Plover','Dunlin','Western Sandpiper','Marbled Godwit','Whimbrel','Greater Yellowlegs','Caspian Tern','Brant'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=8, progress:Math.min(n,8), total:8, detail:n+'/8 estuary spp'};
+    }},
 
 ];
