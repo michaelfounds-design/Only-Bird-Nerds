@@ -1714,8 +1714,8 @@ var showHeat      = true;
 var heatLayer     = null;
 var showProtected       = false;
 var protectedAreasLayer = null;
-// Free IUCN token: https://apiv3.iucnredlist.org/api/v3/token
-var IUCN_TOKEN = 'bWx1CLru5ipmfp1myry31UP5YG4nbJ3VGdxk';
+// Free WDPA token: register at https://www.protectedplanet.net/api
+var WDPA_TOKEN = '';
 var iucnCache  = {};
 var sciNameMap = {};
 
@@ -2063,7 +2063,7 @@ function iucnBadgeHtml(cat) {
 function fetchIUCNStatus(sci, cb) {
   if (iucnCache[sci] !== undefined) { cb(iucnCache[sci]); return; }
   iucnCache[sci] = null;
-  fetch('https://apiv3.iucnredlist.org/api/v3/species/' + encodeURIComponent(sci) + '?token=' + IUCN_TOKEN)
+  fetch('/.netlify/functions/iucn?sci=' + encodeURIComponent(sci))
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var cat = (d.result && d.result[0]) ? d.result[0].category : null;
@@ -2252,9 +2252,9 @@ function initMap() {
   stateLayer  = L.layerGroup();
 
   protectedAreasLayer = L.tileLayer(
-    'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/WDPA_protected_areas/MapServer/tile/{z}/{y}/{x}',
+    'https://api.protectedplanet.net/v3/wdpa/tiles/{z}/{x}/{y}?token=' + WDPA_TOKEN,
     { attribution: '© UNEP-WCMC & IUCN · <a href="https://www.protectedplanet.net" target="_blank">Protected Planet</a>',
-      opacity: 0.55, maxZoom: 19 }
+      opacity: 0.6, maxZoom: 19 }
   );
 
   map.on('zoomend', handleZoom);
@@ -2279,15 +2279,13 @@ function initMap() {
       });
     });
     // Fetch IUCN conservation status for each species row
-    if (IUCN_TOKEN) {
-      el.querySelectorAll('[data-iucn-sci]').forEach(function(span) {
-        var sci = span.getAttribute('data-iucn-sci');
-        if (!sci) return;
-        fetchIUCNStatus(sci, function(cat) {
-          if (cat && cat !== 'LC') span.innerHTML = iucnBadgeHtml(cat);
-        });
+    el.querySelectorAll('[data-iucn-sci]').forEach(function(span) {
+      var sci = span.getAttribute('data-iucn-sci');
+      if (!sci) return;
+      fetchIUCNStatus(sci, function(cat) {
+        if (cat && cat !== 'LC') span.innerHTML = iucnBadgeHtml(cat);
       });
-    }
+    });
   });
 
   // Force Leaflet to re-read container size after flex layout settles
