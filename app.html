@@ -909,7 +909,10 @@
       background: rgba(10,16,11,0.92);
       padding: 5px 8px; border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.1);
+      overflow-x: auto; max-width: calc(100vw - 20px);
+      scrollbar-width: none;
     }
+    #layer-bar::-webkit-scrollbar { display: none; }
 
     .lbtn {
       padding: 4px 11px;
@@ -1469,6 +1472,7 @@
   <button class="lbtn on" id="btn-hotspots">📍 Locations</button>
   <button class="lbtn on" id="btn-regions">🗺 Regions</button>
   <button class="lbtn on" id="btn-heat">🔥 Heat</button>
+  <button class="lbtn" id="btn-ebird-hotspots">🐦 eBird</button>
   <button class="lbtn" id="btn-conservation">🌿 Conservation</button>
 </div>
 
@@ -1712,9 +1716,12 @@ var showHotspots  = true;
 var showRegions   = true;
 var showHeat      = true;
 var heatLayer     = null;
-var showProtected       = false;
-var protectedAreasLayer = null;
-var WDPA_TOKEN   = '';
+var showEbirdHS    = false;
+var ebirdHSLayer   = null;
+var _ebirdHSLoaded = false;
+var showConserv    = false;
+var conservLayer   = null;
+var _conservLoaded = false;
 var iucnCache    = {};
 var sciNameMap   = {};
 var _iucnData    = null;
@@ -2096,6 +2103,106 @@ function fetchIUCNStatus(sci, cb) {
   });
 }
 
+// ─── PNW Local Conservation ───────────────────────────────────────────────────
+var PNW_IBAS = [
+  {n:'Malheur NWR & Harney Basin',  lat:42.87, lon:-118.90, st:'OR'},
+  {n:'Summer Lake Wildlife Area',    lat:42.71, lon:-120.82, st:'OR'},
+  {n:'Klamath Basin',                lat:42.10, lon:-121.88, st:'OR'},
+  {n:'Sauvie Island',                lat:45.76, lon:-122.76, st:'OR'},
+  {n:'Willamette Valley NWRs',       lat:44.77, lon:-123.22, st:'OR'},
+  {n:'Fern Ridge Reservoir',         lat:44.12, lon:-123.27, st:'OR'},
+  {n:'Coos Bay Tidal Flats',         lat:43.37, lon:-124.22, st:'OR'},
+  {n:'Tillamook Bay',                lat:45.50, lon:-123.91, st:'OR'},
+  {n:'Columbia River Estuary',       lat:46.26, lon:-123.85, st:'OR/WA'},
+  {n:'Rogue Valley',                 lat:42.40, lon:-122.90, st:'OR'},
+  {n:'Grays Harbor',                 lat:46.97, lon:-123.94, st:'WA'},
+  {n:'Willapa Bay',                  lat:46.60, lon:-123.91, st:'WA'},
+  {n:'Skagit Bay & Padilla Bay',     lat:48.46, lon:-122.51, st:'WA'},
+  {n:'Dungeness Bay',                lat:48.15, lon:-123.17, st:'WA'},
+  {n:'Nisqually Delta',              lat:47.07, lon:-122.71, st:'WA'},
+  {n:'Columbia Basin (WA)',          lat:46.93, lon:-119.36, st:'WA'},
+  {n:'Turnbull NWR',                 lat:47.38, lon:-117.53, st:'WA'},
+];
+
+function loadEbirdHotspots(cb) {
+  if (_ebirdHSLoaded) { cb(); return; }
+  fetch('data/pnw_hotspots.geojson')
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(gj) {
+      ebirdHSLayer = L.geoJSON(gj, {
+        pointToLayer: function(feat, ll) {
+          return L.circleMarker(ll, {
+            radius:5, color:'#2d5a3d', weight:1.5,
+            fillColor:'#7aab88', fillOpacity:0.75
+          });
+        },
+        onEachFeature: function(feat, layer) {
+          var p = feat.properties || {};
+          layer.bindPopup(
+            '<div style="font-family:\'DM Mono\',monospace;font-size:11px;min-width:150px">'
+            + '<b style="font-family:\'Playfair Display\',serif;font-size:13px">' + (p.locName || 'eBird Hotspot') + '</b><br>'
+            + '<span style="color:#7aab88">eBird Hotspot' + (p.numSpeciesAllTime ? ' · ' + p.numSpeciesAllTime + ' sp' : '') + '</span><br>'
+            + '<a href="https://ebird.org/hotspot/' + p.locId + '" target="_blank" rel="noopener" style="color:#4a7c59">View on eBird ↗</a>'
+            + '</div>'
+          );
+        }
+      });
+      _ebirdHSLoaded = true; cb();
+    })
+    .catch(function() { _ebirdHSLoaded = true; cb(); });
+}
+
+function loadConservation(cb) {
+  if (_conservLoaded) { cb(); return; }
+  var auOr = 'https://www.audubon.org/important-bird-areas/state/oregon';
+  var auWa = 'https://www.audubon.org/important-bird-areas/state/washington';
+  var ibaGroup = L.layerGroup();
+  PNW_IBAS.forEach(function(iba) {
+    var auUrl = (iba.st === 'WA') ? auWa : auOr;
+    var m = L.circleMarker([iba.lat, iba.lon], {
+      radius:7, color:'#c97d22', weight:2,
+      fillColor:'#f0b429', fillOpacity:0.55
+    });
+    m.bindPopup(
+      '<div style="font-family:\'DM Mono\',monospace;font-size:11px;min-width:160px">'
+      + '<b style="font-family:\'Playfair Display\',serif;font-size:13px">' + iba.n + '</b><br>'
+      + '<span style="color:#7aab88">Important Bird Area · ' + iba.st + '</span><br>'
+      + '<a href="' + auUrl + '" target="_blank" rel="noopener" style="color:#4a7c59">View on Audubon ↗</a>'
+      + '</div>'
+    );
+    ibaGroup.addLayer(m);
+  });
+  fetch('data/pnw_nwr.geojson')
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(gj) {
+      var nwrGJ = L.geoJSON(gj, {
+        style: function() {
+          return {color:'#2d5a3d', weight:1.5, fillColor:'#4a7c59', fillOpacity:0.18};
+        },
+        onEachFeature: function(feat, layer) {
+          var p  = feat.properties || {};
+          var nm = p.ORGNAME || p.name || 'National Wildlife Refuge';
+          var url = p.ORG_WB
+            ? p.ORG_WB
+            : 'https://www.fws.gov/refuge/' + encodeURIComponent(nm.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''));
+          layer.bindPopup(
+            '<div style="font-family:\'DM Mono\',monospace;font-size:11px;min-width:160px">'
+            + '<b style="font-family:\'Playfair Display\',serif;font-size:13px">' + nm + '</b><br>'
+            + '<span style="color:#7aab88">National Wildlife Refuge · USFWS</span><br>'
+            + '<a href="' + url + '" target="_blank" rel="noopener" style="color:#4a7c59">Visit Refuge ↗</a>'
+            + '</div>'
+          );
+        }
+      });
+      conservLayer = L.layerGroup([ibaGroup, nwrGJ]);
+      _conservLoaded = true; cb();
+    })
+    .catch(function() {
+      conservLayer = ibaGroup;
+      _conservLoaded = true; cb();
+    });
+}
+
 function _finalizeLoad(firstLoad) {
   computeLifers(allRecords);
   computeGlobalFreq(allRecords);
@@ -2273,12 +2380,6 @@ function initMap() {
 
   countyLayer = L.layerGroup();
   stateLayer  = L.layerGroup();
-
-  protectedAreasLayer = L.tileLayer(
-    'https://api.protectedplanet.net/v3/wdpa/tiles/{z}/{x}/{y}?token=' + WDPA_TOKEN,
-    { attribution: '© UNEP-WCMC & IUCN · <a href="https://www.protectedplanet.net" target="_blank">Protected Planet</a>',
-      opacity: 0.6, maxZoom: 19 }
-  );
 
   map.on('zoomend', handleZoom);
 
@@ -2850,7 +2951,8 @@ function handleZoom() {
   setL(clusterGroup,        showHotspots && z >= ZOOM_LOCATION);
   setL(countyLayer,         showRegions  && z >= ZOOM_COUNTY && z < ZOOM_LOCATION);
   setL(stateLayer,          showRegions  && z < ZOOM_COUNTY);
-  setL(protectedAreasLayer, showProtected);
+  setL(ebirdHSLayer,  showEbirdHS);
+  setL(conservLayer,  showConserv);
 }
 
 // ─────────────────────────────────────────
@@ -3076,13 +3178,18 @@ document.getElementById('btn-heat').addEventListener('click', function() {
   handleZoom();
 });
 
+document.getElementById('btn-ebird-hotspots').addEventListener('click', function() {
+  showEbirdHS = !showEbirdHS;
+  this.classList.toggle('on', showEbirdHS);
+  if (!showEbirdHS) { if (map && ebirdHSLayer) map.removeLayer(ebirdHSLayer); return; }
+  loadEbirdHotspots(function() { if (map && ebirdHSLayer) map.addLayer(ebirdHSLayer); });
+});
+
 document.getElementById('btn-conservation').addEventListener('click', function() {
-  showProtected = !showProtected;
-  this.classList.toggle('on', showProtected);
-  if (map) {
-    if (showProtected) map.addLayer(protectedAreasLayer);
-    else map.removeLayer(protectedAreasLayer);
-  }
+  showConserv = !showConserv;
+  this.classList.toggle('on', showConserv);
+  if (!showConserv) { if (map && conservLayer) map.removeLayer(conservLayer); return; }
+  loadConservation(function() { if (map && conservLayer) map.addLayer(conservLayer); });
 });
 
 document.getElementById('photo-dialog-bg').addEventListener('click', function() { photoDialog.close(); });
