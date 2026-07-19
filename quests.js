@@ -69,6 +69,8 @@ function computeStats(records) {
   var malheurSubs      = {};  // subId → true
   var speciesCommentRows = 0;
   var hasLeap          = false;
+  var heardOnlySpecies = {};
+  var countySpeciesMap = {};
 
   records.forEach(function(r) {
     speciesSeen[r.name]   = true;
@@ -82,6 +84,8 @@ function computeStats(records) {
     var countyKey = r.state + '|' + r.county;
     if (r.county && r.state) {
       counties[countyKey] = true;
+      if (!countySpeciesMap[countyKey]) countySpeciesMap[countyKey] = {};
+      countySpeciesMap[countyKey][r.name] = true;
       var st = r.state;
       if (st === 'US-OR' || st === 'US-WA')                                                       pnwCounties[countyKey]     = true;
       if (st === 'US-CA')                                                                           caCounties[countyKey]      = true;
@@ -165,6 +169,7 @@ function computeStats(records) {
 
     // v2: Species Comments
     if (r.speciesComments) speciesCommentRows++;
+    if ((r.count === '0' || r.count === 0) && r.name) heardOnlySpecies[r.name] = true;
 
     // v2: PNW pack — Dipper's Creed
     if (r.name === 'American Dipper' && r.subId) dippersCreedSubs[r.subId] = true;
@@ -260,6 +265,11 @@ function computeStats(records) {
   var totalChkCount = Object.keys(checklistIds).length;
   var numericChks = totalChkCount - Object.keys(subIdHasX).length;
 
+  var countiesOver100sp = 0;
+  Object.keys(countySpeciesMap).forEach(function(ck) {
+    if (Object.keys(countySpeciesMap[ck]).length >= 100) countiesOver100sp++;
+  });
+
   return {
     _speciesSeen:        speciesSeen,
     totalSpecies:        Object.keys(speciesSeen).length,
@@ -299,8 +309,10 @@ function computeStats(records) {
     totalWithAllObs:     totalWithAllObs,
     maxStatDuration:     maxStatDur,
     maxTravelDist:       maxTravDist,
-    dippersCreedCount:   Object.keys(dippersCreedSubs).length,
-    malheurCount:        Object.keys(malheurSubs).length,
+    dippersCreedCount:      Object.keys(dippersCreedSubs).length,
+    malheurCount:           Object.keys(malheurSubs).length,
+    heardOnlySpeciesCount:  Object.keys(heardOnlySpecies).length,
+    countiesOver100sp:      countiesOver100sp,
   };
 }
 
@@ -1322,4 +1334,514 @@ var QUESTS = [
       return{earned:n>=8, progress:Math.min(n,8), total:8, detail:n+'/8 estuary spp'};
     }},
 
+  // ══════════════════════════════════════════════════════════
+  // 👁  SKULK & SEEK
+  // ══════════════════════════════════════════════════════════
+
+  // The Thicket Oracle — heard-only species (experimental)
+  { id:'sp_tho1', category:'species', tier:1, icon:'👂',
+    name:'What Was That?',
+    desc:'10 species logged as heard-only (count=0). The ears have it.',
+    compute:function(s){ return{earned:s.heardOnlySpeciesCount>=10,  progress:Math.min(s.heardOnlySpeciesCount,10),  total:10,  detail:'(experimental)'}; }},
+  { id:'sp_tho2', category:'species', tier:2, icon:'👂',
+    name:'The Thicket Oracle',
+    desc:'25 heard-only species. You never saw them. You knew them anyway.',
+    compute:function(s){ return{earned:s.heardOnlySpeciesCount>=25,  progress:Math.min(s.heardOnlySpeciesCount,25),  total:25,  detail:'(experimental)'}; }},
+  { id:'sp_tho3', category:'species', tier:3, icon:'👂',
+    name:'Ear Birder',
+    desc:'50 heard-only species.',
+    compute:function(s){ return{earned:s.heardOnlySpeciesCount>=50,  progress:Math.min(s.heardOnlySpeciesCount,50),  total:50,  detail:'(experimental)'}; }},
+  { id:'sp_tho4', category:'species', tier:5, icon:'👂',
+    name:'The Dark Fluent',
+    desc:'100 heard-only species. A superpower most birders never develop.',
+    compute:function(s){ return{earned:s.heardOnlySpeciesCount>=100, progress:Math.min(s.heardOnlySpeciesCount,100), total:100, detail:'(experimental)'}; }},
+
+  // The King's Ransom — NA rail completion badge
+  { id:'sp_kr1', category:'species', tier:1, icon:'🌾',
+    name:'Into the Marsh',
+    desc:'3 of 8 North American rail species. They\'re in there. You found them.',
+    compute:function(s){
+      var list=['Virginia Rail','Sora','King Rail','Clapper Rail','Black Rail','Yellow Rail','Purple Gallinule','Common Gallinule'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=3, progress:Math.min(n,3), total:3, detail:n+'/8 rails'};
+    }},
+  { id:'sp_kr2', category:'species', tier:2, icon:'🌾',
+    name:'The King\'s Ransom',
+    desc:'5 of 8 NA rails. You wade.',
+    compute:function(s){
+      var list=['Virginia Rail','Sora','King Rail','Clapper Rail','Black Rail','Yellow Rail','Purple Gallinule','Common Gallinule'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=5, progress:Math.min(n,5), total:5, detail:n+'/8 rails'};
+    }},
+  { id:'sp_kr3', category:'species', tier:3, icon:'🌾',
+    name:'Rail Lord',
+    desc:'7 of 8 NA rails. Black Rail or Yellow Rail is still out there.',
+    compute:function(s){
+      var list=['Virginia Rail','Sora','King Rail','Clapper Rail','Black Rail','Yellow Rail','Purple Gallinule','Common Gallinule'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=7, progress:Math.min(n,7), total:7, detail:n+'/8 rails'};
+    }},
+  { id:'sp_kr4', category:'species', tier:5, icon:'🌾',
+    name:'Every Rail Kneels',
+    desc:'All 8 NA rail species. A lifetime of marshes.',
+    compute:function(s){
+      var list=['Virginia Rail','Sora','King Rail','Clapper Rail','Black Rail','Yellow Rail','Purple Gallinule','Common Gallinule'];
+      var n=_speciesFromList(s._speciesSeen,list);
+      return{earned:n>=8, progress:Math.min(n,8), total:8, detail:n+'/8 rails'};
+    }},
+
+  // The Wingspan Sovereign — large-wingspan species
+  { id:'sp_ws1', category:'species', tier:1, icon:'🦅',
+    name:'Giants Noticed',
+    desc:'8 species with a wingspan over 150 cm — condors, cranes, eagles, swans, pelicans, albatrosses.',
+    compute:function(s){
+      var n=_speciesFromList(s._speciesSeen,_WINGSPAN_SP);
+      return{earned:n>=8,  progress:Math.min(n,8),  total:8,  detail:n+' of '+_WINGSPAN_SP.length+' giants'};
+    }},
+  { id:'sp_ws2', category:'species', tier:2, icon:'🦅',
+    name:'The Wingspan Sovereign',
+    desc:'15 large-wingspan species. The giants of the air answer to you.',
+    compute:function(s){
+      var n=_speciesFromList(s._speciesSeen,_WINGSPAN_SP);
+      return{earned:n>=15, progress:Math.min(n,15), total:15, detail:n+' of '+_WINGSPAN_SP.length+' giants'};
+    }},
+  { id:'sp_ws3', category:'species', tier:3, icon:'🦅',
+    name:'Commanding the Sky',
+    desc:'25 large-wingspan species.',
+    compute:function(s){
+      var n=_speciesFromList(s._speciesSeen,_WINGSPAN_SP);
+      return{earned:n>=25, progress:Math.min(n,25), total:25, detail:n+' of '+_WINGSPAN_SP.length+' giants'};
+    }},
+  { id:'sp_ws4', category:'species', tier:5, icon:'🦅',
+    name:'Sovereign of All Skies',
+    desc:'35 large-wingspan species. Pelagic trips, cranes, condors — all of it.',
+    compute:function(s){
+      var n=_speciesFromList(s._speciesSeen,_WINGSPAN_SP);
+      return{earned:n>=35, progress:Math.min(n,35), total:35, detail:n+' of '+_WINGSPAN_SP.length+' giants'};
+    }},
+
+  // County Cartographer — counties with 100+ species (depth, not breadth)
+  { id:'geo_cc1', category:'geo', tier:1, icon:'🗺️',
+    name:'Century County',
+    desc:'1 county where you\'ve recorded 100+ species. You know this ground.',
+    compute:function(s){ return{earned:s.countiesOver100sp>=1,  progress:Math.min(s.countiesOver100sp,1),  total:1};  }},
+  { id:'geo_cc2', category:'geo', tier:2, icon:'🗺️',
+    name:'County Cartographer',
+    desc:'3 counties with 100+ species. A real map of places you\'ve worked.',
+    compute:function(s){ return{earned:s.countiesOver100sp>=3,  progress:Math.min(s.countiesOver100sp,3),  total:3};  }},
+  { id:'geo_cc3', category:'geo', tier:3, icon:'🗺️',
+    name:'Deep Cartographer',
+    desc:'10 counties with 100+ species.',
+    compute:function(s){ return{earned:s.countiesOver100sp>=10, progress:Math.min(s.countiesOver100sp,10), total:10}; }},
+  { id:'geo_cc4', category:'geo', tier:5, icon:'🗺️',
+    name:'Master Cartographer',
+    desc:'25 counties with 100+ species. County listing at its most serious.',
+    compute:function(s){ return{earned:s.countiesOver100sp>=25, progress:Math.min(s.countiesOver100sp,25), total:25}; }},
+
 ];
+
+// ─────────────────────────────────────────────────────────────
+// WINGSPAN SPECIES LIST (avg wingspan > ~150 cm)
+// ─────────────────────────────────────────────────────────────
+var _WINGSPAN_SP = [
+  'California Condor','Turkey Vulture','Black Vulture',
+  'Whooping Crane','Sandhill Crane',
+  'American White Pelican','Brown Pelican',
+  'Trumpeter Swan','Tundra Swan','Mute Swan','Whooper Swan',
+  'Bald Eagle','Golden Eagle','White-tailed Eagle','Steller\'s Sea-Eagle',
+  'Great Blue Heron','Great Egret',
+  'Wandering Albatross','Short-tailed Albatross','Laysan Albatross',
+  'Black-footed Albatross','Yellow-nosed Albatross','Black-browed Albatross',
+  'Magnificent Frigatebird','Great Frigatebird','Lesser Frigatebird',
+  'Northern Gannet','Masked Booby','Nazca Booby',
+  'Jabiru',
+  'Greater White-fronted Goose',
+];
+
+// ─────────────────────────────────────────────────────────────
+// QUEST → BADGE POPUP CONTENT MAP
+// Maps quest id to a badge_id key in BADGE_POPUP.
+// Used to look up rich popup content when a user clicks a badge.
+// ─────────────────────────────────────────────────────────────
+var QUEST_BADGE_MAP = {
+  // fledgling / chronicle
+  'ded_1':'the_fledgling',
+  'ded_2':'the_chronicler','ded_3':'the_chronicler','ded_4':'the_chronicler',
+  'ded_5':'the_chronicler','ded_6':'the_chronicler','ded_7':'the_chronicler','ded_8':'the_chronicler',
+  // geographic
+  'geo_st1':'the_pilgrim','geo_st2':'the_pilgrim','geo_st3':'the_pilgrim',
+  'geo_st4':'the_pilgrim','geo_st5':'the_pilgrim',
+  'geo_ct1':'the_continental','geo_ct2':'the_continental','geo_ct3':'the_continental',
+  'geo_ct4':'the_continental','geo_ct5':'the_continental',
+  'geo_cc1':'county_cartographer','geo_cc2':'county_cartographer',
+  'geo_cc3':'county_cartographer','geo_cc4':'county_cartographer',
+  // temporal — big day
+  'tmp_bd1':'the_centurion','tmp_bd2':'the_centurion','tmp_bd3':'the_centurion',
+  'tmp_bd4':'the_centurion','tmp_bd5':'the_centurion',
+  // temporal — dawn
+  'tmp_dw1':'the_dawnbreaker','tmp_dw2':'the_dawnbreaker','tmp_dw3':'the_dawnbreaker',
+  'tmp_dw4':'the_dawnbreaker','tmp_dw5':'the_dawnbreaker',
+  // temporal — migration / winter / midnight
+  'tmp_mig1':'migration_rider','tmp_mig2':'migration_rider',
+  'tmp_mig3':'migration_rider','tmp_mig4':'migration_rider',
+  'tmp_win1':'winter_holdout','tmp_win2':'winter_holdout',
+  'tmp_win3':'winter_holdout','tmp_win4':'winter_holdout',
+  'tmp_mid1':'the_midnight_communion','tmp_mid2':'the_midnight_communion',
+  'tmp_mid3':'the_midnight_communion','tmp_mid4':'the_midnight_communion',
+  // species
+  'sp_owl1':'the_owl_caller','sp_owl2':'the_owl_caller','sp_owl3':'the_owl_caller',
+  'sp_owl4':'the_owl_caller','sp_owl5':'the_owl_caller',
+  'sp_rap1':'the_raptors_gaze','sp_rap2':'the_raptors_gaze','sp_rap3':'the_raptors_gaze',
+  'sp_rap4':'the_raptors_gaze','sp_rap5':'the_raptors_gaze',
+  'sp_wa1':'the_warbler_weaver','sp_wa2':'the_warbler_weaver','sp_wa3':'the_warbler_weaver',
+  'sp_wa4':'the_warbler_weaver','sp_wa5':'the_warbler_weaver',
+  'sp_sh1':'the_shore_mystic','sp_sh2':'the_shore_mystic','sp_sh3':'the_shore_mystic',
+  'sp_sh4':'the_shore_mystic','sp_sh5':'the_shore_mystic',
+  'sp_sp1':'the_little_brown_sage','sp_sp2':'the_little_brown_sage','sp_sp3':'the_little_brown_sage',
+  'sp_sp4':'the_little_brown_sage','sp_sp5':'the_little_brown_sage',
+  'sp_hu1':'the_nectar_baron','sp_hu2':'the_nectar_baron','sp_hu3':'the_nectar_baron',
+  'sp_hu4':'the_nectar_baron','sp_hu5':'the_nectar_baron',
+  'sp_wp1':'the_drummers_circle','sp_wp2':'the_drummers_circle','sp_wp3':'the_drummers_circle',
+  'sp_wp4':'the_drummers_circle','sp_wp5':'the_drummers_circle',
+  'sp_gu1':'the_larophiles_burden','sp_gu2':'the_larophiles_burden','sp_gu3':'the_larophiles_burden',
+  'sp_gu4':'the_larophiles_burden','sp_gu5':'the_larophiles_burden',
+  'sp_bw1':'breeding_witness','sp_bw2':'breeding_witness',
+  'sp_bw3':'breeding_witness','sp_bw4':'breeding_witness',
+  'sp_ra1':'the_marsh_phantom','sp_ra2':'the_marsh_phantom',
+  'sp_ra3':'the_marsh_phantom','sp_ra4':'the_marsh_phantom',
+  'sp_wr1':'the_silent_witness','sp_wr2':'the_silent_witness',
+  'sp_wr3':'the_silent_witness','sp_wr4':'the_silent_witness',
+  'sp_tho1':'the_thicket_oracle','sp_tho2':'the_thicket_oracle',
+  'sp_tho3':'the_thicket_oracle','sp_tho4':'the_thicket_oracle',
+  'sp_kr1':'kings_ransom','sp_kr2':'kings_ransom','sp_kr3':'kings_ransom','sp_kr4':'kings_ransom',
+  'sp_ws1':'the_wingspan_sovereign','sp_ws2':'the_wingspan_sovereign',
+  'sp_ws3':'the_wingspan_sovereign','sp_ws4':'the_wingspan_sovereign',
+  // on-ramp
+  'on_comp':'the_completionist',
+  'on_scr1':'the_scribe','on_scr2':'the_scribe','on_scr3':'the_scribe','on_scr4':'the_scribe',
+  'on_en1':'the_enumerator','on_en2':'the_enumerator','on_en3':'the_enumerator','on_en4':'the_enumerator',
+  // quirk
+  'qk_sit1':'the_big_sit','qk_sit2':'the_big_sit','qk_sit3':'the_big_sit','qk_sit4':'the_big_sit',
+  'qk_dm1':'the_death_march','qk_dm2':'the_death_march','qk_dm3':'the_death_march','qk_dm4':'the_death_march',
+  'qk_phen1':'the_phenologist','qk_phen2':'the_phenologist',
+  'qk_phen3':'the_phenologist','qk_phen4':'the_phenologist',
+  'qk_ny1':'new_years_devotee','qk_ny2':'new_years_devotee',
+  'qk_ny3':'new_years_devotee','qk_ny4':'new_years_devotee',
+  'qk_leap':'the_leap_lister',
+  'qk_loy1':'the_loyalist','qk_loy2':'the_loyalist','qk_loy3':'the_loyalist','qk_loy4':'the_loyalist',
+  'qk_patch1':'location_loyalty','qk_patch2':'location_loyalty',
+  'qk_patch3':'location_loyalty','qk_patch4':'location_loyalty',
+  // PNW pack
+  'pnw_dip1':'dippers_creed','pnw_dip2':'dippers_creed','pnw_dip3':'dippers_creed','pnw_dip4':'dippers_creed',
+  'pnw_sal1':'salmonberry_circuit','pnw_sal2':'salmonberry_circuit',
+  'pnw_sal3':'salmonberry_circuit','pnw_sal4':'salmonberry_circuit',
+  'pnw_sag1':'sagebrush_sea','pnw_sag2':'sagebrush_sea',
+  'pnw_sag3':'sagebrush_sea','pnw_sag4':'sagebrush_sea',
+  'pnw_alc1':'alcid_ascetic','pnw_alc2':'alcid_ascetic','pnw_alc3':'alcid_ascetic','pnw_alc4':'alcid_ascetic',
+  'pnw_mal1':'malheur_pilgrimage','pnw_mal2':'malheur_pilgrimage',
+  'pnw_mal3':'malheur_pilgrimage','pnw_mal4':'malheur_pilgrimage',
+  'pnw_est1':'estuary_keeper','pnw_est2':'estuary_keeper',
+  'pnw_est3':'estuary_keeper','pnw_est4':'estuary_keeper',
+};
+
+// ─────────────────────────────────────────────────────────────
+// BADGE POPUP CONTENT
+// Static display content for each badge group.
+// Keyed by badge_id (matches QUEST_BADGE_MAP values).
+// ─────────────────────────────────────────────────────────────
+var BADGE_POPUP = {
+  the_fledgling:{
+    name:'The Fledgling',flavor:'Every birder has a first checklist. This one is yours.',
+    how_it_works:'Awarded the moment your upload contains at least one checklist. We show the date of your earliest checklist so you can see where the story begins.',
+    tier_unit:'checklists',tiers:null,
+    progress_display:'Fledged on {first_checklist_date}',
+    field_tips:['You already earned this — welcome to the roost.','Your first checklist date is a fun anchor. Compare it with friends to see who\'s the elder birder.'],
+  },
+  the_completionist:{
+    name:'The Completionist',flavor:'Reporting everything you saw, not just the good stuff.',
+    how_it_works:'The share of your checklists marked as complete (\'All Obs Reported\' = yes). We require at least 20 checklists so the percentage means something.',
+    tier_unit:'percent complete',tiers:{bronze:90,silver:95,gold:98,legendary:100},
+    progress_display:'{value}% of your checklists are complete — {next_threshold}% for {next_tier_name}',
+    field_tips:['Complete checklists are the ones scientists can actually use. This badge rewards good data citizenship, not big numbers.','In the eBird app, answer \'Are you submitting a complete checklist?\' with Yes whenever you reported every bird you could identify.','It\'s fine to say No for incidental sightings — this badge just measures the ratio.'],
+  },
+  the_scribe:{
+    name:'The Scribe',flavor:'The birder who writes it down.',
+    how_it_works:'Counts observations where you left a species comment. Behavior notes, plumage details, breeding activity — anything in the comment field counts.',
+    tier_unit:'commented observations',tiers:{bronze:10,silver:50,gold:200,legendary:1000},
+    progress_display:'{value} commented observations — {next_threshold} for {next_tier_name}',
+    field_tips:['A quick note like \'carrying nesting material\' or \'singing from cattails\' turns a tally into a record.','Comments are where rarities get documented. Future-you (and reviewers) will thank present-you.'],
+  },
+  the_enumerator:{
+    name:'The Enumerator',flavor:'Count the birds. All of them.',
+    how_it_works:'Counts checklists where every species has a real number — no \'X\' (present but uncounted) anywhere on the list.',
+    tier_unit:'fully-counted checklists',tiers:{bronze:25,silver:100,gold:500,legendary:2000},
+    progress_display:'{value} fully-counted checklists — {next_threshold} for {next_tier_name}',
+    field_tips:['Actual counts (even estimates) are far more valuable than \'X\'. Ten Mallards tells a story; \'X Mallard\' doesn\'t.','For big flocks, estimate by tens or hundreds rather than defaulting to X.','One \'X\' disqualifies the whole checklist for this badge, so it rewards consistent habit.'],
+  },
+  the_centurion:{
+    name:'The Centurion',flavor:'A single day. A hundred birds. A legend.',
+    how_it_works:'Your best single-day species total. We group all your checklists by date, count distinct species per day, and take your highest day.',
+    tier_unit:'species in one day',tiers:{bronze:50,silver:75,gold:100,legendary:150},
+    progress_display:'Best day: {value} species — {next_threshold} for {next_tier_name}',
+    field_tips:['Big Days are built on habitat variety: hit water, woods, field, and shore in one day.','Spring migration mornings stack species fastest. Start before dawn, end after dusk.','150 (Legendary) usually means a coordinated route in a rich region during peak migration.'],
+  },
+  the_chronicler:{
+    name:'The Chronicler',flavor:'Not the rarest list. The longest devotion.',
+    how_it_works:'Your lifetime count of distinct checklists.',
+    tier_unit:'checklists',tiers:{bronze:25,silver:100,gold:500,legendary:2000},
+    progress_display:'{value} checklists submitted — {next_threshold} for {next_tier_name}',
+    field_tips:['Short lists count too. A five-minute stationary count on your porch is a full checklist.','Consistency beats intensity here — a daily patch list adds up faster than occasional marathons.'],
+  },
+  the_dawnbreaker:{
+    name:'The Dawnbreaker',flavor:'The birds are loudest before the world wakes.',
+    how_it_works:'Counts distinct checklists that started before 6:00 AM (local time as recorded on the checklist).',
+    tier_unit:'pre-dawn checklists',tiers:{bronze:5,silver:10,gold:25,legendary:100},
+    progress_display:'{value} checklists before 6 AM — {next_threshold} for {next_tier_name}',
+    field_tips:['The dawn chorus peaks in late spring — May mornings are prime for this badge.','Owling counts too, if your start time lands before 6.','Set the start time honestly; the badge reads the time you entered on the checklist.'],
+    caveats:['Checklists with no start time recorded can\'t be counted.'],
+  },
+  the_midnight_communion:{
+    name:'The Midnight Communion',flavor:'The quiet hours belong to the truly obsessed.',
+    how_it_works:'Counts checklists with a start time between midnight and 3:00 AM.',
+    tier_unit:'midnight checklists',tiers:{bronze:1,silver:5,gold:15,legendary:50},
+    progress_display:'{value} after-midnight checklists — {next_threshold} for {next_tier_name}',
+    field_tips:['Nocturnal migration, owl surveys, and rail playback windows all live here.','A single midnight checklist earns Bronze — most birders never log one.','Big Day teams often start at 12:01 AM to squeeze out owls and nightjars.'],
+    caveats:['Needs a recorded start time. Missing-time checklists are skipped.'],
+  },
+  migration_rider:{
+    name:'Migration Rider',flavor:'Ride the wave north.',
+    how_it_works:'Your best spring: distinct species recorded between April 1 and May 31 in a single year.',
+    tier_unit:'spring species',tiers:{bronze:40,silver:60,gold:75,legendary:125},
+    progress_display:'Best spring: {value} species — {next_threshold} for {next_tier_name}',
+    field_tips:['Warblers, vireos, tanagers, and flycatchers arrive in waves — bird often through late April and May.','Fallout days after a passing front can add a dozen species in a morning.','125 (Legendary) rewards birders who chase multiple habitats through the whole window.'],
+  },
+  winter_holdout:{
+    name:'Winter Holdout',flavor:'When the fair-weather birders go home.',
+    how_it_works:'Your best winter: distinct species recorded between December 1 and January 31, counting a winter that spans the year boundary as one season.',
+    tier_unit:'winter species',tiers:{bronze:20,silver:30,gold:40,legendary:75},
+    progress_display:'Best winter: {value} species — {next_threshold} for {next_tier_name}',
+    field_tips:['Winter waterfowl, gulls, and lingering half-hardies drive this total.','Coastal and open-water sites stay productive when inland woods go quiet.','Because a winter straddles New Year\'s, a December push plus a January follow-up stack into the same season.'],
+  },
+  breeding_witness:{
+    name:'Breeding Witness',flavor:'You didn\'t just see it. You saw it nesting.',
+    how_it_works:'Counts distinct species for which you recorded a confirmed breeding code (nest with young, fledglings, carrying food, and similar).',
+    tier_unit:'confirmed-breeding species',tiers:{bronze:3,silver:6,gold:10,legendary:25},
+    progress_display:'{value} species confirmed breeding — {next_threshold} for {next_tier_name}',
+    detail:'Confirmed codes: NY (nest w/ young), NE (nest w/ eggs), FS (carrying fecal sac), FY (feeding young), CF (carrying food), ON (occupied nest), UN (used nest), DD (distraction display).',
+    field_tips:['Only \'Confirmed\' codes count — \'Possible\' (singing) and \'Probable\' don\'t move this badge.','Watch for adults carrying food or fecal sacs; that\'s an easy confirmation without ever finding a nest.','Breeding Bird Atlas projects are a great structured way to rack these up.'],
+  },
+  the_raptors_gaze:{
+    name:'The Raptor\'s Gaze',flavor:'Eyes on the sky, always.',
+    how_it_works:'Counts distinct raptor species on your life list — hawks, eagles, kites, harriers (Accipitridae), falcons and caracaras (Falconidae), and Osprey (Pandionidae).',
+    tier_unit:'raptor species',tiers:{bronze:8,silver:14,gold:20,legendary:30},
+    progress_display:'{value} raptor species — {next_threshold} for {next_tier_name}',
+    field_tips:['Hawkwatch sites in fall are the fastest way to add species and study flight ID.','Don\'t overlook the falcons: kestrel, merlin, peregrine, and prairie each count separately.','Owls are NOT raptors for this badge — they have their own (The Owl Caller).'],
+  },
+  the_warbler_weaver:{
+    name:'The Warbler Weaver',flavor:'The confetti of migration.',
+    how_it_works:'Counts distinct New World warbler species (family Parulidae) on your life list.',
+    tier_unit:'warbler species',tiers:{bronze:10,silver:18,gold:25,legendary:35},
+    progress_display:'{value} warbler species — {next_threshold} for {next_tier_name}',
+    field_tips:['Spring migration is warbler prime time — learn the songs and your list explodes.','Eastern North America holds far more warbler diversity than the West; 35 (Legendary) usually means travel.','Fall \'confusing\' warblers count the same as crisp spring males — plumage doesn\'t matter, the species does.'],
+  },
+  the_shore_mystic:{
+    name:'The Shore Mystic',flavor:'Reading the mudflat like scripture.',
+    how_it_works:'Counts distinct shorebird species — sandpipers and allies (Scolopacidae) plus plovers (Charadriidae).',
+    tier_unit:'shorebird species',tiers:{bronze:12,silver:20,gold:30,legendary:40},
+    progress_display:'{value} shorebird species — {next_threshold} for {next_tier_name}',
+    field_tips:['Time the tides: a rising tide pushes birds close, a falling tide spreads them out.','Fall migration (July–September) brings the widest variety, including juveniles.','Estuaries, sewage ponds, and flooded fields are the classic shorebird magnets.'],
+  },
+  the_owl_caller:{
+    name:'The Owl Caller',flavor:'You speak to the dark, and the dark answers.',
+    how_it_works:'Counts distinct owl species — typical owls (Strigidae) and barn owls (Tytonidae).',
+    tier_unit:'owl species',tiers:{bronze:3,silver:5,gold:8,legendary:12},
+    progress_display:'{value} owl species — {next_threshold} for {next_tier_name}',
+    field_tips:['Learn calls — most owls are heard far more often than seen.','Winter is prime for northern visitors; check daytime roosts in dense conifers.','Please bird ethically: limit or avoid playback, especially near nests and in heavily-birded spots.'],
+  },
+  the_marsh_phantom:{
+    name:'The Marsh Phantom',flavor:'Heard everywhere. Seen almost never.',
+    how_it_works:'Counts distinct rail-family species (Rallidae) — rails, sora, gallinules, coots, crakes.',
+    tier_unit:'rail-family species',tiers:{bronze:3,silver:5,gold:8,legendary:12},
+    progress_display:'{value} rail-family species — {next_threshold} for {next_tier_name}',
+    field_tips:['Dawn and dusk in freshwater marsh are your best windows.','Coots and gallinules are the gimmes; Virginia Rail and Sora take patience; Yellow and Black Rail are the grails.','Heard-only counts — most rail records are audio.'],
+  },
+  the_silent_witness:{
+    name:'The Silent Witness',flavor:'Small, loud, and everywhere you look — once you learn to look.',
+    how_it_works:'Counts distinct wren species (family Troglodytidae).',
+    tier_unit:'wren species',tiers:{bronze:4,silver:7,gold:10,legendary:15},
+    progress_display:'{value} wren species — {next_threshold} for {next_tier_name}',
+    field_tips:['Wrens are ventriloquists of the understory — learn songs to find the skulkers.','The Southwest holds the most diversity (Cactus, Rock, Canyon, Bewick\'s, and more).','Marsh and Sedge Wrens hide in wet grass; Pacific and Winter Wrens run the forest floor.'],
+  },
+  the_wingspan_sovereign:{
+    name:'The Wingspan Sovereign',flavor:'The giants of the air answer to you.',
+    how_it_works:'Counts distinct species from our curated large-wingspan list (average wingspan over ~150 cm) — condors, albatrosses, cranes, pelicans, swans, the largest eagles and herons.',
+    tier_unit:'large-wingspan species',tiers:{bronze:8,silver:15,gold:25,legendary:35},
+    progress_display:'{value} giants on your list — {next_threshold} for {next_tier_name}',
+    field_tips:['Pelagic trips unlock albatrosses and the biggest tubenoses.','Swans, cranes, and pelicans are the accessible tier; California Condor is the trophy.','See the badge\'s species list to check which of your birds qualify.'],
+  },
+  the_thicket_oracle:{
+    name:'The Thicket Oracle',flavor:'You never saw it. You knew it anyway.',
+    how_it_works:'Counts distinct species you logged as heard-only. eBird encodes this quietly, so we treat it as experimental and show you which records we matched.',
+    tier_unit:'heard-only species',tiers:{bronze:10,silver:25,gold:50,legendary:100},
+    progress_display:'{value} heard-only species (experimental) — {next_threshold} for {next_tier_name}',
+    field_tips:['Birding by ear is a superpower — this badge celebrates it.','Rails, owls, nightjars, and dense-cover skulkers are the classic heard-only birds.','Adding \'heard only\' in your species comment helps us match these more reliably.'],
+    caveats:['Experimental: eBird\'s export encodes heard-only as count=0. This count may be conservative — some heard birds are logged with a numeric count anyway.'],
+  },
+  kings_ransom:{
+    name:'The King\'s Ransom',flavor:'Every rail in the kingdom, bowed before you.',
+    how_it_works:'A completion badge: have you recorded the full set of North American rails and allies? We check your list against the target species set.',
+    tier_unit:'target species found',tiers:{bronze:3,silver:5,gold:7,legendary:8},
+    progress_display:'{value} of 8 target rails — {next_threshold} for {next_tier_name}',
+    detail:'Target set: Virginia Rail, Sora, King Rail, Clapper Rail, Black Rail, Yellow Rail, Purple Gallinule, Common Gallinule.',
+    field_tips:['Black and Yellow Rail are the make-or-break Legendary birds — both demand effort and often night marsh work.','King vs. Clapper can hinge on habitat (fresh vs. salt) as much as looks.','This one rewards a lifetime of marsh dedication, not a single trip.'],
+  },
+  county_cartographer:{
+    name:'County Cartographer',flavor:'Filling in the map, one county at a time.',
+    how_it_works:'Counts how many counties you\'ve turned into a serious list — a county qualifies once you\'ve recorded 100+ species there.',
+    tier_unit:'counties with 100+ species',tiers:{bronze:1,silver:3,gold:10,legendary:25},
+    progress_display:'{value} counties over 100 species — {next_threshold} for {next_tier_name}',
+    field_tips:['County listing is a rabbit hole in the best way — it sends you to habitats you\'d otherwise skip.','Your home county usually clears 100 first; road trips fill in the rest.','Diverse counties (coast + mountains + valley) hit 100 far more easily than uniform ones.'],
+  },
+  location_loyalty:{
+    name:'The Rooted (Patch Loyalty)',flavor:'Know one place completely.',
+    how_it_works:'Your maximum number of checklists at a single location. This is a four-rung ladder rewarding deep local patch-birding.',
+    tier_unit:'checklists at one location',tiers:{bronze:10,silver:25,gold:100,legendary:365},
+    progress_display:'{value} checklists at your top patch — {next_threshold} for {next_tier_name}',
+    detail:'Tier names: Bronze = The Patchling, Silver = The Neighborhood Naturalist, Gold = The Patch Warden, Legendary = The Rooted.',
+    field_tips:['Pick a patch you can visit often — a local park, a wetland, even your yard.','Patch birding teaches phenology: you learn exactly when each species arrives and leaves.','The Rooted (365) is roughly a year of near-daily visits, or many years of regular ones.'],
+  },
+  the_big_sit:{
+    name:'The Big Sit',flavor:'Plant yourself. Let the birds come to you.',
+    how_it_works:'Your longest stationary count. We look at single checklists using the Stationary protocol and take the longest duration.',
+    tier_unit:'minutes (single stationary count)',tiers:{bronze:180,silver:300,gold:480,legendary:720},
+    progress_display:'Longest sit: {value} min — {next_threshold} min for {next_tier_name}',
+    field_tips:['A true \'Big Sit\' picks one spot with a wide view — a seawatch point, a hawk ridge, a marsh overlook.','Legendary (720 min) is a 12-hour vigil. Bring snacks, sunscreen, and a chair.','Only Stationary-protocol checklists count — if you wandered, it\'s a traveling count.'],
+  },
+  the_death_march:{
+    name:'The Death March',flavor:'The birds were worth every mile. Probably.',
+    how_it_works:'Your longest single traveling count, by distance.',
+    tier_unit:'km (single traveling count)',tiers:{bronze:8,silver:15,gold:25,legendary:40},
+    progress_display:'Longest march: {value} km — {next_threshold} km for {next_tier_name}',
+    field_tips:['Keep one continuous checklist for the whole trek — don\'t split it — to log the full distance.','Backcountry and alpine hikes are natural Death Marches with great birds as the payoff.','40 km (Legendary) is a serious day on foot. Tell someone where you\'re going.'],
+  },
+  the_phenologist:{
+    name:'The Phenologist',flavor:'You know a place through every season it wears.',
+    how_it_works:'The maximum number of distinct calendar months (Jan–Dec, across all years combined) in which you\'ve birded a single location. Legendary requires all 12 months at three or more locations.',
+    tier_unit:'months covered at one location',tiers:{bronze:8,silver:10,gold:12,legendary:12},
+    progress_display:'{value} of 12 months at your best-covered site — {next_threshold} for {next_tier_name}',
+    detail:'Legendary = all 12 months at 3+ separate locations.',
+    field_tips:['This is the badge for patch loyalty over rarity-chasing — our favorite in the whole system.','January and the deep-summer doldrums are the months people miss; go bird them anyway.','You don\'t need a checklist every week — just at least one visit in each month, over any span of years.'],
+  },
+  new_years_devotee:{
+    name:'New Year\'s Devotee',flavor:'While the world sleeps off the party, you\'re already listing.',
+    how_it_works:'Your longest streak of consecutive years with a checklist on January 1st.',
+    tier_unit:'consecutive New Year\'s Days',tiers:{bronze:2,silver:3,gold:5,legendary:10},
+    progress_display:'{value}-year Jan 1 streak — {next_threshold} for {next_tier_name}',
+    field_tips:['Jan 1 is the traditional \'year list reset\' — birders everywhere hit the field to start fresh.','Even a short backyard list keeps the streak alive.','Miss a year and the streak resets, so this rewards ritual as much as birding.'],
+  },
+  the_leap_lister:{
+    name:'The Leap Lister',flavor:'A bird for the day that barely exists.',
+    how_it_works:'Awarded if you\'ve ever submitted a checklist on February 29th.',
+    tier_unit:'leap-day checklists',tiers:null,
+    progress_display:'Leap Day birder ✓',
+    field_tips:['Only comes around every four years — mark your calendar for the next one.','Pure whimsy. Any checklist on Feb 29 earns it.'],
+  },
+  the_loyalist:{
+    name:'The Loyalist',flavor:'Everyone has a bird. Here\'s yours.',
+    how_it_works:'Finds the single species that appears on the most of your checklists, and counts those checklists. We show you which bird it is.',
+    tier_unit:'checklists featuring your top species',tiers:{bronze:50,silver:100,gold:200,legendary:500},
+    progress_display:'Your bird is {top_species}, on {value} checklists — {next_threshold} for {next_tier_name}',
+    field_tips:['It\'s almost always a common local backyard bird — and that\'s the charm.','Compare your bird with friends\'; it\'s a surprisingly personal fingerprint of where you bird.'],
+  },
+  the_pilgrim:{
+    name:'The Pilgrim',flavor:'Home is where the checklist is.',
+    how_it_works:'Counts the distinct states and provinces where you\'ve birded.',
+    tier_unit:'states/provinces',tiers:{bronze:2,silver:5,gold:10,legendary:25},
+    progress_display:'{value} states/provinces birded — {next_threshold} for {next_tier_name}',
+    field_tips:['A checklist from the airport layover counts — bird everywhere you travel.','Road trips are the fastest way to stack states.','25 (Legendary) is half the US, or a well-traveled continental lister.'],
+  },
+  the_continental:{
+    name:'The Continental',flavor:'Passport stamps, measured in birds.',
+    how_it_works:'Counts the distinct countries where you\'ve birded, read from the country code on each checklist.',
+    tier_unit:'countries',tiers:{bronze:2,silver:3,gold:5,legendary:8},
+    progress_display:'{value} countries birded — {next_threshold} for {next_tier_name}',
+    field_tips:['Even one checklist abroad opens a whole new avifauna — and this badge.','Neotropical trips can add hundreds of lifers alongside a new country.','Bird the trip, not just the tour — log your own checklists wherever you go.'],
+  },
+  the_larophiles_burden:{
+    name:'The Larophile\'s Burden',flavor:'Nobody chooses to love gulls. It chooses you.',
+    how_it_works:'Counts distinct gull and kittiwake species on your list. We match by name and exclude hybrids and unidentified \'gull sp.\' so only true species count.',
+    tier_unit:'gull species',tiers:{bronze:6,silver:10,gold:15,legendary:22},
+    progress_display:'{value} gull species — {next_threshold} for {next_tier_name}',
+    field_tips:['Winter is gull season — landfills, harbors, and river mouths are the classrooms.','Learn the common species cold; the rarities reveal themselves against that baseline.','Hybrids are gulls\' favorite trick — and they don\'t count here, which is honestly a mercy.'],
+    caveats:['Hybrid gulls and slash/\'sp.\' records are excluded. Only clean species-level records count.'],
+  },
+  the_little_brown_sage:{
+    name:'The Little Brown Sage',flavor:'Master the little brown jobs and you master birding.',
+    how_it_works:'Counts distinct New World sparrow species (family Passerellidae) on your list.',
+    tier_unit:'sparrow species',tiers:{bronze:8,silver:14,gold:20,legendary:30},
+    progress_display:'{value} sparrow species — {next_threshold} for {next_tier_name}',
+    field_tips:['Weedy field edges, brush piles, and marsh margins are sparrow gold.','Late fall and winter concentrate sparrows and mix scarce species into flocks.','Learn chip notes — many sparrows announce themselves before you see them.'],
+  },
+  the_drummers_circle:{
+    name:'The Drummer\'s Circle',flavor:'The forest keeps a beat.',
+    how_it_works:'Counts distinct woodpecker species (family Picidae) on your list.',
+    tier_unit:'woodpecker species',tiers:{bronze:5,silver:8,gold:12,legendary:18},
+    progress_display:'{value} woodpecker species — {next_threshold} for {next_tier_name}',
+    field_tips:['Listen for drumming and calls — woodpeckers advertise loudly in late winter and spring.','Burned forest and standing dead timber are magnets, especially for the scarcer species.','The Southwest and mountain West hold the extra species that push toward Legendary.'],
+  },
+  the_nectar_baron:{
+    name:'The Nectar Baron',flavor:'Small, fierce, and impossibly fast.',
+    how_it_works:'Counts distinct hummingbird species (family Trochilidae) on your list. Thresholds start low because hummingbird diversity is intensely regional.',
+    tier_unit:'hummingbird species',tiers:{bronze:2,silver:4,gold:8,legendary:15},
+    progress_display:'{value} hummingbird species — {next_threshold} for {next_tier_name}',
+    detail:'Thresholds are deliberately regional — this is a travel incentive as much as a home-patch badge.',
+    field_tips:['2 species is a genuine accomplishment in the Pacific Northwest — don\'t underrate Bronze.','Gold and Legendary effectively require the Southwest (SE Arizona is the mecca).','Feeders and flowering natives concentrate hummers; late summer brings the most variety.'],
+  },
+  dippers_creed:{
+    name:'The Dipper\'s Creed',flavor:'The patron bird of cold, clean, fast water. Kneel at the riffle and count your blessings.',
+    how_it_works:'Counts your checklists that include American Dipper — the PNW\'s bird of restored, oxygen-rich streams.',
+    tier_unit:'checklists with American Dipper',tiers:{bronze:3,silver:10,gold:25,legendary:75},
+    progress_display:'{value} Dipper checklists — {next_threshold} for {next_tier_name}',
+    field_tips:['Fast, clear mountain streams and forested rivers are prime — look on midstream boulders.','Dippers are indicators of stream health; a reliable dipper reach is a healthy reach.','They\'re resident year-round, so this badge rewards frequent visits to your local river.'],
+  },
+  salmonberry_circuit:{
+    name:'The Salmonberry Circuit',flavor:'The wet-side gauntlet. Fog, moss, and birds that would rather you didn\'t see them.',
+    how_it_works:'Counts how many species from the west-side PNW specialty list you\'ve recorded (Varied Thrush, Sooty Grouse, Harlequin Duck, Pacific Wren, Marbled Murrelet, and more).',
+    tier_unit:'species from the circuit',tiers:{bronze:4,silver:7,gold:10,legendary:12},
+    progress_display:'{value} of 12 circuit species — {next_threshold} for {next_tier_name}',
+    detail:'List: Varied Thrush, Sooty Grouse, Harlequin Duck, Black Oystercatcher, Pacific Wren, Marbled Murrelet, Chestnut-backed Chickadee, Red-breasted Sapsucker, Band-tailed Pigeon, Northern Pygmy-Owl, Hermit Warbler, American Dipper.',
+    field_tips:['Old-growth and mature conifer forest holds most of these — think mossy, wet, and quiet.','Marbled Murrelet is the toughest: seabird that nests inland in old-growth; dawn coastal watches or known forest sites help.','Hermit Warbler gets harder north of the Columbia due to hybridization — Oregon is the safer bet.'],
+  },
+  sagebrush_sea:{
+    name:'The Sagebrush Sea',flavor:'Cross the mountains. Trade the ferns for silence, distance, and the smell of rain on sage.',
+    how_it_works:'Counts how many east-side shrub-steppe specialties you\'ve recorded (Sage Thrasher, Sagebrush Sparrow, Greater Sage-Grouse, Burrowing Owl, and more).',
+    tier_unit:'species from the shrub-steppe list',tiers:{bronze:3,silver:5,gold:8,legendary:10},
+    progress_display:'{value} of 10 shrub-steppe species — {next_threshold} for {next_tier_name}',
+    detail:'List: Greater Sage-Grouse, Sage Thrasher, Sagebrush Sparrow, Brewer\'s Sparrow, Burrowing Owl, Ferruginous Hawk, Long-billed Curlew, Loggerhead Shrike, Prairie Falcon, Rock Wren.',
+    field_tips:['This means crossing the Cascades — central and eastern Oregon/Washington sage country.','Spring (April–May) is peak: sparrows sing, grouse display at leks, curlews are back on territory.','Greater Sage-Grouse is the crown jewel; find a lek and arrive well before dawn (from a respectful distance).'],
+  },
+  alcid_ascetic:{
+    name:'The Alcid Ascetic',flavor:'Stand on the headland. Squint at the swells. The sea gives up its monks reluctantly.',
+    how_it_works:'Counts how many alcid species (auks, murres, guillemots, murrelets, auklets, puffins) you\'ve recorded from the PNW list.',
+    tier_unit:'alcid species',tiers:{bronze:2,silver:4,gold:6,legendary:7},
+    progress_display:'{value} of 7 alcid species — {next_threshold} for {next_tier_name}',
+    detail:'List: Common Murre, Pigeon Guillemot, Marbled Murrelet, Ancient Murrelet, Cassin\'s Auklet, Rhinoceros Auklet, Tufted Puffin.',
+    field_tips:['Rocky headlands with a scope get you the inshore species; a pelagic trip unlocks the rest.','Tufted Puffin is the trophy — try nesting colonies (e.g. Haystack Rock area) in late spring/summer.','Ancient Murrelet and Cassin\'s Auklet usually need a boat or a strong seawatch in the right season.'],
+  },
+  malheur_pilgrimage:{
+    name:'The Malheur Pilgrimage',flavor:'Every PNW birder owes the high desert a spring. Pay your debt at the refuge.',
+    how_it_works:'Counts your checklists submitted at Malheur National Wildlife Refuge (Harney County, Oregon).',
+    tier_unit:'Malheur checklists',tiers:{bronze:1,silver:5,gold:15,legendary:50},
+    progress_display:'{value} checklists at Malheur — {next_threshold} for {next_tier_name}',
+    detail:'Matched on Oregon + Harney County + location name containing \'Malheur\'.',
+    field_tips:['Late May is legendary — migrant traps like the refuge headquarters oasis pull in vagrants and songbirds.','The auto-tour route, P Ranch, and Benson Pond are the classic stops.','Base out of Frenchglen or Burns; the refuge is vast, so give it multiple days for the higher tiers.'],
+  },
+  estuary_keeper:{
+    name:'The Estuary Keeper',flavor:'Where the river forgets it was ever in a hurry. Mudflats, tide charts, and ten thousand wings.',
+    how_it_works:'Counts how many estuary and mudflat specialty species you\'ve recorded from the PNW list (Dunlin, Western Sandpiper, Marbled Godwit, Whimbrel, Brant, and more).',
+    tier_unit:'species from the estuary list',tiers:{bronze:3,silver:5,gold:7,legendary:8},
+    progress_display:'{value} of 8 estuary species — {next_threshold} for {next_tier_name}',
+    detail:'List: Black-bellied Plover, Dunlin, Western Sandpiper, Marbled Godwit, Whimbrel, Greater Yellowlegs, Caspian Tern, Brant.',
+    field_tips:['Great PNW estuaries: Willapa Bay, Grays Harbor, Bandon/Coquille, Tillamook, Nehalem.','Bird a rising tide — it concentrates shorebirds close to shore before flooding the flats.','Brant favor eelgrass beds; spring migration (April) is the reliable window for them.'],
+  },
+};

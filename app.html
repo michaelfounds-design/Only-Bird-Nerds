@@ -1169,7 +1169,7 @@
       width: 76px; padding: 0.5rem 0.3rem 0.45rem;
       background: rgba(255,255,255,0.03);
       border: 1px solid; border-radius: 10px;
-      cursor: default; transition: background 0.15s;
+      cursor: pointer; transition: background 0.15s;
       position: relative;
     }
     .bchip:hover { background: rgba(255,255,255,0.07); }
@@ -1182,7 +1182,62 @@
     .bchip-tier {
       font-size: 0.65rem; margin-top: 0.2rem; line-height: 1;
     }
-    /* tooltip via title attr — browser default is fine for now */
+    /* Progress rows — clickable */
+    .bprow { cursor: pointer; border-radius: 8px; padding: 0.4rem; margin: -0.4rem -0.4rem 0.4rem; }
+    .bprow:hover { background: rgba(122,171,136,0.05); }
+    /* Badge detail view */
+    .bdetail-back {
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.06em; color: var(--sage);
+      background: none; border: none; cursor: pointer;
+      padding: 0 0 0.9rem; display: block; opacity: 0.75;
+    }
+    .bdetail-back:hover { opacity: 1; }
+    .bdetail-hdr {
+      display: flex; gap: 0.8rem; align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .bdetail-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
+    .bdetail-name {
+      font-family: 'Playfair Display', serif; font-weight: 700;
+      font-size: 1rem; color: var(--cream); line-height: 1.2;
+      display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
+    }
+    .bdetail-flavor {
+      font-family: 'Lora', serif; font-style: italic; font-size: 0.75rem;
+      color: rgba(200,221,208,0.6); margin-top: 0.3rem; line-height: 1.45;
+    }
+    .bdetail-prog { margin-bottom: 1.1rem; }
+    .bdetail-sec {
+      font-family: 'DM Mono', monospace; font-size: 0.53rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--sage); margin: 0.9rem 0 0.4rem; opacity: 0.8;
+    }
+    .bdetail-body {
+      font-family: 'Lora', serif; font-size: 0.73rem;
+      color: rgba(200,221,208,0.75); line-height: 1.6; margin: 0 0 0.5rem;
+    }
+    .bdetail-detail {
+      font-family: 'DM Mono', monospace; font-size: 0.62rem;
+      color: rgba(122,171,136,0.7); line-height: 1.5;
+      background: rgba(122,171,136,0.06); border-radius: 6px;
+      padding: 0.55rem 0.7rem; margin: 0.4rem 0 0.6rem;
+    }
+    .bdetail-tbl {
+      width: 100%; border-collapse: collapse; margin-bottom: 0.5rem;
+      font-family: 'DM Mono', monospace; font-size: 0.63rem;
+    }
+    .bdetail-tbl td { padding: 0.3rem 0.5rem 0.3rem 0; vertical-align: middle; }
+    .bdetail-tbl td:first-child { width: 6rem; text-transform: capitalize; font-weight: 600; }
+    .bdetail-tbl tr + tr td { border-top: 1px solid rgba(255,255,255,0.06); }
+    .bdetail-tips {
+      font-family: 'Lora', serif; font-size: 0.72rem;
+      color: rgba(200,221,208,0.7); line-height: 1.55;
+      margin: 0; padding-left: 1.2rem;
+    }
+    .bdetail-tips li { margin-bottom: 0.45rem; }
+    .bdetail-tips li:last-child { margin-bottom: 0; }
+    .bdetail-caveats { color: rgba(200,180,100,0.65); }
 
 
     /* ── Mobile panel drag handle (hidden on desktop) ── */
@@ -3325,7 +3380,7 @@ function _renderBadgeBody() {
     close.forEach(function(q) {
       var tier = TIERS[q.tier - 1];
       var pct  = Math.min(100, Math.round((q.progress / q.total) * 100));
-      html += '<div class="bprow">';
+      html += '<div class="bprow" data-qid="' + q.id + '">';
       html += '<div class="bprow-icon">' + q.icon + '</div>';
       html += '<div class="bprow-info">';
       html += '<div class="bprow-name">' + q.name +
@@ -3343,8 +3398,7 @@ function _renderBadgeBody() {
     html += '<div class="badge-grid">';
     earned.forEach(function(q) {
       var tier = TIERS[q.tier - 1];
-      var tip  = q.name + '\n' + q.desc + (q.detail ? '\n' + q.detail : '');
-      html += '<div class="bchip" style="border-color:' + tier.color + '22" title="' + tip.replace(/"/g,'&quot;') + '">';
+      html += '<div class="bchip" data-qid="' + q.id + '" style="border-color:' + tier.color + '22">';
       html += '<div class="bchip-icon">' + q.icon + '</div>';
       html += '<div class="bchip-name">' + q.name + '</div>';
       html += '<div class="bchip-tier">' + tier.icon + '</div>';
@@ -3360,6 +3414,86 @@ function _renderBadgeBody() {
 
   document.getElementById('badge-modal-body').innerHTML = html;
 }
+
+function _showBadgeDetail(qid) {
+  var q = null;
+  for (var i = 0; i < QUESTS.length; i++) { if (QUESTS[i].id === qid) { q = QUESTS[i]; break; } }
+  if (!q) return;
+  var bid = (typeof QUEST_BADGE_MAP !== 'undefined') ? QUEST_BADGE_MAP[qid] : null;
+  var bp  = (bid && typeof BADGE_POPUP !== 'undefined') ? BADGE_POPUP[bid] : null;
+  var tier = TIERS[q.tier - 1];
+  var r    = q.compute(currentStats);
+
+  var html = '<button class="bdetail-back" id="bdetail-back">← All badges</button>';
+  html += '<div class="bdetail-hdr">';
+  html += '<div class="bdetail-icon">' + q.icon + '</div>';
+  html += '<div><div class="bdetail-name">' + q.name +
+          ' <span class="btier-chip" style="background:' + tier.color + '">' + tier.name + '</span></div>';
+  if (bp && bp.flavor) html += '<div class="bdetail-flavor">' + bp.flavor + '</div>';
+  html += '</div></div>';
+
+  // Progress bar
+  if (r.total > 0) {
+    var pct = Math.min(100, Math.round(r.progress / r.total * 100));
+    html += '<div class="bdetail-prog">';
+    html += '<div class="bbar-wrap"><div class="bbar" style="width:' + pct + '%;background:' + tier.color + '"></div></div>';
+    html += '<div class="bbar-lbl">' + r.progress.toLocaleString() + ' / ' + r.total.toLocaleString();
+    if (r.detail) html += ' · ' + r.detail;
+    html += '</div></div>';
+  } else if (r.earned) {
+    html += '<div class="bdetail-prog"><div class="bbar-lbl" style="color:' + tier.color + '">✓ Earned</div></div>';
+  }
+
+  if (bp) {
+    html += '<div class="bdetail-sec">How it works</div>';
+    html += '<p class="bdetail-body">' + bp.how_it_works + '</p>';
+
+    if (bp.tiers) {
+      html += '<div class="bdetail-sec">Tiers</div>';
+      var tierNames = ['Bronze','Silver','Gold','Legendary'];
+      var tierKeys  = ['bronze','silver','gold','legendary'];
+      var tierColors = ['#c97d22','#aaa','#f0b429','#4a7c59'];
+      html += '<table class="bdetail-tbl">';
+      for (var t = 0; t < tierKeys.length; t++) {
+        html += '<tr><td style="color:' + tierColors[t] + '">' + tierNames[t] + '</td>'
+              + '<td>' + bp.tiers[tierKeys[t]] + ' ' + bp.tier_unit + '</td></tr>';
+      }
+      html += '</table>';
+    }
+
+    if (bp.detail) {
+      html += '<p class="bdetail-detail">' + bp.detail + '</p>';
+    }
+
+    if (bp.field_tips && bp.field_tips.length) {
+      html += '<div class="bdetail-sec">Field Tips</div><ul class="bdetail-tips">';
+      bp.field_tips.forEach(function(tip) { html += '<li>' + tip + '</li>'; });
+      html += '</ul>';
+    }
+
+    if (bp.caveats && bp.caveats.length) {
+      html += '<div class="bdetail-sec">Data Notes</div><ul class="bdetail-tips bdetail-caveats">';
+      bp.caveats.forEach(function(c) { html += '<li>' + c + '</li>'; });
+      html += '</ul>';
+    }
+  } else {
+    html += '<p class="bdetail-body">' + q.desc + '</p>';
+  }
+
+  var body = document.getElementById('badge-modal-body');
+  body.innerHTML = html;
+  body.scrollTop = 0;
+  document.getElementById('bdetail-back').addEventListener('click', _renderBadgeBody);
+}
+
+// Delegated click: badge chips and progress rows open detail view
+document.getElementById('badge-modal-body').addEventListener('click', function(e) {
+  var el = e.target;
+  while (el && el !== this) {
+    if (el.dataset && el.dataset.qid) { _showBadgeDetail(el.dataset.qid); return; }
+    el = el.parentElement;
+  }
+});
 
 document.getElementById('quests-all-btn').addEventListener('click', openBadgeModal);
 document.getElementById('badges-all-btn').addEventListener('click', openBadgeModal);
