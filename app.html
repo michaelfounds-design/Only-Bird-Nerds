@@ -402,6 +402,51 @@
     .ptab-body { flex: 1; overflow-y: auto; padding: 1rem; }
     .ptab-body::-webkit-scrollbar { width: 3px; }
     .ptab-body::-webkit-scrollbar-thumb { background: rgba(122,171,136,0.18); }
+    /* Lists tab */
+    .lists-section-hdr { display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;margin-top:1rem; }
+    .lists-section-hdr:first-child { margin-top:0; }
+    .lists-section-title { font-family:'Playfair Display',serif;font-size:0.85rem;color:var(--sage); }
+    .lists-count { font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(122,171,136,0.6);background:rgba(122,171,136,0.1);padding:1px 7px;border-radius:10px; }
+    .lists-sort-row { display:flex;align-items:center;gap:0.3rem;margin-bottom:0.6rem;flex-wrap:wrap; }
+    .lists-sort-lbl { font-size:0.6rem;color:rgba(122,171,136,0.5);text-transform:uppercase;letter-spacing:0.07em; }
+    .lists-sort-btn { font-family:'DM Mono',monospace;font-size:0.6rem;background:none;border:1px solid rgba(122,171,136,0.2);border-radius:5px;color:rgba(122,171,136,0.5);cursor:pointer;padding:2px 8px;transition:all 0.15s; }
+    .lists-sort-btn.active { background:rgba(74,124,89,0.2);border-color:var(--sage);color:var(--sage); }
+    #life-list-body { max-height:340px;overflow-y:auto; }
+    .ll-row { display:grid;grid-template-columns:1fr auto;gap:0.3rem;padding:0.35rem 0;border-bottom:1px solid rgba(122,171,136,0.08);align-items:start; }
+    .ll-name { font-size:0.72rem;color:#f7f3ec;font-weight:500; }
+    .ll-name.lifer-star::before { content:'⭐ '; }
+    .ll-meta { font-size:0.62rem;color:rgba(247,243,236,0.45);line-height:1.5; }
+    .ll-date { font-size:0.62rem;color:rgba(122,171,136,0.7);white-space:nowrap; }
+    .lists-empty { font-size:0.72rem;color:rgba(122,171,136,0.4);padding:0.5rem 0; }
+    .lists-new-btn { font-family:'DM Mono',monospace;font-size:0.6rem;background:none;border:1px solid rgba(122,171,136,0.3);border-radius:5px;color:var(--sage);cursor:pointer;padding:2px 8px;transition:all 0.15s; }
+    .lists-new-btn:hover { background:rgba(74,124,89,0.15); }
+    .custom-list-block { margin-bottom:0.75rem;border:1px solid rgba(122,171,136,0.12);border-radius:8px;overflow:hidden; }
+    .custom-list-hdr { display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.6rem;background:rgba(122,171,136,0.06);cursor:pointer;user-select:none; }
+    .custom-list-icon { font-size:1rem; }
+    .custom-list-name { font-size:0.72rem;color:var(--sage);flex:1; }
+    .custom-list-cnt { font-size:0.6rem;color:rgba(122,171,136,0.5); }
+    .custom-list-del { background:none;border:none;color:rgba(122,171,136,0.35);cursor:pointer;font-size:0.8rem;padding:0 2px;line-height:1; }
+    .custom-list-del:hover { color:#e57373; }
+    .custom-list-items { padding:0.3rem 0.6rem; }
+    .custom-list-sp-row { display:flex;align-items:center;justify-content:space-between;padding:0.28rem 0;border-bottom:1px solid rgba(122,171,136,0.07); }
+    .custom-list-sp-row:last-child { border-bottom:none; }
+    .custom-list-sp-name { font-size:0.7rem;color:#f7f3ec; }
+    .custom-list-sp-rm { background:none;border:none;color:rgba(122,171,136,0.3);cursor:pointer;font-size:0.75rem;padding:0 2px; }
+    .custom-list-sp-rm:hover { color:#e57373; }
+    .new-list-form { display:none;margin-top:0.5rem;background:rgba(122,171,136,0.06);border-radius:8px;padding:0.6rem; }
+    .new-list-form.open { display:block; }
+    .new-list-row { display:flex;gap:0.4rem;align-items:center; }
+    .new-list-emoji { font-size:1.2rem;cursor:pointer;padding:3px;border-radius:4px; }
+    .new-list-input { flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(122,171,136,0.25);border-radius:5px;color:#f7f3ec;font-size:0.72rem;padding:4px 8px;font-family:'DM Mono',monospace; }
+    .new-list-input::placeholder { color:rgba(247,243,236,0.3); }
+    .new-list-save { font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(74,124,89,0.25);border:1px solid rgba(122,171,136,0.3);border-radius:5px;color:var(--sage);cursor:pointer;padding:4px 10px; }
+    /* Add-to-list floating menu */
+    #atl-menu { position:fixed;z-index:99999;background:rgba(12,24,16,0.97);border:1px solid rgba(122,171,136,0.3);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.6);padding:0.4rem;min-width:150px;display:none; }
+    .atl-menu-title { font-size:0.6rem;color:rgba(122,171,136,0.5);text-transform:uppercase;letter-spacing:0.07em;padding:2px 6px 6px;font-family:'DM Mono',monospace; }
+    .atl-menu-item { display:flex;align-items:center;gap:0.4rem;padding:5px 8px;border-radius:5px;cursor:pointer;font-size:0.7rem;color:#f7f3ec;font-family:'DM Mono',monospace;transition:background 0.1s; }
+    .atl-menu-item:hover { background:rgba(122,171,136,0.12); }
+    .atl-menu-item.checked { color:var(--sage); }
+    .atl-menu-new { border-top:1px solid rgba(122,171,136,0.12);margin-top:3px;padding-top:3px;color:rgba(122,171,136,0.6); }
     /* Profile tab */
     #avatar-wrap {
       display: flex; flex-direction: column; align-items: center;
@@ -1551,6 +1596,7 @@
   <div id="profile-panel-hdr">
     <div class="ptabs">
       <button class="ptab active" data-ptab="profile">Profile</button>
+      <button class="ptab" data-ptab="lists">Lists</button>
       <button class="ptab" data-ptab="shared">My Shared Data</button>
     </div>
     <button id="profile-close-btn">✕</button>
@@ -1618,6 +1664,42 @@
     </div>
 
   </div>
+
+  <!-- Lists tab -->
+  <div class="ptab-body" id="ptab-lists" style="display:none">
+    <!-- Life List -->
+    <div class="lists-section-hdr" style="margin-top:0">
+      <span class="lists-section-title">Life List</span>
+      <span id="life-list-count" class="lists-count"></span>
+    </div>
+    <div class="lists-sort-row">
+      <span class="lists-sort-lbl">Sort:</span>
+      <button class="lists-sort-btn active" data-llsort="date">Date</button>
+      <button class="lists-sort-btn" data-llsort="name">Name</button>
+      <button class="lists-sort-btn" data-llsort="location">Location</button>
+    </div>
+    <div id="life-list-body"></div>
+
+    <!-- Custom Lists -->
+    <div class="lists-section-hdr" style="margin-top:1.2rem">
+      <span class="lists-section-title">My Lists</span>
+      <button id="new-list-btn" class="lists-new-btn">+ New</button>
+    </div>
+    <div id="new-list-form" class="new-list-form">
+      <div class="new-list-row">
+        <span id="new-list-emoji-btn" class="new-list-emoji" title="Pick emoji">📋</span>
+        <input id="new-list-name-input" class="new-list-input" type="text" maxlength="40" placeholder="List name (e.g. Home List)" />
+        <button id="new-list-save-btn" class="new-list-save">Create</button>
+      </div>
+    </div>
+    <div id="custom-lists-body"></div>
+  </div>
+</div>
+
+<!-- Add-to-list floating menu -->
+<div id="atl-menu">
+  <div class="atl-menu-title">Add to list</div>
+  <div id="atl-menu-items"></div>
 </div>
 
 <!-- ── My Aviary overlay ── -->
@@ -2272,6 +2354,7 @@ function _finalizeLoad(firstLoad) {
   buildAutocomplete();
   buildDropdowns();
   renderPanelQB();
+  renderListsTab();
   setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
 }
 
@@ -2648,6 +2731,13 @@ function buildPopup(title, sm, rKey, extra) {
       + 'style="background:' + (isPinned ? '#fff3cd' : 'none') + ';'
       + 'border:1px solid ' + (isPinned ? '#f0b429' : '#ddd') + ';border-radius:5px;'
       + 'cursor:pointer;padding:5px 7px;font-size:13px;touch-action:manipulation;min-width:32px;min-height:32px;">📌</button></td>';
+
+    // Add-to-list button
+    h += '<td style="padding:2px 2px;vertical-align:middle">'
+      + '<button onclick="atlMenu.open(event,\'' + spEsc + '\')" '
+      + 'title="Add to a list" '
+      + 'style="background:none;border:1px solid #ddd;border-radius:5px;'
+      + 'cursor:pointer;padding:5px 7px;font-size:13px;touch-action:manipulation;min-width:32px;min-height:32px;">🔖</button></td>';
 
     // IUCN conservation status badge (filled async via popupopen handler)
     var sciAttr = (sciNameMap[e.name] || '').replace(/"/g, '&quot;');
@@ -3882,8 +3972,212 @@ function switchProfileTab(tab) {
     b.classList.toggle('active', b.dataset.ptab === tab);
   });
   document.getElementById('ptab-profile').style.display = tab === 'profile' ? '' : 'none';
+  document.getElementById('ptab-lists').style.display   = tab === 'lists'   ? '' : 'none';
   document.getElementById('ptab-shared').style.display  = tab === 'shared'  ? '' : 'none';
+  if (tab === 'lists') renderListsTab();
 }
+
+// ── Lists feature ────────────────────────────────────────────────────────────
+var _llSort = 'date';
+
+function _loadCustomLists() {
+  try { return JSON.parse(localStorage.getItem('obn_custom_lists') || '[]'); } catch(e) { return []; }
+}
+function _saveCustomLists(lists) {
+  try { localStorage.setItem('obn_custom_lists', JSON.stringify(lists)); } catch(e) {}
+}
+
+function renderListsTab() {
+  if (document.getElementById('ptab-lists').style.display === 'none') return;
+  _renderLifeList(_llSort);
+  _renderCustomLists();
+}
+
+function _renderLifeList(sort) {
+  _llSort = sort;
+  document.querySelectorAll('.lists-sort-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.llsort === sort);
+  });
+
+  var lifeItems = allRecords.filter(function(r) { return r.lifer; });
+
+  if (!lifeItems.length) {
+    document.getElementById('life-list-count').textContent = '';
+    document.getElementById('life-list-body').innerHTML = '<p class="lists-empty">Upload your eBird CSV to see your life list.</p>';
+    return;
+  }
+
+  document.getElementById('life-list-count').textContent = lifeItems.length.toLocaleString();
+
+  if (sort === 'date') {
+    lifeItems.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+  } else if (sort === 'name') {
+    lifeItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
+  } else if (sort === 'location') {
+    lifeItems.sort(function(a, b) { return (a.location || '').localeCompare(b.location || ''); });
+  }
+
+  var html = '';
+  lifeItems.forEach(function(r) {
+    var dateLabel = r.date ? (function() {
+      var d = new Date(r.date);
+      return isNaN(d) ? r.date : d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    })() : '';
+    var locLabel = [r.location, r.county, r.state].filter(Boolean).join(', ');
+    html += '<div class="ll-row">'
+      + '<div><div class="ll-name">' + r.name + '</div>'
+      + '<div class="ll-meta">' + locLabel + '</div></div>'
+      + '<div class="ll-date">' + dateLabel + '</div>'
+      + '</div>';
+  });
+  document.getElementById('life-list-body').innerHTML = html;
+}
+
+function _renderCustomLists() {
+  var lists = _loadCustomLists();
+  var el = document.getElementById('custom-lists-body');
+  if (!lists.length) {
+    el.innerHTML = '<p class="lists-empty">No custom lists yet.</p>';
+    return;
+  }
+  var html = '';
+  lists.forEach(function(lst, idx) {
+    html += '<div class="custom-list-block">';
+    html += '<div class="custom-list-hdr">'
+      + '<span class="custom-list-icon">' + (lst.icon || '📋') + '</span>'
+      + '<span class="custom-list-name">' + lst.name + '</span>'
+      + '<span class="custom-list-cnt">' + (lst.species || []).length + '</span>'
+      + '<button class="custom-list-del" data-listidx="' + idx + '" title="Delete list">✕</button>'
+      + '</div>';
+    if ((lst.species || []).length) {
+      html += '<div class="custom-list-items">';
+      lst.species.forEach(function(sp) {
+        var spEsc = sp.replace(/'/g, "\\'");
+        html += '<div class="custom-list-sp-row">'
+          + '<span class="custom-list-sp-name">' + sp + '</span>'
+          + '<button class="custom-list-sp-rm" data-listidx="' + idx + '" data-sp="' + sp.replace(/"/g,'&quot;') + '" title="Remove">✕</button>'
+          + '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  el.innerHTML = html;
+
+  el.querySelectorAll('.custom-list-del').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var i = parseInt(this.dataset.listidx);
+      var lists2 = _loadCustomLists();
+      if (confirm('Delete list "' + lists2[i].name + '"?')) {
+        lists2.splice(i, 1);
+        _saveCustomLists(lists2);
+        _renderCustomLists();
+      }
+    });
+  });
+  el.querySelectorAll('.custom-list-sp-rm').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var i = parseInt(this.dataset.listidx);
+      var sp = this.dataset.sp;
+      var lists2 = _loadCustomLists();
+      lists2[i].species = (lists2[i].species || []).filter(function(s) { return s !== sp; });
+      _saveCustomLists(lists2);
+      _renderCustomLists();
+    });
+  });
+}
+
+// new list form
+document.getElementById('new-list-btn').addEventListener('click', function() {
+  var form = document.getElementById('new-list-form');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) document.getElementById('new-list-name-input').focus();
+});
+document.getElementById('new-list-save-btn').addEventListener('click', function() {
+  var name = document.getElementById('new-list-name-input').value.trim();
+  if (!name) return;
+  var icon = document.getElementById('new-list-emoji-btn').textContent;
+  var lists = _loadCustomLists();
+  lists.push({ id: 'cl_' + Date.now(), name: name, icon: icon, species: [] });
+  _saveCustomLists(lists);
+  document.getElementById('new-list-name-input').value = '';
+  document.getElementById('new-list-form').classList.remove('open');
+  _renderCustomLists();
+});
+document.getElementById('new-list-name-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('new-list-save-btn').click();
+});
+
+// sort buttons for life list
+document.getElementById('ptab-lists').addEventListener('click', function(e) {
+  if (e.target.dataset.llsort) _renderLifeList(e.target.dataset.llsort);
+});
+
+// add-to-list floating menu
+var atlMenu = (function() {
+  var _sp = '';
+  var _el = document.getElementById('atl-menu');
+
+  document.addEventListener('click', function(e) {
+    if (!_el.contains(e.target)) _el.style.display = 'none';
+  });
+
+  function open(evt, sp) {
+    evt.stopPropagation();
+    _sp = sp;
+    var lists = _loadCustomLists();
+    var items = document.getElementById('atl-menu-items');
+    if (!lists.length) {
+      items.innerHTML = '<div class="atl-menu-item atl-menu-new" onclick="atlMenu.openListsTab()">+ Create a list</div>';
+    } else {
+      var html = '';
+      lists.forEach(function(lst, i) {
+        var has = (lst.species || []).indexOf(sp) !== -1;
+        html += '<div class="atl-menu-item' + (has ? ' checked' : '') + '" data-listidx="' + i + '">'
+          + (lst.icon || '📋') + ' ' + lst.name
+          + (has ? ' ✓' : '')
+          + '</div>';
+      });
+      html += '<div class="atl-menu-item atl-menu-new" onclick="atlMenu.openListsTab()">+ New list…</div>';
+      items.innerHTML = html;
+      items.querySelectorAll('[data-listidx]').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var idx = parseInt(this.dataset.listidx);
+          var lists2 = _loadCustomLists();
+          var sp2 = _sp;
+          var sps = lists2[idx].species || [];
+          var pos = sps.indexOf(sp2);
+          if (pos === -1) { sps.push(sp2); } else { sps.splice(pos, 1); }
+          lists2[idx].species = sps;
+          _saveCustomLists(lists2);
+          _el.style.display = 'none';
+          if (document.getElementById('ptab-lists').style.display !== 'none') _renderCustomLists();
+        });
+      });
+    }
+
+    var rect = evt.target.getBoundingClientRect();
+    _el.style.display = 'block';
+    var menuH = _el.offsetHeight;
+    var top = rect.bottom + 4;
+    if (top + menuH > window.innerHeight - 8) top = rect.top - menuH - 4;
+    _el.style.top  = top + 'px';
+    _el.style.left = Math.min(rect.left, window.innerWidth - _el.offsetWidth - 8) + 'px';
+  }
+
+  function openListsTab() {
+    _el.style.display = 'none';
+    openProfilePanel('lists');
+    setTimeout(function() {
+      document.getElementById('new-list-form').classList.add('open');
+      document.getElementById('new-list-name-input').focus();
+    }, 80);
+  }
+
+  return { open: open, openListsTab: openListsTab };
+})();
 
 function loadProfileUI() {
   document.getElementById('profile-name').value = profileData.name || '';
