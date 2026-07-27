@@ -2670,8 +2670,18 @@ function buildPopup(title, sm, rKey, extra) {
     return b.count - a.count;
   });
 
+  // Cache species list for bulk add-to-list
+  var _pck = 'pp_' + (rKey || ('t' + Date.now()));
+  _popupSpeciesCache[_pck] = spList.map(function(e) { return e.name; });
+
   var h = '<div style="font-family:Arial,sans-serif;font-size:12px;width:min(280px,82vw)">';
-  h += '<b style="font-size:14px;color:#1b3a2d">' + title + '</b><br>';
+  h += '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px">';
+  h += '<b style="font-size:14px;color:#1b3a2d">' + title + '</b>';
+  h += '<button onclick="atlMenu.openAll(event,\'' + _pck + '\')" '
+    + 'style="flex-shrink:0;background:rgba(74,124,89,0.1);border:1px solid rgba(74,124,89,0.35);'
+    + 'border-radius:100px;color:#4a7c59;font-size:10px;cursor:pointer;padding:2px 8px;'
+    + 'white-space:nowrap;font-family:Arial,sans-serif">+ Add all to list</button>';
+  h += '</div>';
   h += '<span style="color:#888;font-size:11px">' + total + ' species';
   if (extra)  h += ' · ' + extra;
   if (lifers) h += ' · <span style="color:#c97d22">⭐ ' + lifers + ' lifers</span>';
@@ -4269,26 +4279,42 @@ document.getElementById('lists-overlay').addEventListener('click', function(e) {
   if (e.target === this) closeListsOverlay();
 });
 
+// Species cache for bulk add (keyed by popup rKey)
+var _popupSpeciesCache = {};
+
 // 🔖 quick add-to-list floating menu (from map popups)
 var atlMenu = (function() {
   var _sp = '';
   var _el = document.getElementById('atl-menu');
   document.addEventListener('click', function(e) { if (_el&&!_el.contains(e.target)) _el.style.display='none'; });
 
+  function _showMenu(evt, items, html) {
+    items.innerHTML = html;
+    var rect = evt.target.getBoundingClientRect();
+    _el.style.display = 'block';
+    var menuH = _el.offsetHeight;
+    var top = rect.bottom + 4;
+    if (top + menuH > window.innerHeight - 8) top = rect.top - menuH - 4;
+    _el.style.top  = top + 'px';
+    _el.style.left = Math.min(rect.left, window.innerWidth - _el.offsetWidth - 8) + 'px';
+  }
+
+  // Single-species toggle (🔖 per row)
   function open(evt, sp) {
     evt.stopPropagation();
     _sp = sp;
     var lists = _loadCustomLists();
-    var items = document.getElementById('atl-menu-items');
+    var itemsEl = document.getElementById('atl-menu-items');
     var html = '';
     lists.forEach(function(lst, i) {
       var has = (lst.species||[]).indexOf(sp) !== -1;
       html += '<div class="atl-menu-item'+(has?' checked':'')+'" data-listidx="'+i+'">'
         + (lst.icon||'📋')+' '+lst.name+(has?' ✓':'')+'</div>';
     });
+    if (!lists.length) html += '<div class="atl-menu-item" style="color:rgba(122,171,136,0.5);cursor:default">No lists yet</div>';
     html += '<div class="atl-menu-item atl-menu-sep" onclick="openListsOverlay()">📋 Open My Lists…</div>';
-    items.innerHTML = html;
-    items.querySelectorAll('[data-listidx]').forEach(function(el) {
+    itemsEl.innerHTML = html;
+    itemsEl.querySelectorAll('[data-listidx]').forEach(function(el) {
       el.addEventListener('click', function() {
         var idx = parseInt(this.dataset.listidx);
         var lists2 = _loadCustomLists();
@@ -4300,16 +4326,51 @@ var atlMenu = (function() {
         _el.style.display = 'none';
       });
     });
-    var rect = evt.target.getBoundingClientRect();
-    _el.style.display = 'block';
-    var menuH = _el.offsetHeight;
-    var top = rect.bottom + 4;
-    if (top + menuH > window.innerHeight - 8) top = rect.top - menuH - 4;
-    _el.style.top  = top + 'px';
-    _el.style.left = Math.min(rect.left, window.innerWidth - _el.offsetWidth - 8) + 'px';
+    _showMenu(evt, itemsEl, itemsEl.innerHTML);
   }
 
-  return { open: open };
+  // Bulk add all species in a popup (+ Add all to list button)
+  function openAll(evt, cacheKey) {
+    evt.stopPropagation();
+    var allSp = _popupSpeciesCache[cacheKey] || [];
+    var lists = _loadCustomLists();
+    var itemsEl = document.getElementById('atl-menu-items');
+    var html = '<div class="atl-menu-title">Add ' + allSp.length + ' species to…</div>';
+    lists.forEach(function(lst, i) {
+      var existing = lst.species || [];
+      var newCount = allSp.filter(function(s) { return existing.indexOf(s) === -1; }).length;
+      var alreadyAll = newCount === 0;
+      html += '<div class="atl-menu-item'+(alreadyAll?' checked':'')+'" data-listidx="'+i+'" data-cachekey="'+cacheKey+'">'
+        + (lst.icon||'📋')+' '+lst.name
+        + (alreadyAll
+            ? ' <span style="color:rgba(122,171,136,0.5);font-size:0.85em">all added ✓</span>'
+            : ' <span style="color:rgba(122,171,136,0.6);font-size:0.85em">+'+newCount+' new</span>')
+        + '</div>';
+    });
+    if (!lists.length) html += '<div class="atl-menu-item" style="color:rgba(122,171,136,0.5);cursor:default">No lists yet</div>';
+    html += '<div class="atl-menu-item atl-menu-sep" onclick="openListsOverlay()">📋 Open My Lists…</div>';
+    itemsEl.innerHTML = html;
+    itemsEl.querySelectorAll('[data-listidx]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        if (this.classList.contains('checked')) return; // already all added
+        var idx = parseInt(this.dataset.listidx);
+        var key = this.dataset.cachekey;
+        var species = _popupSpeciesCache[key] || [];
+        var lists2 = _loadCustomLists();
+        var sps = lists2[idx].species || [];
+        species.forEach(function(s) { if (sps.indexOf(s) === -1) sps.push(s); });
+        lists2[idx].species = sps;
+        _saveCustomLists(lists2);
+        // Update the clicked item to reflect the new state
+        this.classList.add('checked');
+        this.innerHTML = (lists2[idx].icon||'📋') + ' ' + lists2[idx].name
+          + ' <span style="color:rgba(122,171,136,0.5);font-size:0.85em">all added ✓</span>';
+      });
+    });
+    _showMenu(evt, itemsEl, itemsEl.innerHTML);
+  }
+
+  return { open: open, openAll: openAll };
 })();
 
 function loadProfileUI() {
