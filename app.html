@@ -1872,6 +1872,10 @@ var _ebirdHSLoaded = false;
 var showConserv    = false;
 var conservLayer   = null;
 var _conservLoaded = false;
+// Protected Planet — hardcoded locally, not committed to public repo
+var PROTECTED_PLANET_KEY = 'YOUR_PROTECTED_PLANET_KEY';
+var _wdpaLayerGroup    = null;
+var _wdpaCountryCache  = {}; // iso3 → features[]
 var iucnCache    = {};
 var sciNameMap   = {};
 var _iucnData    = null;
@@ -2351,6 +2355,105 @@ function loadConservation(cb) {
       conservLayer = ibaGroup;
       _conservLoaded = true; cb();
     });
+}
+
+// ── Protected Planet (WDPA) ───────────────────────────────────────────────────
+function _dataCountries() {
+  var iso3Map = { 'US': 'USA', 'CA': 'CAN', 'MX': 'MEX', 'AU': 'AUS', 'GB': 'GBR' };
+  var out = {};
+  allRecords.forEach(function(r) {
+    if (r.state) {
+      var prefix = r.state.split('-')[0];
+      var iso3 = iso3Map[prefix];
+      if (iso3) out[iso3] = true;
+    }
+  });
+  return Object.keys(out);
+}
+
+function loadWDPA() {
+  if (!_wdpaLayerGroup) _wdpaLayerGroup = L.layerGroup();
+  var countries = _dataCountries();
+  if (!countries.length) { _renderWDPA(); return; }
+  var pending = countries.filter(function(c) { return !_wdpaCountryCache[c]; });
+  if (!pending.length) { _renderWDPA(); return; }
+  var done = 0;
+  pending.forEach(function(iso3) {
+    // Fetch two pages (100 areas) per country; largest areas tend to appear first
+    var fetches = [1, 2].map(function(page) {
+      return fetch('https://api.protectedplanet.net/v3/protected_areas'
+        + '?token=' + PROTECTED_PLANET_KEY
+        + '&country=' + iso3
+        + '&with_geometry=true'
+        + '&per_page=50'
+        + '&page=' + page)
+        .then(function(r) { return r.json(); })
+        .then(function(d) { return d.protected_areas || []; })
+        .catch(function() { return []; });
+    });
+    Promise.all(fetches).then(function(pages) {
+      var features = [].concat(pages[0], pages[1]).filter(function(pa) {
+        return pa && pa.geojson && pa.geojson.type;
+      });
+      _wdpaCountryCache[iso3] = features;
+      done++;
+      if (done === pending.length) _renderWDPA();
+    });
+  });
+}
+
+function _renderWDPA() {
+  if (!_wdpaLayerGroup) return;
+  _wdpaLayerGroup.clearLayers();
+  Object.keys(_wdpaCountryCache).forEach(function(iso3) {
+    (_wdpaCountryCache[iso3] || []).forEach(function(pa) {
+      var geom = pa.geojson;
+      if (!geom || !geom.type) return;
+      var feature = {
+        type: 'Feature',
+        geometry: geom,
+        properties: {
+          name: pa.name || 'Protected Area',
+          iucn: pa.iucn_category ? pa.iucn_category.name : '',
+          desig: pa.designation ? pa.designation.name : '',
+          area: pa.reported_area || 0,
+          wdpaId: pa.wdpa_id
+        }
+      };
+      try {
+        L.geoJSON(feature, {
+          style: function() {
+            return { color: '#7b5ea7', weight: 1.2, fillColor: '#9b7fc7', fillOpacity: 0.13 };
+          },
+          pointToLayer: function(f, latlng) {
+            return L.circleMarker(latlng, { radius: 6, color: '#7b5ea7', weight: 1.5, fillColor: '#9b7fc7', fillOpacity: 0.5 });
+          },
+          onEachFeature: function(f, layer) {
+            var p = f.properties;
+            var ppUrl = p.wdpaId
+              ? 'https://www.protectedplanet.net/en/protected_areas/' + p.wdpaId
+              : 'https://www.protectedplanet.net';
+            layer.bindPopup(
+              '<div style="font-family:\'DM Mono\',monospace;font-size:11px;min-width:160px">'
+              + '<b style="font-family:\'Playfair Display\',serif;font-size:13px">' + p.name + '</b><br>'
+              + (p.desig  ? '<span style="color:#9b7fc7">' + p.desig + '</span><br>' : '')
+              + (p.iucn   ? '<span style="color:#888">IUCN Category ' + p.iucn + '</span><br>' : '')
+              + (p.area   ? '<span style="color:#888">' + Math.round(p.area).toLocaleString() + ' ha</span><br>' : '')
+              + '<a href="' + ppUrl + '" target="_blank" rel="noopener" style="color:#9b7fc7">Protected Planet ↗</a>'
+              + '</div>'
+            );
+          }
+        }).addTo(_wdpaLayerGroup);
+      } catch(e) {}
+    });
+  });
+  if (map && showConserv) map.addLayer(_wdpaLayerGroup);
+}
+
+function _toggleWDPA(on) {
+  if (!map || !_wdpaLayerGroup) return;
+  if (on) { if (!map.hasLayer(_wdpaLayerGroup)) map.addLayer(_wdpaLayerGroup); }
+  else     { map.removeLayer(_wdpaLayerGroup); }
 }
 
 function _finalizeLoad(firstLoad) {
@@ -3118,8 +3221,9 @@ function handleZoom() {
   setL(clusterGroup,        showHotspots && z >= ZOOM_LOCATION);
   setL(countyLayer,         showRegions  && z >= ZOOM_COUNTY && z < ZOOM_LOCATION);
   setL(stateLayer,          showRegions  && z < ZOOM_COUNTY);
-  setL(ebirdHSLayer,  showEbirdHS);
-  setL(conservLayer,  showConserv);
+  setL(ebirdHSLayer,   showEbirdHS);
+  setL(conservLayer,   showConserv);
+  if (_wdpaLayerGroup) setL(_wdpaLayerGroup, showConserv);
 }
 
 // ─────────────────────────────────────────
@@ -3355,8 +3459,13 @@ document.getElementById('btn-ebird-hotspots').addEventListener('click', function
 document.getElementById('btn-conservation').addEventListener('click', function() {
   showConserv = !showConserv;
   this.classList.toggle('on', showConserv);
-  if (!showConserv) { if (map && conservLayer) map.removeLayer(conservLayer); return; }
+  if (!showConserv) {
+    if (map && conservLayer)    map.removeLayer(conservLayer);
+    _toggleWDPA(false);
+    return;
+  }
   loadConservation(function() { if (map && conservLayer) map.addLayer(conservLayer); });
+  loadWDPA();
 });
 
 document.getElementById('photo-dialog-bg').addEventListener('click', function() { photoDialog.close(); });
