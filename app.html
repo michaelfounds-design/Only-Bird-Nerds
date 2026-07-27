@@ -2533,14 +2533,23 @@ function normalize(rows) {
   }, []);
 }
 
+function baseSpeciesName(name) {
+  // Slash species ("Downy/Hairy Woodpecker") and spuh ("gull sp.") are not countable lifers
+  if (name.indexOf('/') !== -1 || /\bsp\.$/.test(name)) return null;
+  // Strip subspecies/group suffix: "Palm Warbler (Western)" -> "Palm Warbler"
+  return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
+}
+
 function computeLifers(records) {
   records.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
   var seen = {};
   liferSet = {};
   records.forEach(function(r) {
-    r.lifer = !seen[r.name];
-    seen[r.name] = true;
-    if (r.lifer) liferSet[r.name] = true;
+    var base = baseSpeciesName(r.name);
+    if (!base) { r.lifer = false; return; }
+    r.lifer = !seen[base];
+    seen[base] = true;
+    if (r.lifer) liferSet[base] = true;
   });
 }
 
@@ -2553,7 +2562,10 @@ function computeGlobalFreq(records) {
 
 function uniqueSpecies(records) {
   var seen = {};
-  records.forEach(function(r) { seen[r.name] = true; });
+  records.forEach(function(r) {
+    var base = baseSpeciesName(r.name);
+    if (base) seen[base] = true;
+  });
   return Object.keys(seen).sort();
 }
 
