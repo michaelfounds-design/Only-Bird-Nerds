@@ -402,51 +402,65 @@
     .ptab-body { flex: 1; overflow-y: auto; padding: 1rem; }
     .ptab-body::-webkit-scrollbar { width: 3px; }
     .ptab-body::-webkit-scrollbar-thumb { background: rgba(122,171,136,0.18); }
-    /* Lists tab */
-    .lists-section-hdr { display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;margin-top:1rem; }
-    .lists-section-hdr:first-child { margin-top:0; }
-    .lists-section-title { font-family:'Playfair Display',serif;font-size:0.85rem;color:var(--sage); }
-    .lists-count { font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(122,171,136,0.6);background:rgba(122,171,136,0.1);padding:1px 7px;border-radius:10px; }
-    .lists-sort-row { display:flex;align-items:center;gap:0.3rem;margin-bottom:0.6rem;flex-wrap:wrap; }
-    .lists-sort-lbl { font-size:0.6rem;color:rgba(122,171,136,0.5);text-transform:uppercase;letter-spacing:0.07em; }
-    .lists-sort-btn { font-family:'DM Mono',monospace;font-size:0.6rem;background:none;border:1px solid rgba(122,171,136,0.2);border-radius:5px;color:rgba(122,171,136,0.5);cursor:pointer;padding:2px 8px;transition:all 0.15s; }
-    .lists-sort-btn.active { background:rgba(74,124,89,0.2);border-color:var(--sage);color:var(--sage); }
-    #life-list-body { max-height:340px;overflow-y:auto; }
-    .ll-row { display:grid;grid-template-columns:1fr auto;gap:0.3rem;padding:0.35rem 0;border-bottom:1px solid rgba(122,171,136,0.08);align-items:start; }
-    .ll-name { font-size:0.72rem;color:#f7f3ec;font-weight:500; }
-    .ll-name.lifer-star::before { content:'⭐ '; }
-    .ll-meta { font-size:0.62rem;color:rgba(247,243,236,0.45);line-height:1.5; }
-    .ll-date { font-size:0.62rem;color:rgba(122,171,136,0.7);white-space:nowrap; }
-    .lists-empty { font-size:0.72rem;color:rgba(122,171,136,0.4);padding:0.5rem 0; }
-    .lists-new-btn { font-family:'DM Mono',monospace;font-size:0.6rem;background:none;border:1px solid rgba(122,171,136,0.3);border-radius:5px;color:var(--sage);cursor:pointer;padding:2px 8px;transition:all 0.15s; }
-    .lists-new-btn:hover { background:rgba(74,124,89,0.15); }
-    .custom-list-block { margin-bottom:0.75rem;border:1px solid rgba(122,171,136,0.12);border-radius:8px;overflow:hidden; }
-    .custom-list-hdr { display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.6rem;background:rgba(122,171,136,0.06);cursor:pointer;user-select:none; }
-    .custom-list-icon { font-size:1rem; }
-    .custom-list-name { font-size:0.72rem;color:var(--sage);flex:1; }
-    .custom-list-cnt { font-size:0.6rem;color:rgba(122,171,136,0.5); }
-    .custom-list-del { background:none;border:none;color:rgba(122,171,136,0.35);cursor:pointer;font-size:0.8rem;padding:0 2px;line-height:1; }
-    .custom-list-del:hover { color:#e57373; }
-    .custom-list-items { padding:0.3rem 0.6rem; }
-    .custom-list-sp-row { display:flex;align-items:center;justify-content:space-between;padding:0.28rem 0;border-bottom:1px solid rgba(122,171,136,0.07); }
-    .custom-list-sp-row:last-child { border-bottom:none; }
-    .custom-list-sp-name { font-size:0.7rem;color:#f7f3ec; }
-    .custom-list-sp-rm { background:none;border:none;color:rgba(122,171,136,0.3);cursor:pointer;font-size:0.75rem;padding:0 2px; }
-    .custom-list-sp-rm:hover { color:#e57373; }
-    .new-list-form { display:none;margin-top:0.5rem;background:rgba(122,171,136,0.06);border-radius:8px;padding:0.6rem; }
-    .new-list-form.open { display:block; }
-    .new-list-row { display:flex;gap:0.4rem;align-items:center; }
-    .new-list-emoji { font-size:1.2rem;cursor:pointer;padding:3px;border-radius:4px; }
-    .new-list-input { flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(122,171,136,0.25);border-radius:5px;color:#f7f3ec;font-size:0.72rem;padding:4px 8px;font-family:'DM Mono',monospace; }
-    .new-list-input::placeholder { color:rgba(247,243,236,0.3); }
-    .new-list-save { font-family:'DM Mono',monospace;font-size:0.6rem;background:rgba(74,124,89,0.25);border:1px solid rgba(122,171,136,0.3);border-radius:5px;color:var(--sage);cursor:pointer;padding:4px 10px; }
-    /* Add-to-list floating menu */
-    #atl-menu { position:fixed;z-index:99999;background:rgba(12,24,16,0.97);border:1px solid rgba(122,171,136,0.3);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.6);padding:0.4rem;min-width:150px;display:none; }
+    /* Lists overlay */
+    #lists-overlay { position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;background:transparent;transition:background 0.25s; }
+    #lists-overlay.open { pointer-events:all;background:rgba(0,0,0,0.45); }
+    .lo-panel { height:55vh;max-height:720px;background:rgba(10,18,12,0.98);border-top:1px solid rgba(122,171,136,0.2);border-radius:18px 18px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);box-shadow:0 -8px 40px rgba(0,0,0,0.5); }
+    #lists-overlay.open .lo-panel { transform:translateY(0); }
+    .lo-drag-handle { width:40px;height:4px;background:rgba(122,171,136,0.2);border-radius:2px;margin:10px auto 0;flex-shrink:0; }
+    .lo-header { display:flex;align-items:center;gap:0.6rem;padding:0.7rem 1.2rem 0.7rem;border-bottom:1px solid rgba(122,171,136,0.1);flex-shrink:0; }
+    .lo-back-btn { background:none;border:none;color:rgba(122,171,136,0.7);font-family:'DM Mono',monospace;font-size:0.65rem;cursor:pointer;padding:0;white-space:nowrap;letter-spacing:0.04em; }
+    .lo-title { font-family:'Playfair Display',serif;font-size:1rem;color:#f7f3ec;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .lo-header-actions { display:flex;align-items:center;gap:0.4rem;flex-shrink:0; }
+    .lo-new-btn { font-family:'DM Mono',monospace;font-size:0.62rem;background:none;border:1px solid rgba(122,171,136,0.3);border-radius:100px;color:var(--sage);cursor:pointer;padding:3px 11px;white-space:nowrap; }
+    .lo-close-btn { background:none;border:none;color:rgba(122,171,136,0.45);font-size:1rem;cursor:pointer;padding:0.2rem 0.3rem;line-height:1;flex-shrink:0; }
+    .lo-body { flex:1;overflow-y:auto;padding:0.4rem 1.2rem 2rem; }
+    .lo-body::-webkit-scrollbar { width:3px; }
+    .lo-body::-webkit-scrollbar-thumb { background:rgba(122,171,136,0.15); }
+    /* List cards */
+    .lo-list-card { display:flex;align-items:center;gap:0.85rem;padding:0.8rem 0.4rem;border-bottom:1px solid rgba(122,171,136,0.08);cursor:pointer;border-radius:8px;transition:background 0.12s;margin:0 -0.4rem; }
+    .lo-list-card:hover { background:rgba(122,171,136,0.06); }
+    .lo-card-icon { font-size:1.6rem;flex-shrink:0;line-height:1; }
+    .lo-card-body { flex:1;min-width:0; }
+    .lo-card-name { font-size:0.85rem;color:#f7f3ec;font-weight:500;margin-bottom:2px; }
+    .lo-card-meta { font-size:0.64rem;color:rgba(122,171,136,0.65);font-family:'DM Mono',monospace;letter-spacing:0.02em; }
+    .lo-card-arrow { color:rgba(122,171,136,0.35);font-size:1.3rem;flex-shrink:0; }
+    .lo-empty { font-size:0.73rem;color:rgba(122,171,136,0.4);padding:1.2rem 0;line-height:1.7; }
+    /* New list form */
+    .lo-new-form { display:none;margin-top:0.6rem;background:rgba(122,171,136,0.05);border-radius:10px;padding:0.8rem;border:1px solid rgba(122,171,136,0.12); }
+    .lo-new-form.open { display:block; }
+    .lo-new-form-row { display:flex;gap:0.5rem;align-items:center;margin-bottom:0.65rem; }
+    .lo-new-emoji { font-size:1.25rem;cursor:pointer;padding:3px;line-height:1; }
+    .lo-new-input { flex:1;background:rgba(0,0,0,0.25);border:1px solid rgba(122,171,136,0.22);border-radius:6px;color:#f7f3ec;font-size:0.73rem;padding:7px 10px;font-family:'DM Mono',monospace;outline:none; }
+    .lo-new-input:focus { border-color:rgba(122,171,136,0.5); }
+    .lo-new-input::placeholder { color:rgba(247,243,236,0.28); }
+    .lo-new-actions { display:flex;flex-direction:column;gap:0.5rem; }
+    .lo-import-row { display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap; }
+    .lo-import-lbl { font-size:0.6rem;color:rgba(122,171,136,0.5);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap; }
+    .lo-import-sel { font-family:'DM Mono',monospace;font-size:0.62rem;background:rgba(0,0,0,0.35);border:1px solid rgba(122,171,136,0.2);border-radius:5px;color:var(--sage);padding:4px 7px;cursor:pointer;max-width:170px;flex:1; }
+    .lo-new-save-btn { font-family:'DM Mono',monospace;font-size:0.65rem;background:rgba(74,124,89,0.25);border:1px solid rgba(122,171,136,0.3);border-radius:6px;color:var(--sage);cursor:pointer;padding:7px 16px;align-self:flex-end; }
+    /* Sort row (life list) */
+    .lo-sort-row { display:flex;gap:0.3rem; }
+    .lo-sort-btn { font-family:'DM Mono',monospace;font-size:0.58rem;background:none;border:1px solid rgba(122,171,136,0.2);border-radius:5px;color:rgba(122,171,136,0.5);cursor:pointer;padding:2px 8px; }
+    .lo-sort-btn.active { background:rgba(74,124,89,0.2);border-color:var(--sage);color:var(--sage); }
+    /* Detail: species rows */
+    .ld-species-list { display:flex;flex-direction:column; }
+    .ld-sp-row { display:flex;align-items:center;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid rgba(122,171,136,0.07); }
+    .ld-sp-photo { flex-shrink:0;width:54px; }
+    .ld-sp-info { flex:1;min-width:0; }
+    .ld-sp-name { font-size:0.78rem;color:#f7f3ec;font-weight:500; }
+    .ld-sp-meta { font-size:0.62rem;color:rgba(247,243,236,0.38);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .ld-sp-actions { display:flex;gap:0.25rem;flex-shrink:0; }
+    .ld-sp-btn { background:none;border:1px solid rgba(122,171,136,0.15);border-radius:5px;cursor:pointer;padding:5px 7px;font-size:0.82rem;line-height:1;color:rgba(122,171,136,0.55); }
+    .ld-sp-btn:hover { border-color:var(--sage); }
+    .ld-rm-btn:hover { border-color:#e57373;color:#e57373; }
+    /* Quick add-to-list floating menu (🔖 button) */
+    #atl-menu { position:fixed;z-index:99999;background:rgba(12,24,16,0.97);border:1px solid rgba(122,171,136,0.3);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.6);padding:0.4rem;min-width:155px;display:none; }
     .atl-menu-title { font-size:0.6rem;color:rgba(122,171,136,0.5);text-transform:uppercase;letter-spacing:0.07em;padding:2px 6px 6px;font-family:'DM Mono',monospace; }
     .atl-menu-item { display:flex;align-items:center;gap:0.4rem;padding:5px 8px;border-radius:5px;cursor:pointer;font-size:0.7rem;color:#f7f3ec;font-family:'DM Mono',monospace;transition:background 0.1s; }
     .atl-menu-item:hover { background:rgba(122,171,136,0.12); }
     .atl-menu-item.checked { color:var(--sage); }
-    .atl-menu-new { border-top:1px solid rgba(122,171,136,0.12);margin-top:3px;padding-top:3px;color:rgba(122,171,136,0.6); }
+    .atl-menu-sep { border-top:1px solid rgba(122,171,136,0.12);margin-top:3px;padding-top:3px; }
     /* Profile tab */
     #avatar-wrap {
       display: flex; flex-direction: column; align-items: center;
@@ -1586,6 +1600,7 @@
 <!-- ── Map quick actions ── -->
 <div id="map-actions">
   <button class="map-action-btn" id="map-action-share" title="Share a trip">&#128279; Share</button>
+  <button class="map-action-btn" id="lists-btn" title="My Lists">📋 My Lists</button>
 </div>
 
 <div id="cloud-toast">✓ Saved to cloud</div>
@@ -1596,7 +1611,6 @@
   <div id="profile-panel-hdr">
     <div class="ptabs">
       <button class="ptab active" data-ptab="profile">Profile</button>
-      <button class="ptab" data-ptab="lists">Lists</button>
       <button class="ptab" data-ptab="shared">My Shared Data</button>
     </div>
     <button id="profile-close-btn">✕</button>
@@ -1665,41 +1679,27 @@
 
   </div>
 
-  <!-- Lists tab -->
-  <div class="ptab-body" id="ptab-lists" style="display:none">
-    <!-- Life List -->
-    <div class="lists-section-hdr" style="margin-top:0">
-      <span class="lists-section-title">Life List</span>
-      <span id="life-list-count" class="lists-count"></span>
-    </div>
-    <div class="lists-sort-row">
-      <span class="lists-sort-lbl">Sort:</span>
-      <button class="lists-sort-btn active" data-llsort="date">Date</button>
-      <button class="lists-sort-btn" data-llsort="name">Name</button>
-      <button class="lists-sort-btn" data-llsort="location">Location</button>
-    </div>
-    <div id="life-list-body"></div>
-
-    <!-- Custom Lists -->
-    <div class="lists-section-hdr" style="margin-top:1.2rem">
-      <span class="lists-section-title">My Lists</span>
-      <button id="new-list-btn" class="lists-new-btn">+ New</button>
-    </div>
-    <div id="new-list-form" class="new-list-form">
-      <div class="new-list-row">
-        <span id="new-list-emoji-btn" class="new-list-emoji" title="Pick emoji">📋</span>
-        <input id="new-list-name-input" class="new-list-input" type="text" maxlength="40" placeholder="List name (e.g. Home List)" />
-        <button id="new-list-save-btn" class="new-list-save">Create</button>
-      </div>
-    </div>
-    <div id="custom-lists-body"></div>
   </div>
 </div>
 
-<!-- Add-to-list floating menu -->
+<!-- Add-to-list quick menu (🔖 popup button) -->
 <div id="atl-menu">
   <div class="atl-menu-title">Add to list</div>
   <div id="atl-menu-items"></div>
+</div>
+
+<!-- ── Lists overlay ── -->
+<div id="lists-overlay">
+  <div class="lo-panel">
+    <div class="lo-drag-handle"></div>
+    <div class="lo-header">
+      <button class="lo-back-btn" id="lo-back-btn" style="display:none">← Back</button>
+      <span class="lo-title">My Lists</span>
+      <div class="lo-header-actions" id="lo-header-actions"></div>
+      <button class="lo-close-btn" id="lo-close-btn">✕</button>
+    </div>
+    <div class="lo-body" id="lo-content"></div>
+  </div>
 </div>
 
 <!-- ── My Aviary overlay ── -->
@@ -2354,7 +2354,6 @@ function _finalizeLoad(firstLoad) {
   buildAutocomplete();
   buildDropdowns();
   renderPanelQB();
-  renderListsTab();
   setTimeout(function() { initMap(); updateMap(); queuePhotos(speciesList.slice()); }, 50);
 }
 
@@ -3972,13 +3971,12 @@ function switchProfileTab(tab) {
     b.classList.toggle('active', b.dataset.ptab === tab);
   });
   document.getElementById('ptab-profile').style.display = tab === 'profile' ? '' : 'none';
-  document.getElementById('ptab-lists').style.display   = tab === 'lists'   ? '' : 'none';
   document.getElementById('ptab-shared').style.display  = tab === 'shared'  ? '' : 'none';
-  if (tab === 'lists') renderListsTab();
 }
 
 // ── Lists feature ────────────────────────────────────────────────────────────
 var _llSort = 'date';
+var _listsCurrentId = null;
 
 function _loadCustomLists() {
   try { return JSON.parse(localStorage.getItem('obn_custom_lists') || '[]'); } catch(e) { return []; }
@@ -3987,177 +3985,321 @@ function _saveCustomLists(lists) {
   try { localStorage.setItem('obn_custom_lists', JSON.stringify(lists)); } catch(e) {}
 }
 
-function renderListsTab() {
-  if (document.getElementById('ptab-lists').style.display === 'none') return;
-  _renderLifeList(_llSort);
-  _renderCustomLists();
+function openListsOverlay() {
+  document.getElementById('lists-overlay').classList.add('open');
+  _showListsHome();
+}
+function closeListsOverlay() {
+  document.getElementById('lists-overlay').classList.remove('open');
+  _listsCurrentId = null;
 }
 
-function _renderLifeList(sort) {
-  _llSort = sort;
-  document.querySelectorAll('.lists-sort-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.llsort === sort);
-  });
-
-  var lifeItems = allRecords.filter(function(r) { return r.lifer; });
-
-  if (!lifeItems.length) {
-    document.getElementById('life-list-count').textContent = '';
-    document.getElementById('life-list-body').innerHTML = '<p class="lists-empty">Upload your eBird CSV to see your life list.</p>';
-    return;
-  }
-
-  document.getElementById('life-list-count').textContent = lifeItems.length.toLocaleString();
-
-  if (sort === 'date') {
-    lifeItems.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-  } else if (sort === 'name') {
-    lifeItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
-  } else if (sort === 'location') {
-    lifeItems.sort(function(a, b) { return (a.location || '').localeCompare(b.location || ''); });
-  }
-
-  var html = '';
-  lifeItems.forEach(function(r) {
-    var dateLabel = r.date ? (function() {
-      var d = new Date(r.date);
-      return isNaN(d) ? r.date : d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-    })() : '';
-    var locLabel = [r.location, r.county, r.state].filter(Boolean).join(', ');
-    html += '<div class="ll-row">'
-      + '<div><div class="ll-name">' + r.name + '</div>'
-      + '<div class="ll-meta">' + locLabel + '</div></div>'
-      + '<div class="ll-date">' + dateLabel + '</div>'
-      + '</div>';
-  });
-  document.getElementById('life-list-body').innerHTML = html;
-}
-
-function _renderCustomLists() {
-  var lists = _loadCustomLists();
-  var el = document.getElementById('custom-lists-body');
-  if (!lists.length) {
-    el.innerHTML = '<p class="lists-empty">No custom lists yet.</p>';
-    return;
-  }
-  var html = '';
-  lists.forEach(function(lst, idx) {
-    html += '<div class="custom-list-block">';
-    html += '<div class="custom-list-hdr">'
-      + '<span class="custom-list-icon">' + (lst.icon || '📋') + '</span>'
-      + '<span class="custom-list-name">' + lst.name + '</span>'
-      + '<span class="custom-list-cnt">' + (lst.species || []).length + '</span>'
-      + '<button class="custom-list-del" data-listidx="' + idx + '" title="Delete list">✕</button>'
-      + '</div>';
-    if ((lst.species || []).length) {
-      html += '<div class="custom-list-items">';
-      lst.species.forEach(function(sp) {
-        var spEsc = sp.replace(/'/g, "\\'");
-        html += '<div class="custom-list-sp-row">'
-          + '<span class="custom-list-sp-name">' + sp + '</span>'
-          + '<button class="custom-list-sp-rm" data-listidx="' + idx + '" data-sp="' + sp.replace(/"/g,'&quot;') + '" title="Remove">✕</button>'
-          + '</div>';
-      });
-      html += '</div>';
+function _computeListMeta(speciesArr) {
+  if (!speciesArr.length) return { count: 0, geography: '', years: '' };
+  var seenSp = {}, states = {}, years = [];
+  allRecords.forEach(function(r) {
+    if (speciesArr.indexOf(r.name) !== -1 && !seenSp[r.name]) {
+      seenSp[r.name] = true;
+      if (r.state) states[r.state] = true;
+      if (r.year) years.push(parseInt(r.year));
     }
-    html += '</div>';
   });
-  el.innerHTML = html;
+  var stateList = Object.keys(states).map(function(s) { return s.replace(/^US-/, ''); }).sort();
+  var geo = stateList.length <= 4 ? stateList.join(', ') : stateList.length + ' states';
+  var yMin = years.length ? Math.min.apply(null, years) : null;
+  var yMax = years.length ? Math.max.apply(null, years) : null;
+  var yr = yMin ? (yMin === yMax ? String(yMin) : yMin + '–' + yMax) : '';
+  return { count: speciesArr.length, geography: geo, years: yr };
+}
 
-  el.querySelectorAll('.custom-list-del').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var i = parseInt(this.dataset.listidx);
-      var lists2 = _loadCustomLists();
-      if (confirm('Delete list "' + lists2[i].name + '"?')) {
-        lists2.splice(i, 1);
-        _saveCustomLists(lists2);
-        _renderCustomLists();
-      }
-    });
+function _lifeListSpecies() {
+  return allRecords.filter(function(r) { return r.lifer; }).map(function(r) { return r.name; });
+}
+
+function _countyOptions() {
+  var seen = {}, opts = [];
+  allRecords.forEach(function(r) {
+    if (r.county && r.state) {
+      var k = r.state + '|' + r.county;
+      if (!seen[k]) { seen[k] = true; opts.push({ k: k, label: r.county + ', ' + r.state.replace(/^US-/,'') }); }
+    }
   });
-  el.querySelectorAll('.custom-list-sp-rm').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var i = parseInt(this.dataset.listidx);
-      var sp = this.dataset.sp;
+  opts.sort(function(a, b) { return a.label.localeCompare(b.label); });
+  return opts.map(function(o) { return '<option value="' + o.k.replace(/"/g,'&quot;') + '">' + o.label + '</option>'; }).join('');
+}
+
+function _locationOptions() {
+  var seen = {}, opts = [];
+  allRecords.forEach(function(r) {
+    if (r.location && !seen[r.location]) { seen[r.location] = true; opts.push(r.location); }
+  });
+  opts.sort();
+  return opts.map(function(l) { return '<option value="' + l.replace(/"/g,'&quot;') + '">' + l + '</option>'; }).join('');
+}
+
+function _showListsHome() {
+  _listsCurrentId = null;
+  document.getElementById('lo-back-btn').style.display = 'none';
+  document.querySelector('.lo-title').textContent = 'My Lists';
+  document.getElementById('lo-header-actions').innerHTML =
+    '<button class="lo-new-btn" id="lo-new-list-btn">+ New list</button>';
+
+  var lifeSpecies = _lifeListSpecies();
+  var lifeMeta = _computeListMeta(lifeSpecies);
+  var lists = _loadCustomLists();
+
+  var html = '';
+  // Life List card always first
+  var lifeParts = [lifeMeta.count.toLocaleString() + ' species'];
+  if (lifeMeta.geography) lifeParts.push(lifeMeta.geography);
+  if (lifeMeta.years) lifeParts.push(lifeMeta.years);
+  html += '<div class="lo-list-card" data-listid="life">'
+    + '<div class="lo-card-icon">🐦</div>'
+    + '<div class="lo-card-body"><div class="lo-card-name">Life List</div>'
+    + '<div class="lo-card-meta">' + lifeParts.join(' · ') + '</div></div>'
+    + '<div class="lo-card-arrow">›</div></div>';
+
+  lists.forEach(function(lst) {
+    var meta = _computeListMeta(lst.species || []);
+    var parts = [meta.count.toLocaleString() + ' species'];
+    if (meta.geography) parts.push(meta.geography);
+    if (meta.years) parts.push(meta.years);
+    html += '<div class="lo-list-card" data-listid="' + lst.id + '">'
+      + '<div class="lo-card-icon">' + (lst.icon || '📋') + '</div>'
+      + '<div class="lo-card-body"><div class="lo-card-name">' + lst.name + '</div>'
+      + '<div class="lo-card-meta">' + parts.join(' · ') + '</div></div>'
+      + '<div class="lo-card-arrow">›</div></div>';
+  });
+
+  if (!allRecords.length) {
+    html += '<p class="lo-empty">Upload your eBird CSV to populate your Life List, then create custom lists like Home List or County List.</p>';
+  }
+
+  // New list form
+  html += '<div id="lo-new-form" class="lo-new-form">'
+    + '<div class="lo-new-form-row">'
+    + '<span id="lo-new-emoji" class="lo-new-emoji">📋</span>'
+    + '<input id="lo-new-name" class="lo-new-input" type="text" maxlength="40" placeholder="List name (e.g. Home List)" />'
+    + '</div>'
+    + '<div class="lo-new-actions">'
+    + '<div class="lo-import-row">'
+    + '<span class="lo-import-lbl">Import from:</span>'
+    + '<select id="lo-import-county" class="lo-import-sel"><option value="">County…</option>' + _countyOptions() + '</select>'
+    + '<select id="lo-import-location" class="lo-import-sel"><option value="">Location…</option>' + _locationOptions() + '</select>'
+    + '</div>'
+    + '<button id="lo-new-save" class="lo-new-save-btn">Create list</button>'
+    + '</div></div>';
+
+  document.getElementById('lo-content').innerHTML = html;
+
+  // Wire card clicks
+  document.querySelectorAll('.lo-list-card').forEach(function(card) {
+    card.addEventListener('click', function() { _showListDetail(this.dataset.listid); });
+  });
+
+  // New list toggle
+  document.getElementById('lo-new-list-btn').addEventListener('click', function() {
+    var f = document.getElementById('lo-new-form');
+    f.classList.toggle('open');
+    if (f.classList.contains('open')) document.getElementById('lo-new-name').focus();
+  });
+
+  // Save
+  document.getElementById('lo-new-save').addEventListener('click', _saveNewList);
+  document.getElementById('lo-new-name').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') _saveNewList();
+  });
+}
+
+function _saveNewList() {
+  var name = document.getElementById('lo-new-name').value.trim();
+  if (!name) { document.getElementById('lo-new-name').focus(); return; }
+  var icon = document.getElementById('lo-new-emoji').textContent;
+  var countyKey = document.getElementById('lo-import-county').value;
+  var locName   = document.getElementById('lo-import-location').value;
+  var species = [];
+  if (countyKey) {
+    var parts = countyKey.split('|'), st = parts[0], co = parts[1];
+    allRecords.forEach(function(r) {
+      if (r.state === st && r.county === co && species.indexOf(r.name) === -1) species.push(r.name);
+    });
+  } else if (locName) {
+    allRecords.forEach(function(r) {
+      if (r.location === locName && species.indexOf(r.name) === -1) species.push(r.name);
+    });
+  }
+  var lists = _loadCustomLists();
+  lists.push({ id: 'cl_' + Date.now(), name: name, icon: icon, species: species });
+  _saveCustomLists(lists);
+  _showListsHome();
+}
+
+function _showListDetail(listId) {
+  _listsCurrentId = listId;
+  var isLife = listId === 'life';
+  var lstName, lstIcon, speciesArr;
+
+  if (isLife) {
+    lstName = 'Life List'; lstIcon = '🐦'; speciesArr = null;
+  } else {
+    var lists = _loadCustomLists();
+    var lst = lists.find(function(l) { return l.id === listId; });
+    if (!lst) { _showListsHome(); return; }
+    lstName = lst.name; lstIcon = lst.icon || '📋';
+    speciesArr = lst.species || [];
+  }
+
+  document.getElementById('lo-back-btn').style.display = '';
+  document.querySelector('.lo-title').textContent = lstIcon + ' ' + lstName;
+
+  var actHtml = '';
+  if (isLife) {
+    actHtml = '<div class="lo-sort-row">'
+      + '<button class="lo-sort-btn' + (_llSort==='date'     ? ' active':'') + '" data-llsort="date">Date</button>'
+      + '<button class="lo-sort-btn' + (_llSort==='name'     ? ' active':'') + '" data-llsort="name">Name</button>'
+      + '<button class="lo-sort-btn' + (_llSort==='location' ? ' active':'') + '" data-llsort="location">Location</button>'
+      + '</div>';
+  } else {
+    actHtml = '<select id="ld-add-county" class="lo-import-sel"><option value="">+ County</option>' + _countyOptions() + '</select>'
+      + '<select id="ld-add-location" class="lo-import-sel"><option value="">+ Location</option>' + _locationOptions() + '</select>'
+      + '<button class="ld-del-list-btn lo-new-btn" data-listid="' + listId + '" style="border-color:rgba(229,115,115,0.3);color:#e57373">Delete</button>';
+  }
+  document.getElementById('lo-header-actions').innerHTML = actHtml;
+
+  _renderDetailSpecies(listId, speciesArr, isLife);
+
+  // Life list sort buttons
+  if (isLife) {
+    document.querySelectorAll('.lo-sort-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { _llSort = this.dataset.llsort; _showListDetail('life'); });
+    });
+  } else {
+    // Add-from county/location
+    var addCo = document.getElementById('ld-add-county');
+    var addLo = document.getElementById('ld-add-location');
+    if (addCo) addCo.addEventListener('change', function() {
+      if (!this.value) return;
+      var p = this.value.split('|'), st = p[0], co = p[1];
+      var lists2 = _loadCustomLists(), lst2 = lists2.find(function(l){return l.id===listId;});
+      if (!lst2) return;
+      allRecords.forEach(function(r){ if(r.state===st&&r.county===co&&lst2.species.indexOf(r.name)===-1) lst2.species.push(r.name); });
+      _saveCustomLists(lists2); _showListDetail(listId);
+    });
+    if (addLo) addLo.addEventListener('change', function() {
+      if (!this.value) return;
+      var loc = this.value;
+      var lists2 = _loadCustomLists(), lst2 = lists2.find(function(l){return l.id===listId;});
+      if (!lst2) return;
+      allRecords.forEach(function(r){ if(r.location===loc&&lst2.species.indexOf(r.name)===-1) lst2.species.push(r.name); });
+      _saveCustomLists(lists2); _showListDetail(listId);
+    });
+    // Delete list
+    var delBtn = document.querySelector('.ld-del-list-btn');
+    if (delBtn) delBtn.addEventListener('click', function() {
+      if (!confirm('Delete this list?')) return;
       var lists2 = _loadCustomLists();
-      lists2[i].species = (lists2[i].species || []).filter(function(s) { return s !== sp; });
-      _saveCustomLists(lists2);
-      _renderCustomLists();
+      _saveCustomLists(lists2.filter(function(l){return l.id!==listId;}));
+      _showListsHome();
+    });
+  }
+}
+
+function _renderDetailSpecies(listId, speciesArr, isLife) {
+  var items;
+  if (isLife) {
+    items = allRecords.filter(function(r) { return r.lifer; });
+    if (_llSort === 'name') items.sort(function(a,b){return a.name.localeCompare(b.name);});
+    else if (_llSort === 'location') items.sort(function(a,b){return (a.location||'').localeCompare(b.location||'');});
+    // default 'date': already sorted by computeLifers
+  } else {
+    var firstSeen = {};
+    allRecords.forEach(function(r){ if(speciesArr.indexOf(r.name)!==-1&&!firstSeen[r.name]) firstSeen[r.name]=r; });
+    items = speciesArr.map(function(sp){ return firstSeen[sp]||{name:sp,date:'',location:'',county:'',state:''}; });
+  }
+
+  if (!items.length) {
+    document.getElementById('lo-content').innerHTML =
+      '<p class="lo-empty" style="margin-top:1rem">No species yet. Use the County or Location dropdowns above to import, or add birds from the map with 🔖.</p>';
+    return;
+  }
+
+  var html = '<div class="ld-species-list">';
+  items.forEach(function(r) {
+    var photo   = getPhoto(r.name);
+    var spAttr  = r.name.replace(/"/g,'&quot;');
+    var spEsc   = r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    var dateLabel = r.date ? (function(){ var d=new Date(r.date); return isNaN(d)?r.date:d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); })() : '';
+    var stAbbr  = r.state ? r.state.replace(/^US-/,'') : '';
+    var locParts = [r.location, r.county, stAbbr].filter(Boolean);
+    html += '<div class="ld-sp-row">'
+      + '<div class="ld-sp-photo">'
+      + '<img src="'+(photo||'')+'" data-sp="'+spAttr+'" onclick="if(this.src)openLightbox(this.src)" '
+      + 'style="width:54px;height:54px;object-fit:cover;border-radius:6px;display:'+(photo?'block':'none')+';cursor:pointer" '
+      + 'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'" />'
+      + '<div data-sp-ph="'+spAttr+'" style="width:54px;height:54px;background:rgba(122,171,136,0.08);border-radius:6px;'
+      + 'display:'+(photo?'none':'flex')+';align-items:center;justify-content:center;font-size:1.3rem">🐦</div>'
+      + '</div>'
+      + '<div class="ld-sp-info"><div class="ld-sp-name">'+r.name+'</div>'
+      + '<div class="ld-sp-meta">'+locParts.join(', ')+(dateLabel?' · '+dateLabel:'')+'</div></div>'
+      + '<div class="ld-sp-actions">'
+      + '<button onclick="photoDialog.open(\''+spEsc+'\')" title="Change photo" class="ld-sp-btn">📷</button>'
+      + (!isLife ? '<button class="ld-sp-btn ld-rm-btn" data-listid="'+listId+'" data-sp="'+spAttr+'" title="Remove">✕</button>' : '')
+      + '</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('lo-content').innerHTML = html;
+
+  document.querySelectorAll('.ld-rm-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var lid = this.dataset.listid, sp = this.dataset.sp;
+      var lists2 = _loadCustomLists(), lst2 = lists2.find(function(l){return l.id===lid;});
+      if (!lst2) return;
+      lst2.species = lst2.species.filter(function(s){return s!==sp;});
+      _saveCustomLists(lists2); _showListDetail(lid);
     });
   });
 }
 
-// new list form
-document.getElementById('new-list-btn').addEventListener('click', function() {
-  var form = document.getElementById('new-list-form');
-  form.classList.toggle('open');
-  if (form.classList.contains('open')) document.getElementById('new-list-name-input').focus();
-});
-document.getElementById('new-list-save-btn').addEventListener('click', function() {
-  var name = document.getElementById('new-list-name-input').value.trim();
-  if (!name) return;
-  var icon = document.getElementById('new-list-emoji-btn').textContent;
-  var lists = _loadCustomLists();
-  lists.push({ id: 'cl_' + Date.now(), name: name, icon: icon, species: [] });
-  _saveCustomLists(lists);
-  document.getElementById('new-list-name-input').value = '';
-  document.getElementById('new-list-form').classList.remove('open');
-  _renderCustomLists();
-});
-document.getElementById('new-list-name-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('new-list-save-btn').click();
+// Overlay close / back
+document.getElementById('lo-close-btn').addEventListener('click', closeListsOverlay);
+document.getElementById('lo-back-btn').addEventListener('click', _showListsHome);
+document.getElementById('lists-btn').addEventListener('click', function() { openListsOverlay(); });
+// Close on backdrop click
+document.getElementById('lists-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeListsOverlay();
 });
 
-// sort buttons for life list
-document.getElementById('ptab-lists').addEventListener('click', function(e) {
-  if (e.target.dataset.llsort) _renderLifeList(e.target.dataset.llsort);
-});
-
-// add-to-list floating menu
+// 🔖 quick add-to-list floating menu (from map popups)
 var atlMenu = (function() {
   var _sp = '';
   var _el = document.getElementById('atl-menu');
-
-  document.addEventListener('click', function(e) {
-    if (!_el.contains(e.target)) _el.style.display = 'none';
-  });
+  document.addEventListener('click', function(e) { if (_el&&!_el.contains(e.target)) _el.style.display='none'; });
 
   function open(evt, sp) {
     evt.stopPropagation();
     _sp = sp;
     var lists = _loadCustomLists();
     var items = document.getElementById('atl-menu-items');
-    if (!lists.length) {
-      items.innerHTML = '<div class="atl-menu-item atl-menu-new" onclick="atlMenu.openListsTab()">+ Create a list</div>';
-    } else {
-      var html = '';
-      lists.forEach(function(lst, i) {
-        var has = (lst.species || []).indexOf(sp) !== -1;
-        html += '<div class="atl-menu-item' + (has ? ' checked' : '') + '" data-listidx="' + i + '">'
-          + (lst.icon || '📋') + ' ' + lst.name
-          + (has ? ' ✓' : '')
-          + '</div>';
+    var html = '';
+    lists.forEach(function(lst, i) {
+      var has = (lst.species||[]).indexOf(sp) !== -1;
+      html += '<div class="atl-menu-item'+(has?' checked':'')+'" data-listidx="'+i+'">'
+        + (lst.icon||'📋')+' '+lst.name+(has?' ✓':'')+'</div>';
+    });
+    html += '<div class="atl-menu-item atl-menu-sep" onclick="openListsOverlay()">📋 Open My Lists…</div>';
+    items.innerHTML = html;
+    items.querySelectorAll('[data-listidx]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var idx = parseInt(this.dataset.listidx);
+        var lists2 = _loadCustomLists();
+        var sps = lists2[idx].species || [];
+        var pos = sps.indexOf(_sp);
+        if (pos === -1) { sps.push(_sp); } else { sps.splice(pos, 1); }
+        lists2[idx].species = sps;
+        _saveCustomLists(lists2);
+        _el.style.display = 'none';
       });
-      html += '<div class="atl-menu-item atl-menu-new" onclick="atlMenu.openListsTab()">+ New list…</div>';
-      items.innerHTML = html;
-      items.querySelectorAll('[data-listidx]').forEach(function(el) {
-        el.addEventListener('click', function() {
-          var idx = parseInt(this.dataset.listidx);
-          var lists2 = _loadCustomLists();
-          var sp2 = _sp;
-          var sps = lists2[idx].species || [];
-          var pos = sps.indexOf(sp2);
-          if (pos === -1) { sps.push(sp2); } else { sps.splice(pos, 1); }
-          lists2[idx].species = sps;
-          _saveCustomLists(lists2);
-          _el.style.display = 'none';
-          if (document.getElementById('ptab-lists').style.display !== 'none') _renderCustomLists();
-        });
-      });
-    }
-
+    });
     var rect = evt.target.getBoundingClientRect();
     _el.style.display = 'block';
     var menuH = _el.offsetHeight;
@@ -4167,16 +4309,7 @@ var atlMenu = (function() {
     _el.style.left = Math.min(rect.left, window.innerWidth - _el.offsetWidth - 8) + 'px';
   }
 
-  function openListsTab() {
-    _el.style.display = 'none';
-    openProfilePanel('lists');
-    setTimeout(function() {
-      document.getElementById('new-list-form').classList.add('open');
-      document.getElementById('new-list-name-input').focus();
-    }, 80);
-  }
-
-  return { open: open, openListsTab: openListsTab };
+  return { open: open };
 })();
 
 function loadProfileUI() {
