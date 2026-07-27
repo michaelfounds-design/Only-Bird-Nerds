@@ -956,9 +956,10 @@
 
     @media (max-width: 768px) {
       #profile-panel { width: 100%; }
-      #profile-btn { top: 8px; right: 10px; height: 36px; padding: 0 12px; font-size: 0.65rem; }
-      /* Share button: move below profile btn, left side to avoid layer bar */
-      #map-actions { top: auto; bottom: 5.5rem; right: 1.25rem; flex-direction: row; }
+      #profile-btn { top: 8px; right: 10px; height: 42px; padding: 0 14px; font-size: 0.68rem; }
+      /* Map actions: bottom-left corner, horizontal row */
+      #map-actions { top: auto; bottom: 0.6rem; right: auto; left: 0.6rem; flex-direction: row; gap: 0.4rem; }
+      .map-action-btn { height: 42px; padding: 0 14px; font-size: 0.68rem; }
       /* Trip dialog: full width, scrollable on short screens */
       #trip-dialog {
         width: 96vw; max-height: 90vh; overflow-y: auto;
@@ -1387,11 +1388,33 @@
       /* Map always full screen */
       #map { left: 0 !important; transition: none; }
 
-      /* Layer bar — no panel offset on mobile */
+      /* Layer bar — move to bottom on mobile, above action row */
       #layer-bar {
-        left: 50%;
-        transform: translateX(-50%);
-        top: 10px;
+        top: auto;
+        bottom: 3.6rem;       /* sits above the bottom action row */
+        left: 0.5rem;
+        right: 0.5rem;
+        transform: none;
+        width: auto;
+        max-width: none;
+        border-radius: 10px;
+        padding: 6px 8px;
+        justify-content: flex-start;
+      }
+      .lbtn {
+        padding: 8px 13px;    /* bigger tap targets */
+        font-size: 0.65rem;
+        min-height: 36px;
+        flex-shrink: 0;
+      }
+
+      /* Panel button — bottom-right, same row as map actions */
+      #mobile-panel-btn {
+        bottom: 0.6rem;
+        right: 0.6rem;
+        height: 42px;
+        padding: 0 16px;
+        font-size: 0.7rem;
       }
 
       /* Stats grid — 4 across on mobile */
