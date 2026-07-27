@@ -402,12 +402,18 @@
     .ptab-body { flex: 1; overflow-y: auto; padding: 1rem; }
     .ptab-body::-webkit-scrollbar { width: 3px; }
     .ptab-body::-webkit-scrollbar-thumb { background: rgba(122,171,136,0.18); }
-    /* Lists overlay */
-    #lists-overlay { position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;background:transparent;transition:background 0.25s; }
+    /* Lists overlay — right-side half-screen drawer */
+    #lists-overlay { position:fixed;inset:0;z-index:2000;display:flex;justify-content:flex-end;pointer-events:none;background:transparent;transition:background 0.25s; }
     #lists-overlay.open { pointer-events:all;background:rgba(0,0,0,0.45); }
-    .lo-panel { height:55vh;max-height:720px;background:rgba(10,18,12,0.98);border-top:1px solid rgba(122,171,136,0.2);border-radius:18px 18px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);box-shadow:0 -8px 40px rgba(0,0,0,0.5); }
-    #lists-overlay.open .lo-panel { transform:translateY(0); }
-    .lo-drag-handle { width:40px;height:4px;background:rgba(122,171,136,0.2);border-radius:2px;margin:10px auto 0;flex-shrink:0; }
+    .lo-panel { height:100vh;width:min(50vw,680px);background:rgba(8,16,10,0.99);border-left:1px solid rgba(122,171,136,0.18);display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 40px rgba(0,0,0,0.6); }
+    #lists-overlay.open .lo-panel { transform:translateX(0); }
+    .lo-drag-handle { display:none; }
+    @media (max-width:768px) {
+      #lists-overlay { flex-direction:column;justify-content:flex-end; }
+      .lo-panel { height:70vh;width:100%;border-left:none;border-top:1px solid rgba(122,171,136,0.18);border-radius:16px 16px 0 0;transform:translateY(100%); }
+      #lists-overlay.open .lo-panel { transform:translateY(0); }
+      .lo-drag-handle { display:block;width:40px;height:4px;background:rgba(122,171,136,0.2);border-radius:2px;margin:10px auto 0;flex-shrink:0; }
+    }
     .lo-header { display:flex;align-items:center;gap:0.6rem;padding:0.7rem 1.2rem 0.7rem;border-bottom:1px solid rgba(122,171,136,0.1);flex-shrink:0; }
     .lo-back-btn { background:none;border:none;color:rgba(122,171,136,0.7);font-family:'DM Mono',monospace;font-size:0.65rem;cursor:pointer;padding:0;white-space:nowrap;letter-spacing:0.04em; }
     .lo-title { font-family:'Playfair Display',serif;font-size:1rem;color:#f7f3ec;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
@@ -437,7 +443,11 @@
     .lo-new-actions { display:flex;flex-direction:column;gap:0.5rem; }
     .lo-import-row { display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap; }
     .lo-import-lbl { font-size:0.6rem;color:rgba(122,171,136,0.5);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap; }
-    .lo-import-sel { font-family:'DM Mono',monospace;font-size:0.62rem;background:rgba(0,0,0,0.35);border:1px solid rgba(122,171,136,0.2);border-radius:5px;color:var(--sage);padding:4px 7px;cursor:pointer;max-width:170px;flex:1; }
+    .lo-import-sel { font-family:'DM Mono',monospace;font-size:0.62rem;background:#0a1200;border:1px solid rgba(122,171,136,0.25);border-radius:5px;color:#f7f3ec;padding:4px 7px;cursor:pointer;max-width:170px;flex:1; }
+    .lo-import-sel option { background:#0a1200;color:#f7f3ec; }
+    .lo-loc-search { font-family:'DM Mono',monospace;font-size:0.62rem;background:#0a1200;border:1px solid rgba(122,171,136,0.25);border-radius:5px;color:#f7f3ec;padding:4px 7px;flex:1;outline:none; }
+    .lo-loc-search:focus { border-color:rgba(122,171,136,0.5); }
+    .lo-loc-search::placeholder { color:rgba(247,243,236,0.3); }
     .lo-new-save-btn { font-family:'DM Mono',monospace;font-size:0.65rem;background:rgba(74,124,89,0.25);border:1px solid rgba(122,171,136,0.3);border-radius:6px;color:var(--sage);cursor:pointer;padding:7px 16px;align-self:flex-end; }
     /* Sort row (life list) */
     .lo-sort-row { display:flex;gap:0.3rem; }
@@ -445,14 +455,17 @@
     .lo-sort-btn.active { background:rgba(74,124,89,0.2);border-color:var(--sage);color:var(--sage); }
     /* Detail: species rows */
     .ld-species-list { display:flex;flex-direction:column; }
-    .ld-sp-row { display:flex;align-items:center;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid rgba(122,171,136,0.07); }
-    .ld-sp-photo { flex-shrink:0;width:54px; }
+    .ld-sp-row { display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(122,171,136,0.07);transition:background 0.1s;margin:0 -0.5rem;padding-left:0.5rem;padding-right:0.5rem;border-radius:6px; }
+    .ld-sp-row:hover { background:rgba(122,171,136,0.04); }
+    .ld-sp-photo { flex-shrink:0;width:90px; }
+    .ld-sp-photo img, .ld-sp-photo div { width:90px;height:90px;border-radius:8px; }
     .ld-sp-info { flex:1;min-width:0; }
-    .ld-sp-name { font-size:0.78rem;color:#f7f3ec;font-weight:500; }
-    .ld-sp-meta { font-size:0.62rem;color:rgba(247,243,236,0.38);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .ld-sp-actions { display:flex;gap:0.25rem;flex-shrink:0; }
-    .ld-sp-btn { background:none;border:1px solid rgba(122,171,136,0.15);border-radius:5px;cursor:pointer;padding:5px 7px;font-size:0.82rem;line-height:1;color:rgba(122,171,136,0.55); }
-    .ld-sp-btn:hover { border-color:var(--sage); }
+    .ld-sp-name { font-family:'Playfair Display',serif;font-size:0.95rem;color:#f7f3ec;font-weight:700;margin-bottom:4px; }
+    .ld-sp-loc { font-size:0.7rem;color:rgba(122,171,136,0.8);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .ld-sp-date { font-size:0.65rem;color:rgba(247,243,236,0.35);font-family:'DM Mono',monospace; }
+    .ld-sp-actions { display:flex;flex-direction:column;gap:0.3rem;flex-shrink:0; }
+    .ld-sp-btn { background:none;border:1px solid rgba(122,171,136,0.18);border-radius:6px;cursor:pointer;padding:6px 9px;font-size:0.9rem;line-height:1;color:rgba(122,171,136,0.6);transition:all 0.12s; }
+    .ld-sp-btn:hover { border-color:var(--sage);background:rgba(122,171,136,0.08); }
     .ld-rm-btn:hover { border-color:#e57373;color:#e57373; }
     /* Quick add-to-list floating menu (🔖 button) */
     #atl-menu { position:fixed;z-index:99999;background:rgba(12,24,16,0.97);border:1px solid rgba(122,171,136,0.3);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.6);padding:0.4rem;min-width:155px;display:none; }
@@ -4044,7 +4057,7 @@ function _locationOptions() {
     if (r.location && !seen[r.location]) { seen[r.location] = true; opts.push(r.location); }
   });
   opts.sort();
-  return opts.map(function(l) { return '<option value="' + l.replace(/"/g,'&quot;') + '">' + l + '</option>'; }).join('');
+  return opts.map(function(l) { return '<option value="' + l.replace(/"/g,'&quot;') + '">'; }).join('');
 }
 
 function _showListsHome() {
@@ -4095,7 +4108,8 @@ function _showListsHome() {
     + '<div class="lo-import-row">'
     + '<span class="lo-import-lbl">Import from:</span>'
     + '<select id="lo-import-county" class="lo-import-sel"><option value="">County…</option>' + _countyOptions() + '</select>'
-    + '<select id="lo-import-location" class="lo-import-sel"><option value="">Location…</option>' + _locationOptions() + '</select>'
+    + '<datalist id="lo-loc-dl">' + _locationOptions() + '</datalist>'
+    + '<input id="lo-import-location" type="text" list="lo-loc-dl" class="lo-loc-search" placeholder="Search location…" autocomplete="off" />'
     + '</div>'
     + '<button id="lo-new-save" class="lo-new-save-btn">Create list</button>'
     + '</div></div>';
@@ -4171,7 +4185,8 @@ function _showListDetail(listId) {
       + '</div>';
   } else {
     actHtml = '<select id="ld-add-county" class="lo-import-sel"><option value="">+ County</option>' + _countyOptions() + '</select>'
-      + '<select id="ld-add-location" class="lo-import-sel"><option value="">+ Location</option>' + _locationOptions() + '</select>'
+      + '<datalist id="ld-loc-dl">' + _locationOptions() + '</datalist>'
+      + '<input id="ld-add-location" type="text" list="ld-loc-dl" class="lo-loc-search" placeholder="Search location…" autocomplete="off" style="max-width:150px" />'
       + '<button class="ld-del-list-btn lo-new-btn" data-listid="' + listId + '" style="border-color:rgba(229,115,115,0.3);color:#e57373">Delete</button>';
   }
   document.getElementById('lo-header-actions').innerHTML = actHtml;
@@ -4195,14 +4210,19 @@ function _showListDetail(listId) {
       allRecords.forEach(function(r){ if(r.state===st&&r.county===co&&lst2.species.indexOf(r.name)===-1) lst2.species.push(r.name); });
       _saveCustomLists(lists2); _showListDetail(listId);
     });
-    if (addLo) addLo.addEventListener('change', function() {
-      if (!this.value) return;
-      var loc = this.value;
-      var lists2 = _loadCustomLists(), lst2 = lists2.find(function(l){return l.id===listId;});
-      if (!lst2) return;
-      allRecords.forEach(function(r){ if(r.location===loc&&lst2.species.indexOf(r.name)===-1) lst2.species.push(r.name); });
-      _saveCustomLists(lists2); _showListDetail(listId);
-    });
+    if (addLo) {
+      // fire when datalist option selected (input event) or on blur if valid location
+      var _applyLoc = function(loc) {
+        if (!loc) return;
+        var matched = allRecords.some(function(r){ return r.location === loc; });
+        if (!matched) return;
+        var lists2 = _loadCustomLists(), lst2 = lists2.find(function(l){return l.id===listId;});
+        if (!lst2) return;
+        allRecords.forEach(function(r){ if(r.location===loc&&lst2.species.indexOf(r.name)===-1) lst2.species.push(r.name); });
+        _saveCustomLists(lists2); _showListDetail(listId);
+      };
+      addLo.addEventListener('change', function(){ _applyLoc(this.value.trim()); });
+    }
     // Delete list
     var delBtn = document.querySelector('.ld-del-list-btn');
     if (delBtn) delBtn.addEventListener('click', function() {
@@ -4244,13 +4264,16 @@ function _renderDetailSpecies(listId, speciesArr, isLife) {
     html += '<div class="ld-sp-row">'
       + '<div class="ld-sp-photo">'
       + '<img src="'+(photo||'')+'" data-sp="'+spAttr+'" onclick="if(this.src)openLightbox(this.src)" '
-      + 'style="width:54px;height:54px;object-fit:cover;border-radius:6px;display:'+(photo?'block':'none')+';cursor:pointer" '
+      + 'style="width:90px;height:90px;object-fit:cover;border-radius:8px;display:'+(photo?'block':'none')+';cursor:pointer" '
       + 'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'" />'
-      + '<div data-sp-ph="'+spAttr+'" style="width:54px;height:54px;background:rgba(122,171,136,0.08);border-radius:6px;'
-      + 'display:'+(photo?'none':'flex')+';align-items:center;justify-content:center;font-size:1.3rem">🐦</div>'
+      + '<div data-sp-ph="'+spAttr+'" style="width:90px;height:90px;background:rgba(122,171,136,0.08);border-radius:8px;'
+      + 'display:'+(photo?'none':'flex')+';align-items:center;justify-content:center;font-size:2rem">🐦</div>'
       + '</div>'
-      + '<div class="ld-sp-info"><div class="ld-sp-name">'+r.name+'</div>'
-      + '<div class="ld-sp-meta">'+locParts.join(', ')+(dateLabel?' · '+dateLabel:'')+'</div></div>'
+      + '<div class="ld-sp-info">'
+      + '<div class="ld-sp-name">'+r.name+'</div>'
+      + '<div class="ld-sp-loc">'+locParts.join(', ')+'</div>'
+      + (dateLabel ? '<div class="ld-sp-date">'+dateLabel+'</div>' : '')
+      + '</div>'
       + '<div class="ld-sp-actions">'
       + '<button onclick="photoDialog.open(\''+spEsc+'\')" title="Change photo" class="ld-sp-btn">📷</button>'
       + (!isLife ? '<button class="ld-sp-btn ld-rm-btn" data-listid="'+listId+'" data-sp="'+spAttr+'" title="Remove">✕</button>' : '')
@@ -4288,8 +4311,7 @@ var atlMenu = (function() {
   var _el = document.getElementById('atl-menu');
   document.addEventListener('click', function(e) { if (_el&&!_el.contains(e.target)) _el.style.display='none'; });
 
-  function _showMenu(evt, items, html) {
-    items.innerHTML = html;
+  function _showMenu(evt) {
     var rect = evt.target.getBoundingClientRect();
     _el.style.display = 'block';
     var menuH = _el.offsetHeight;
@@ -4326,7 +4348,7 @@ var atlMenu = (function() {
         _el.style.display = 'none';
       });
     });
-    _showMenu(evt, itemsEl, itemsEl.innerHTML);
+    _showMenu(evt);
   }
 
   // Bulk add all species in a popup (+ Add all to list button)
@@ -4367,7 +4389,7 @@ var atlMenu = (function() {
           + ' <span style="color:rgba(122,171,136,0.5);font-size:0.85em">all added ✓</span>';
       });
     });
-    _showMenu(evt, itemsEl, itemsEl.innerHTML);
+    _showMenu(evt);
   }
 
   return { open: open, openAll: openAll };
