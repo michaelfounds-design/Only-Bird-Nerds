@@ -73,7 +73,11 @@ function computeStats(records) {
   var countySpeciesMap = {};
 
   records.forEach(function(r) {
-    speciesSeen[r.name]   = true;
+    // baseSpeciesName() (defined in app.html, loaded before this runs) is the
+    // single source of truth for "is this a countable species" — see its
+    // comment for the full rule. null = slash-species/spuh/hybrid, not a species.
+    var base = baseSpeciesName(r.name);
+    if (base) speciesSeen[base] = true;
     checklistIds[r.subId] = true;
 
     if (r.state) {
@@ -85,7 +89,7 @@ function computeStats(records) {
     if (r.county && r.state) {
       counties[countyKey] = true;
       if (!countySpeciesMap[countyKey]) countySpeciesMap[countyKey] = {};
-      countySpeciesMap[countyKey][r.name] = true;
+      if (base) countySpeciesMap[countyKey][base] = true;
       var st = r.state;
       if (st === 'US-OR' || st === 'US-WA')                                                       pnwCounties[countyKey]     = true;
       if (st === 'US-CA')                                                                           caCounties[countyKey]      = true;
@@ -97,13 +101,13 @@ function computeStats(records) {
 
     if (r.year) {
       if (!yearSpecies[r.year]) yearSpecies[r.year] = {};
-      yearSpecies[r.year][r.name] = true;
+      if (base) yearSpecies[r.year][base] = true;
       if (!yearMonths[r.year])   yearMonths[r.year]  = {};
       if (r.month) yearMonths[r.year][r.month] = true;
     }
-    if (r.date) {
+    if (r.date && base) {
       if (!speciesByDay[r.date]) speciesByDay[r.date] = {};
-      speciesByDay[r.date][r.name] = true;
+      speciesByDay[r.date][base] = true;
     }
     if (r.month) {
       monthsActive[r.month] = true;
@@ -128,9 +132,9 @@ function computeStats(records) {
     }
 
     // v2: species loyalty
-    if (r.name && r.subId) {
-      if (!speciesSubIds[r.name]) speciesSubIds[r.name] = {};
-      speciesSubIds[r.name][r.subId] = true;
+    if (base && r.subId) {
+      if (!speciesSubIds[base]) speciesSubIds[base] = {};
+      speciesSubIds[base][r.subId] = true;
     }
 
     // v2: Jan 1 streak
@@ -140,22 +144,22 @@ function computeStats(records) {
     if (r.month === 2 && r.day === 29) hasLeap = true;
 
     // v2: Migration Rider (Apr + May)
-    if (r.year && (r.month === 4 || r.month === 5)) {
+    if (r.year && base && (r.month === 4 || r.month === 5)) {
       if (!migYearSp[r.year]) migYearSp[r.year] = {};
-      migYearSp[r.year][r.name] = true;
+      migYearSp[r.year][base] = true;
     }
 
     // v2: Winter Holdout (Dec of year Y + Jan of year Y+1 = winter Y/Y+1)
-    if (r.year && (r.month === 12 || r.month === 1)) {
+    if (r.year && base && (r.month === 12 || r.month === 1)) {
       var wk = r.month === 12
         ? (r.year + '-' + (parseInt(r.year) + 1))
         : ((parseInt(r.year) - 1) + '-' + r.year);
       if (!winterSeasSp[wk]) winterSeasSp[wk] = {};
-      winterSeasSp[wk][r.name] = true;
+      winterSeasSp[wk][base] = true;
     }
 
     // v2: Breeding Witness
-    if (r.breeding && r.name) breedingSp[r.name] = true;
+    if (r.breeding && base) breedingSp[base] = true;
 
     // v2: per-checklist fields
     if (r.subId) {
@@ -169,10 +173,10 @@ function computeStats(records) {
 
     // v2: Species Comments
     if (r.speciesComments) speciesCommentRows++;
-    if ((r.count === '0' || r.count === 0) && r.name) heardOnlySpecies[r.name] = true;
+    if ((r.count === '0' || r.count === 0) && base) heardOnlySpecies[base] = true;
 
     // v2: PNW pack — Dipper's Creed
-    if (r.name === 'American Dipper' && r.subId) dippersCreedSubs[r.subId] = true;
+    if (base === 'American Dipper' && r.subId) dippersCreedSubs[r.subId] = true;
 
     // v2: PNW pack — Malheur Pilgrimage
     if (r.subId && r.state === 'US-OR' && r.county === 'Harney' &&

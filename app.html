@@ -2205,9 +2205,30 @@ function onCSVParsed(res) {
   _finalizeLoad(true);
 }
 
+function _maxDate(records) {
+  return records.reduce(function(m, r) { return r.date > m ? r.date : m; }, '');
+}
+
 function onRefreshParsed(res) {
   var newRecs = normalize(res.data);
   var oldCount = allRecords.length;
+
+  // Guard against picking a stale/duplicate export by mistake — refresh
+  // should only ever move your data forward. If the newly selected file has
+  // fewer observations or an older most-recent sighting than what's already
+  // loaded, confirm before silently replacing (and losing) newer data.
+  if (oldCount) {
+    var oldMax = _maxDate(allRecords), newMax = _maxDate(newRecs);
+    if (newRecs.length < oldCount || (oldMax && newMax < oldMax)) {
+      var proceed = confirm(
+        'This file looks OLDER than your current data:\n\n' +
+        '  Currently loaded: ' + oldCount.toLocaleString() + ' observations, most recent ' + (oldMax || '—') + '\n' +
+        '  This file:        ' + newRecs.length.toLocaleString() + ' observations, most recent ' + (newMax || '—') + '\n\n' +
+        'Using it will replace your current data with this older set. Continue anyway?'
+      );
+      if (!proceed) return;
+    }
+  }
 
   // Backup current data before replacing
   try {
