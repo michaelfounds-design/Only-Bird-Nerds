@@ -1857,6 +1857,7 @@
   <img id="photo-lb-img" src="" alt="" />
 </div>
 
+<script src="species-utils.js"></script>
 <script src="quests.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -2594,21 +2595,8 @@ function normalize(rows) {
   }, []);
 }
 
-// Canonical species-counting rule for the whole app. ANY place that needs a
-// species count or a deduped species list must go through this (or uniqueSpecies()
-// below, which wraps it) — never dedupe on the raw eBird "Common Name" directly,
-// since that field also carries slash-species, spuh, hybrid, and subspecies/group
-// tags that are not distinct countable species.
-function baseSpeciesName(name) {
-  // Not a countable species at all:
-  //  - slash species, e.g. "Downy/Hairy Woodpecker" (identity ambiguous between 2 species)
-  //  - spuh, e.g. "gull sp." (identified only to genus/family, not species)
-  //  - hybrid, e.g. "Mallard x American Black Duck (hybrid)" (not a distinct species)
-  if (name.indexOf('/') !== -1 || /\bsp\.$/.test(name) || /\sx\s/.test(name)) return null;
-  // Subspecies/group tag collapses into its parent species:
-  // "Palm Warbler (Western)" -> "Palm Warbler", "Rock Pigeon (Feral Pigeon)" -> "Rock Pigeon"
-  return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
-}
+// baseSpeciesName() and uniqueSpecies() live in species-utils.js (shared with
+// shared.html) — do not redefine them here.
 
 function computeLifers(records) {
   records.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
@@ -2632,15 +2620,6 @@ function computeGlobalFreq(records) {
     if (!base) return;
     globalFreq[base] = (globalFreq[base] || 0) + 1;
   });
-}
-
-function uniqueSpecies(records) {
-  var seen = {};
-  records.forEach(function(r) {
-    var base = baseSpeciesName(r.name);
-    if (base) seen[base] = true;
-  });
-  return Object.keys(seen).sort();
 }
 
 function buildStateCountyMap(records) {
