@@ -1792,6 +1792,9 @@
     </label>
   </div>
 
+  <div class="dlg-label">Exclude locations <span style="opacity:.6;font-weight:400">(e.g. your home yard — hold ⌘/Ctrl to select more than one)</span></div>
+  <select id="trip-exclude-locs" class="filter-select" multiple size="4" onchange="updateTripPreview()" style="height:auto"></select>
+
   <div id="trip-preview" class="trip-preview">Enter dates to preview.</div>
 
   <div class="profile-field" style="margin-top:0.4rem">
@@ -1975,6 +1978,18 @@ function savePins() {
   });
 }
 // ── Trip sharing ──────────────────────────────────────────
+function _tripLocationOptionsHTML() {
+  var seen = {}, opts = [];
+  allRecords.forEach(function(r) {
+    if (r.location && !seen[r.location]) { seen[r.location] = true; opts.push(r.location); }
+  });
+  opts.sort();
+  return opts.map(function(l) {
+    var esc = l.replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    return '<option value="' + esc + '">' + esc + '</option>';
+  }).join('');
+}
+
 function openTripDialog() {
   if (!currentUser) { openProfilePanel('profile'); return; }
   if (!allRecords.length) { alert('Upload your eBird CSV first to create a trip.'); return; }
@@ -1984,6 +1999,9 @@ function openTripDialog() {
     document.getElementById('trip-end').value   = dates[dates.length - 1];
   }
   document.querySelector('input[name="trip-geo"][value="all"]').checked = true;
+  var excludeSel = document.getElementById('trip-exclude-locs');
+  excludeSel.innerHTML = _tripLocationOptionsHTML();
+  excludeSel.selectedIndex = -1;
   updateTripPreview();
   document.getElementById('trip-dialog-bg').style.display = 'block';
   document.getElementById('trip-dialog').style.display    = 'block';
@@ -2002,7 +2020,12 @@ function getTripFiltered() {
   var geo      = document.querySelector('input[name="trip-geo"]:checked').value;
   var stFilter = document.getElementById('state-select').value;
   var cnFilter = document.getElementById('county-select').value;
+  var excludeSel = document.getElementById('trip-exclude-locs');
+  var excluded = excludeSel
+    ? Array.prototype.map.call(excludeSel.selectedOptions, function(o) { return o.value; })
+    : [];
   return allRecords.filter(function(r) {
+    if (excluded.length && excluded.indexOf(r.location) !== -1) return false;
     if (start && r.date && r.date < start) return false;
     if (end   && r.date && r.date > end)   return false;
     if (geo === 'filters') {
@@ -2031,8 +2054,14 @@ function createTrip() {
   if (!name) { document.getElementById('trip-name-input').focus(); return; }
   var recs = getTripFiltered();
   if (!recs.length) { updateTripPreview(); return; }
+  // Snapshot each record's photo (override → manifest → cached iNat fetch) at
+  // share time. Embedding it directly in the trip row (rather than having
+  // viewers separately fetch photo_overrides by your user_id) means a shared
+  // map shows your curated photos regardless of Supabase RLS settings, and
+  // freezes them as they were when you shared — later photo changes on your
+  // own map won't retroactively alter a trip you already shared.
   var obs = recs.map(function(r) {
-    return { name: r.name, lat: r.lat, lon: r.lon, date: r.date, state: r.state };
+    return { name: r.name, lat: r.lat, lon: r.lon, date: r.date, state: r.state, photo: getPhoto(r.name) || '' };
   });
   var id  = Math.random().toString(36).slice(2, 11);
   var btn = document.getElementById('trip-create-btn');
@@ -4998,6 +5027,7 @@ function tripToRecords(obs) {
       county: '', location: '', lat: lat, lon: lon,
       date: dateStr, year: year, month: month,
       time: '', protocol: '', allObs: false, breeding: '', lifer: false,
+      photo: o.photo || '',
     });
     return out;
   }, []);
@@ -5017,23 +5047,15 @@ function loadSharedTrip(id) {
         return;
       }
       var trip = res.data;
-
-      // Load the trip creator's photo overrides FIRST (same pattern as
-      // syncFromCloud) so markers/popups render with their curated photos
-      // instead of generic ones. Requires photo_overrides to be publicly
-      // readable by species_name/user_id for shared trips — if your Supabase
-      // RLS policy only allows a row's owner to SELECT it, this fetch will
-      // come back empty for other visitors and needs a policy update.
-      _sb.from('photo_overrides').select('species_name, photo_url').eq('user_id', trip.user_id)
-        .then(function(ores) {
-          if (ores.data) ores.data.forEach(function(row) { photoOverrides[row.species_name] = row.photo_url; });
-        })
-        .catch(function() {})
-        .then(function() { renderSharedTrip(trip); });
-    });
-
-  function renderSharedTrip(trip) {
       allRecords = tripToRecords(trip.observations);
+
+      // Each record carries the creator's photo (snapshotted at share time
+      // in createTrip()) — apply it into photoOverrides before building the
+      // map so markers/popups render with those photos instead of generic
+      // ones. No extra fetch, no dependency on Supabase RLS for cross-user
+      // reads: the photo travels with the trip data itself.
+      allRecords.forEach(function(r) { if (r.photo) photoOverrides[r.name] = r.photo; });
+
       computeLifers(allRecords);
       computeGlobalFreq(allRecords);
       speciesList = uniqueSpecies(allRecords);
@@ -5076,7 +5098,7 @@ function loadSharedTrip(id) {
           }
         })
         .catch(function() {});
-  }
+    });
 }
 
 // ─────────────────────────────────────────
