@@ -4199,16 +4199,34 @@ function _recordMatchesScope(r, scope) {
 
 function _computeListMeta(speciesArr, scope) {
   if (!speciesArr.length) return { count: 0, geography: '', years: '' };
-  var seenSp = {}, states = {}, years = [];
+  var seenSp = {}, states = {}, countries = {}, years = [];
   allRecords.forEach(function(r) {
     if (speciesArr.indexOf(r.name) !== -1 && !seenSp[r.name] && _recordMatchesScope(r, scope)) {
       seenSp[r.name] = true;
-      if (r.state) states[r.state] = true;
+      if (r.state) {
+        states[r.state] = true;
+        // eBird's "State/Province" code is COUNTRY-SUBDIVISION, e.g.
+        // US-OR, CA-QC, MX-ROO, IS-7 — the prefix before "-" is the country.
+        var ctry = r.state.indexOf('-') !== -1 ? r.state.split('-')[0] : r.state;
+        if (ctry) countries[ctry] = true;
+      }
       if (r.year) years.push(parseInt(r.year));
     }
   });
   var stateList = Object.keys(states).map(function(s) { return s.replace(/^US-/, ''); }).sort();
-  var geo = stateList.length <= 4 ? stateList.join(', ') : stateList.length + ' states';
+  var countryCount = Object.keys(countries).length;
+  // "States" only means literally-US-states once more than one country is
+  // involved — Canadian provinces, Mexican states, Icelandic regions, etc.
+  // all land in the same field, so call it out as countries + subdivisions
+  // rather than mislabeling everything "states".
+  var geo;
+  if (stateList.length <= 4) {
+    geo = stateList.join(', ');
+  } else if (countryCount > 1) {
+    geo = countryCount + ' countries · ' + stateList.length + ' states/provinces';
+  } else {
+    geo = stateList.length + ' states/provinces';
+  }
   var yMin = years.length ? Math.min.apply(null, years) : null;
   var yMax = years.length ? Math.max.apply(null, years) : null;
   var yr = yMin ? (yMin === yMax ? String(yMin) : yMin + '–' + yMax) : '';
