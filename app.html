@@ -2542,6 +2542,12 @@ function tryAutoLoad() {
 }
 
 function parseCSV(file) {
+  // A real, human-initiated "someone tried the tool" — distinct from the
+  // auto-restore-from-cache/cloud paths, which never call this function.
+  // Lets Analytics answer "did people who landed on the page actually drop
+  // a CSV in" instead of just counting page views.
+  try { gtag('event', 'csv_uploaded'); } catch(e) {}
+
   // Save to Supabase Storage so signed-in users don't need to re-upload
   if (currentUser) {
     _sb.storage.from('BirdNerd_1.0')
