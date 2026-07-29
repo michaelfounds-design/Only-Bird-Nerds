@@ -2200,13 +2200,27 @@ function fetchInat(name, retries, cb) {
 // ─────────────────────────────────────────
 // CSV PARSING
 // ─────────────────────────────────────────
-function onCSVParsed(res) {
-  allRecords = normalize(res.data);
-  _finalizeLoad(true);
-}
-
 function _maxDate(records) {
   return records.reduce(function(m, r) { return r.date > m ? r.date : m; }, '');
+}
+
+// True if newRecs is older than whatever's already loaded — used to stop
+// ANY code path (manual upload, refresh, or the cloud auto-restore below)
+// from clobbering newer local data with a stale copy.
+function _isOlderThanLoaded(newRecs) {
+  if (!allRecords.length) return false;
+  var oldMax = _maxDate(allRecords), newMax = _maxDate(newRecs);
+  return !!(oldMax && newMax < oldMax);
+}
+
+function onCSVParsed(res) {
+  var newRecs = normalize(res.data);
+  if (_isOlderThanLoaded(newRecs)) {
+    showCloudToast('Skipped — that data is older than what\'s already loaded');
+    return;
+  }
+  allRecords = newRecs;
+  _finalizeLoad(true);
 }
 
 function onRefreshParsed(res) {
@@ -2218,12 +2232,17 @@ function onRefreshParsed(res) {
   // latest sighting is older than what's already loaded, it's rejected
   // outright so a stale/duplicate export can never silently erase newer
   // sightings (e.g. a recent trip) that only exist in the current data.
-  if (oldCount) {
-    var oldMax = _maxDate(allRecords), newMax = _maxDate(newRecs);
-    if (oldMax && newMax < oldMax) {
-      showCloudToast('Skipped — that file\'s most recent observation (' + newMax + ') is older than what\'s already loaded (' + oldMax + ')');
-      return;
-    }
+  if (_isOlderThanLoaded(newRecs)) {
+    showCloudToast('Skipped — that file\'s most recent observation (' + _maxDate(newRecs) + ') is older than what\'s already loaded (' + _maxDate(allRecords) + ')');
+    return;
+  }
+
+  // Keep cloud storage in sync so a later auto-restore (login, token
+  // refresh) doesn't pull a stale copy and clobber this refresh — see
+  // onCSVParsed's guard above, which is the failure mode this prevents.
+  if (currentUser) {
+    _sb.storage.from('BirdNerd_1.0')
+      .upload(currentUser.id + '/MyEBirdData.csv', new Blob([Papa.unparse(res.data)], { type: 'text/csv' }), { upsert: true });
   }
 
   // Backup current data before replacing
@@ -4998,6 +5017,22 @@ function loadSharedTrip(id) {
         return;
       }
       var trip = res.data;
+
+      // Load the trip creator's photo overrides FIRST (same pattern as
+      // syncFromCloud) so markers/popups render with their curated photos
+      // instead of generic ones. Requires photo_overrides to be publicly
+      // readable by species_name/user_id for shared trips — if your Supabase
+      // RLS policy only allows a row's owner to SELECT it, this fetch will
+      // come back empty for other visitors and needs a policy update.
+      _sb.from('photo_overrides').select('species_name, photo_url').eq('user_id', trip.user_id)
+        .then(function(ores) {
+          if (ores.data) ores.data.forEach(function(row) { photoOverrides[row.species_name] = row.photo_url; });
+        })
+        .catch(function() {})
+        .then(function() { renderSharedTrip(trip); });
+    });
+
+  function renderSharedTrip(trip) {
       allRecords = tripToRecords(trip.observations);
       computeLifers(allRecords);
       computeGlobalFreq(allRecords);
@@ -5041,7 +5076,7 @@ function loadSharedTrip(id) {
           }
         })
         .catch(function() {});
-    });
+  }
 }
 
 // ─────────────────────────────────────────
