@@ -4182,11 +4182,26 @@ function closeListsOverlay() {
   _listsCurrentId = null;
 }
 
-function _computeListMeta(speciesArr) {
+// A list's `scope` (array of {state,county} or {location} filters) records
+// which county/location import(s) built it. Records outside that scope don't
+// count toward its geography/date range or "first seen" display — otherwise
+// a species also seen on some unrelated trip contaminates a location list's
+// stats with that trip's state/year. Empty/missing scope (manual lists, the
+// Life List) means unrestricted, matching the old any-occurrence behavior.
+function _recordMatchesScope(r, scope) {
+  if (!scope || !scope.length) return true;
+  return scope.some(function(s) {
+    if (s.location) return r.location === s.location;
+    if (s.state || s.county) return r.state === s.state && r.county === s.county;
+    return false;
+  });
+}
+
+function _computeListMeta(speciesArr, scope) {
   if (!speciesArr.length) return { count: 0, geography: '', years: '' };
   var seenSp = {}, states = {}, years = [];
   allRecords.forEach(function(r) {
-    if (speciesArr.indexOf(r.name) !== -1 && !seenSp[r.name]) {
+    if (speciesArr.indexOf(r.name) !== -1 && !seenSp[r.name] && _recordMatchesScope(r, scope)) {
       seenSp[r.name] = true;
       if (r.state) states[r.state] = true;
       if (r.year) years.push(parseInt(r.year));
@@ -4248,7 +4263,7 @@ function _showListsHome() {
     + '<div class="lo-card-arrow">›</div></div>';
 
   lists.forEach(function(lst) {
-    var meta = _computeListMeta(lst.species || []);
+    var meta = _computeListMeta(lst.species || [], lst.scope);
     var parts = [meta.count.toLocaleString() + ' species'];
     if (meta.geography) parts.push(meta.geography);
     if (meta.years) parts.push(meta.years);
@@ -4306,21 +4321,23 @@ function _saveNewList() {
   var icon = document.getElementById('lo-new-emoji').textContent;
   var countyKey = document.getElementById('lo-import-county').value;
   var locName   = document.getElementById('lo-import-location').value;
-  var species = [];
+  var species = [], scope = [];
   if (countyKey) {
     var parts = countyKey.split('|'), st = parts[0], co = parts[1];
+    scope.push({ state: st, county: co });
     allRecords.forEach(function(r) {
       var sp = baseSpeciesName(r.name) || r.name;
       if (r.state === st && r.county === co && species.indexOf(sp) === -1) species.push(sp);
     });
   } else if (locName) {
+    scope.push({ location: locName });
     allRecords.forEach(function(r) {
       var sp = baseSpeciesName(r.name) || r.name;
       if (r.location === locName && species.indexOf(sp) === -1) species.push(sp);
     });
   }
   var lists = _loadCustomLists();
-  lists.push({ id: 'cl_' + Date.now(), name: name, icon: icon, species: species });
+  lists.push({ id: 'cl_' + Date.now(), name: name, icon: icon, species: species, scope: scope });
   _saveCustomLists(lists);
   _showListsHome();
 }
@@ -4328,7 +4345,7 @@ function _saveNewList() {
 function _showListDetail(listId) {
   _listsCurrentId = listId;
   var isLife = listId === 'life';
-  var lstName, lstIcon, speciesArr;
+  var lstName, lstIcon, speciesArr, lstScope = null;
 
   if (isLife) {
     lstName = 'Life List'; lstIcon = '🐦'; speciesArr = null;
@@ -4338,6 +4355,7 @@ function _showListDetail(listId) {
     if (!lst) { _showListsHome(); return; }
     lstName = lst.name; lstIcon = lst.icon || '📋';
     speciesArr = lst.species || [];
+    lstScope = lst.scope || [];
   }
 
   document.getElementById('lo-back-btn').style.display = '';
@@ -4358,7 +4376,7 @@ function _showListDetail(listId) {
   }
   document.getElementById('lo-header-actions').innerHTML = actHtml;
 
-  _renderDetailSpecies(listId, speciesArr, isLife);
+  _renderDetailSpecies(listId, speciesArr, isLife, lstScope);
 
   // Life list sort buttons
   if (isLife) {
@@ -4374,6 +4392,11 @@ function _showListDetail(listId) {
       var p = this.value.split('|'), st = p[0], co = p[1];
       var lists2 = _loadCustomLists(), lst2 = lists2.find(function(l){return l.id===listId;});
       if (!lst2) return;
+      // Also extends the list's scope — re-selecting a county here fixes
+      // geography/dates for lists created before scope was tracked, even if
+      // every species from that county is already on the list.
+      if (!lst2.scope) lst2.scope = [];
+      if (!lst2.scope.some(function(s){return s.state===st&&s.county===co;})) lst2.scope.push({state:st, county:co});
       allRecords.forEach(function(r){ var sp=baseSpeciesName(r.name)||r.name; if(r.state===st&&r.county===co&&lst2.species.indexOf(sp)===-1) lst2.species.push(sp); });
       _saveCustomLists(lists2); _showListDetail(listId);
     });
@@ -4385,6 +4408,9 @@ function _showListDetail(listId) {
         if (!matched) return;
         var lists2 = _loadCustomLists(), lst2 = lists2.find(function(l){return l.id===listId;});
         if (!lst2) return;
+        // Also extends the list's scope — see the county handler above for why.
+        if (!lst2.scope) lst2.scope = [];
+        if (!lst2.scope.some(function(s){return s.location===loc;})) lst2.scope.push({location:loc});
         allRecords.forEach(function(r){ var sp=baseSpeciesName(r.name)||r.name; if(r.location===loc&&lst2.species.indexOf(sp)===-1) lst2.species.push(sp); });
         _saveCustomLists(lists2); _showListDetail(listId);
       };
@@ -4401,7 +4427,7 @@ function _showListDetail(listId) {
   }
 }
 
-function _renderDetailSpecies(listId, speciesArr, isLife) {
+function _renderDetailSpecies(listId, speciesArr, isLife, scope) {
   var items;
   if (isLife) {
     items = allRecords.filter(function(r) { return r.lifer; });
@@ -4409,8 +4435,15 @@ function _renderDetailSpecies(listId, speciesArr, isLife) {
     else if (_llSort === 'location') items.sort(function(a,b){return (a.location||'').localeCompare(b.location||'');});
     // default 'date': already sorted by computeLifers
   } else {
+    // Restrict "first seen" to records within this list's scope (see
+    // _recordMatchesScope) so a location list shows the sighting that
+    // actually put the species on it, not some unrelated trip.
     var firstSeen = {};
-    allRecords.forEach(function(r){ if(speciesArr.indexOf(r.name)!==-1&&!firstSeen[r.name]) firstSeen[r.name]=r; });
+    allRecords.forEach(function(r){
+      if (speciesArr.indexOf(r.name) === -1) return;
+      if (!_recordMatchesScope(r, scope)) return;
+      if (!firstSeen[r.name]) firstSeen[r.name] = r;
+    });
     items = speciesArr.map(function(sp){ return firstSeen[sp]||{name:sp,date:'',location:'',county:'',state:''}; });
   }
 
