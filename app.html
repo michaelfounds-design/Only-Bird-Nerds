@@ -2645,9 +2645,12 @@ function initMap() {
 
   map = L.map('map', { zoomControl: true }).setView([39.5, -98.3], 4);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://carto.com/" target="_blank">CartoDB</a>',
-    subdomains: 'abcd', maxZoom: 19,
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+    maxZoom: 16,
+  }).addTo(map);
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16,
   }).addTo(map);
 
   clusterGroup = L.markerClusterGroup({
@@ -4987,7 +4990,8 @@ function buildDownloadHTML(locs, photos, stats) {
 'var PHOTOS='+photosJ+';',
 'var STATS='+statsJ+';',
 'var map=L.map("map",{center:[39,-98],zoom:4});',
-'L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap © CARTO",maxZoom:19}).addTo(map);',
+'L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",{attribution:"Tiles &copy; Esri",maxZoom:16}).addTo(map);',
+'L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",{maxZoom:16}).addTo(map);',
 'var clusters=L.markerClusterGroup({maxClusterRadius:40,showCoverageOnHover:false});',
 'map.addLayer(clusters);',
 'var heatLayer=null;var showHeat=false;',
