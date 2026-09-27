@@ -624,6 +624,104 @@
       background: rgba(27,58,45,0.06); min-height: 2rem;
       margin-bottom: 0.4rem;
     }
+    /* ── Sighting dialog ── */
+    #sighting-dialog-bg {
+      display: none; position: fixed; inset: 0;
+      z-index: 3999; background: rgba(0,0,0,0.52);
+    }
+    #sighting-dialog {
+      display: none;
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      z-index: 4000;
+      background: var(--cream); border-radius: 14px;
+      padding: 1.5rem 1.6rem 1.3rem; width: 380px; max-width: 95vw;
+      max-height: 88vh; overflow-y: auto;
+      box-shadow: 0 10px 48px rgba(0,0,0,0.55);
+    }
+    #sighting-dialog h3 {
+      font-family: 'Playfair Display', sans-serif;
+      font-size: 1rem; font-weight: 700; color: var(--forest);
+      margin-bottom: 1rem;
+    }
+    #sighting-dialog .profile-field label { color: var(--warm-gray); }
+    #sighting-dialog .profile-field input,
+    #sighting-dialog .profile-field textarea {
+      color: var(--ink); background: #fff;
+      border-color: rgba(74,124,89,0.25);
+    }
+    #sighting-dialog .profile-field input:focus,
+    #sighting-dialog .profile-field textarea:focus { border-color: var(--fern); }
+    #sighting-species-input {
+      width: 100%; padding: 0.48rem 0.7rem;
+      background: #fff; border: 1px solid rgba(74,124,89,0.25);
+      border-radius: 6px; color: var(--ink);
+      font-family: 'DM Mono', monospace; font-size: 0.7rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    #sighting-species-input:focus { border-color: var(--fern); }
+    #sighting-species-dropdown {
+      display: none;
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: #fff;
+      border: 1px solid rgba(74,124,89,0.25);
+      border-top: none; border-radius: 0 0 6px 6px;
+      max-height: 160px; overflow-y: auto; z-index: 9999;
+    }
+    #sighting-species-dropdown div {
+      padding: 0.38rem 0.7rem;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      color: var(--ink); cursor: pointer;
+    }
+    #sighting-species-dropdown div:hover { background: rgba(74,124,89,0.12); }
+    #sighting-species-dropdown .sp-sci {
+      color: var(--warm-gray); font-style: italic; font-size: 0.6rem; margin-left: 0.3rem;
+    }
+    #sighting-loc-methods {
+      display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.2rem 0 0.6rem;
+    }
+    .loc-method-btn {
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.02em;
+      padding: 0.32rem 0.55rem; border-radius: 100px; cursor: pointer;
+      border: 1px solid rgba(74,124,89,0.3);
+      background: rgba(74,124,89,0.06); color: var(--forest);
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .loc-method-btn:hover { background: rgba(74,124,89,0.15); }
+    .loc-method-btn.active {
+      background: var(--fern); color: #fff; border-color: var(--fern);
+    }
+    #sighting-loc-status {
+      font-family: 'DM Mono', monospace; font-size: 0.65rem;
+      color: var(--warm-gray); letter-spacing: 0.02em;
+      padding: 0.4rem 0.6rem; border-radius: 6px;
+      background: rgba(27,58,45,0.06); margin-bottom: 0.5rem;
+    }
+    #sighting-loc-status.set { color: var(--fern); }
+    #sighting-home-actions { margin: -0.3rem 0 0.5rem; }
+    #sighting-list { max-height: 180px; overflow-y: auto; }
+    .sighting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.5rem; padding: 0.4rem 0.1rem;
+      border-bottom: 1px solid rgba(74,124,89,0.12);
+      font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--ink);
+    }
+    .sighting-row-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sighting-row-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
+    .sighting-row-actions button {
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      padding: 0.15rem 0.4rem; border-radius: 4px; cursor: pointer;
+      border: 1px solid rgba(74,124,89,0.25); background: #fff; color: var(--forest);
+    }
+    .sighting-row-actions button.danger { color: #d4622a; border-color: rgba(212,98,42,0.3); }
+    .manual-tag {
+      display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.55rem;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--sun); border: 1px solid rgba(240,180,41,0.35);
+      border-radius: 100px; padding: 0.05rem 0.35rem; margin-left: 0.35rem;
+      vertical-align: middle;
+    }
     /* ── Trip cards in panel ── */
     #trip-list { margin-bottom: 0.5rem; }
     .trip-card {
@@ -1497,6 +1595,13 @@
     <input type="file" id="csv-input" accept=".csv" />
     <p class="upload-note">In eBird: My eBird → Download My Data → MyEBirdData.csv</p>
 
+    <p class="upload-note" style="margin-top:1.1rem">
+      Don't use eBird?
+      <a href="#" onclick="startManualEntry(); return false;" style="color:var(--sage);text-decoration:underline">
+        Add sightings by hand instead →
+      </a>
+    </p>
+
     <div id="csv-loading" style="display:none; margin-top:2rem; text-align:center;">
       <p style="font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--sage); letter-spacing:0.08em;">
         Loading your saved map…
@@ -1635,6 +1740,7 @@
 
 <!-- ── Map quick actions ── -->
 <div id="map-actions">
+  <button class="map-action-btn" id="map-action-add-sighting" title="Add a sighting">➕ Add Sighting</button>
   <button class="map-action-btn" id="map-action-share" title="Share a trip">&#128279; Share</button>
   <button class="map-action-btn" id="lists-btn" title="My Lists">📋 My Lists</button>
 </div>
@@ -1814,6 +1920,74 @@
   </div>
 </div>
 
+<!-- ── Add / manage sighting dialog ── -->
+<div id="sighting-dialog-bg" onclick="closeSightingDialog()"></div>
+<div id="sighting-dialog">
+  <h3 id="sighting-dialog-title">Add a Sighting</h3>
+
+  <div class="profile-field">
+    <label>Species</label>
+    <div class="search-wrap">
+      <input id="sighting-species-input" type="text" placeholder="Type to search…" autocomplete="off" />
+      <div id="sighting-species-dropdown"></div>
+    </div>
+  </div>
+
+  <div class="trip-date-row">
+    <div class="profile-field">
+      <label>Date</label>
+      <input id="sighting-date" type="date" />
+    </div>
+    <div class="profile-field">
+      <label>Count (optional)</label>
+      <input id="sighting-count" type="text" placeholder="e.g. 2 or X" />
+    </div>
+  </div>
+
+  <div class="dlg-label">Location</div>
+  <div id="sighting-loc-methods">
+    <button type="button" class="loc-method-btn" data-method="click" onclick="setSightingLocMethod('click')">📍 Click map</button>
+    <button type="button" class="loc-method-btn" data-method="geo" onclick="setSightingLocMethod('geo')">🎯 My location</button>
+    <button type="button" class="loc-method-btn" data-method="home" onclick="setSightingLocMethod('home')">🏠 Home</button>
+    <button type="button" class="loc-method-btn" data-method="manual" onclick="setSightingLocMethod('manual')">✎ Address / coords</button>
+  </div>
+
+  <div id="sighting-loc-manual" style="display:none">
+    <div class="dlg-row">
+      <input class="dlg-input" id="sighting-address-input" type="text" placeholder="Search an address or place…" />
+      <button class="dlg-btn" type="button" onclick="geocodeSightingAddress(event)">Find</button>
+    </div>
+    <div class="trip-date-row" style="margin-top:0.4rem">
+      <div class="profile-field">
+        <label>Latitude</label>
+        <input id="sighting-lat-input" type="number" step="any" oninput="onSightingLatLonInput()" />
+      </div>
+      <div class="profile-field">
+        <label>Longitude</label>
+        <input id="sighting-lon-input" type="number" step="any" oninput="onSightingLatLonInput()" />
+      </div>
+    </div>
+  </div>
+
+  <div id="sighting-loc-status">No location set — pick a method above.</div>
+  <div id="sighting-home-actions" style="display:none">
+    <button type="button" class="dlg-btn ghost" onclick="setCurrentAsHome()">📌 Set current pin as Home</button>
+  </div>
+
+  <div class="profile-field" style="margin-top:0.2rem">
+    <label>Notes (optional)</label>
+    <textarea id="sighting-notes" placeholder="Anything worth remembering?" style="height:52px"></textarea>
+  </div>
+
+  <div class="dlg-footer">
+    <button class="dlg-btn ghost" id="sighting-cancel-edit-btn" onclick="closeSightingDialog()">Cancel</button>
+    <button class="dlg-btn" id="sighting-save-btn" onclick="saveSighting()">Save Sighting</button>
+  </div>
+
+  <div class="dlg-label" style="margin-top:1rem">Your manual sightings</div>
+  <div id="sighting-list"><div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--warm-gray)">None yet.</div></div>
+</div>
+
 <!-- ── Photo override dialog ── -->
 <div id="photo-dialog-bg"></div>
 <div id="photo-dialog">
@@ -1978,6 +2152,332 @@ function savePins() {
     if (rows.length) _sb.from('location_pins').insert(rows);
   });
 }
+
+// ── Manual sightings ──────────────────────────────────────
+// For someone who doesn't use eBird (or just wants a house-list), sightings
+// added here live alongside CSV-derived records: manualObsToRecords() gives
+// each one the same shape normalize()/tripToRecords() produce, tagged
+// source:'manual', so the map, heatmap, quests and lifer logic all just
+// work on them without a separate code path.
+var manualObs         = [];   // [{id, name, sci, lat, lon, date, count, notes}]
+var homeLocation      = null; // {lat, lon} | null
+var _sightingEditId   = null;
+var _sightingLat      = null;
+var _sightingLon      = null;
+var _sightingPickMode = false;
+var _speciesTaxonomy  = null; // lazy-loaded [[comName, sciName], ...] for the typeahead
+
+function loadManualObs() {
+  try { manualObs = JSON.parse(localStorage.getItem('obn_manual_obs') || '[]'); }
+  catch(e) { manualObs = []; }
+  try {
+    var h = JSON.parse(localStorage.getItem('obn_home_location') || 'null');
+    if (h && isFinite(h.lat) && isFinite(h.lon)) homeLocation = h;
+  } catch(e) {}
+}
+
+function saveManualObs() {
+  try { localStorage.setItem('obn_manual_obs', JSON.stringify(manualObs)); } catch(e) {}
+  if (!currentUser) return;
+  showCloudToast('✓ Saved to cloud');
+  var rows = manualObs.map(function(o) {
+    return {
+      id: o.id, user_id: currentUser.id, name: o.name, sci: o.sci || null,
+      lat: o.lat, lon: o.lon, date: o.date,
+      count: o.count || null, notes: o.notes || null,
+    };
+  });
+  _sb.from('manual_observations').delete().eq('user_id', currentUser.id).then(function() {
+    if (rows.length) _sb.from('manual_observations').insert(rows);
+  });
+}
+
+function saveHomeLocation() {
+  try { localStorage.setItem('obn_home_location', JSON.stringify(homeLocation)); } catch(e) {}
+  if (!currentUser || !homeLocation) return;
+  _sb.from('profiles').upsert({ id: currentUser.id, home_lat: homeLocation.lat, home_lon: homeLocation.lon });
+}
+
+function manualObsToRecords(obs) {
+  return (obs || []).reduce(function(out, o) {
+    var lat = parseFloat(o.lat), lon = parseFloat(o.lon);
+    var name = (o.name || '').trim();
+    if (!name || isNaN(lat) || isNaN(lon)) return out;
+    var dateStr = (o.date || '').trim();
+    var year = '', month = 0, day = 0;
+    if (dateStr) {
+      var d = new Date(dateStr + 'T12:00:00');
+      if (!isNaN(d)) { year = String(d.getFullYear()); month = d.getMonth() + 1; day = d.getDate(); }
+    }
+    out.push({
+      subId: 'manual-' + o.id, name: name, sci: (o.sci || '').trim(),
+      state: '', county: '', location: 'Manually added',
+      lat: lat, lon: lon, date: dateStr, year: year, month: month, day: day,
+      time: '', protocol: '', duration: 0, distance: 0,
+      count: (o.count || '').trim(), speciesComments: (o.notes || '').trim(),
+      allObs: false, breeding: '', lifer: false,
+      source: 'manual', manualId: o.id,
+    });
+    return out;
+  }, []);
+}
+
+function mergeManualIntoRecords() {
+  // Idempotent: strips any manual records from a previous merge before
+  // re-appending the current set, so calling this repeatedly (every
+  // _finalizeLoad, including after a CSV refresh) never duplicates entries.
+  allRecords = (allRecords || []).filter(function(r) { return r.source !== 'manual'; });
+  allRecords = allRecords.concat(manualObsToRecords(manualObs));
+}
+
+function startManualEntry() {
+  showApp();
+  initMap();
+  updateMap();
+  openSightingDialog();
+}
+
+function openSightingDialog(editId) {
+  if (!_speciesTaxonomy) {
+    fetch('species-list.json').then(function(r) { return r.json(); })
+      .then(function(list) { _speciesTaxonomy = list; })
+      .catch(function() { _speciesTaxonomy = []; });
+  }
+  _sightingEditId = editId || null;
+  var existing = editId ? manualObs.filter(function(o) { return o.id === editId; })[0] : null;
+
+  document.getElementById('sighting-dialog-title').textContent = existing ? 'Edit Sighting' : 'Add a Sighting';
+  var spInp = document.getElementById('sighting-species-input');
+  spInp.value = existing ? existing.name : '';
+  spInp.dataset.sci = existing ? (existing.sci || '') : '';
+  document.getElementById('sighting-date').value          = existing ? existing.date : new Date().toISOString().slice(0, 10);
+  document.getElementById('sighting-count').value         = existing ? (existing.count || '') : '';
+  document.getElementById('sighting-notes').value         = existing ? (existing.notes || '') : '';
+  document.getElementById('sighting-lat-input').value     = existing ? existing.lat : '';
+  document.getElementById('sighting-lon-input').value     = existing ? existing.lon : '';
+  document.getElementById('sighting-address-input').value = '';
+  document.getElementById('sighting-save-btn').textContent = existing ? 'Save Changes' : 'Save Sighting';
+
+  _sightingLat = existing ? existing.lat : null;
+  _sightingLon = existing ? existing.lon : null;
+  _sightingPickMode = false;
+  document.getElementById('sighting-loc-manual').style.display = 'none';
+  setActiveLocMethodBtn(existing ? 'manual' : null);
+  updateSightingLocStatus();
+
+  renderSightingList();
+  document.getElementById('sighting-dialog-bg').style.display = 'block';
+  document.getElementById('sighting-dialog').style.display    = 'block';
+}
+
+function closeSightingDialog() {
+  _sightingPickMode = false;
+  document.getElementById('sighting-dialog-bg').style.display = 'none';
+  document.getElementById('sighting-dialog').style.display    = 'none';
+}
+
+function updateSightingLocStatus() {
+  var el      = document.getElementById('sighting-loc-status');
+  var homeBtn = document.getElementById('sighting-home-actions');
+  if (_sightingLat != null && _sightingLon != null && isFinite(_sightingLat) && isFinite(_sightingLon)) {
+    el.textContent = '📍 ' + _sightingLat.toFixed(4) + ', ' + _sightingLon.toFixed(4);
+    el.classList.add('set');
+    homeBtn.style.display = 'block';
+  } else {
+    el.textContent = _sightingPickMode
+      ? 'Click anywhere on the map to place the pin…'
+      : 'No location set — pick a method above.';
+    el.classList.remove('set');
+    homeBtn.style.display = 'none';
+  }
+}
+
+function setActiveLocMethodBtn(method) {
+  document.querySelectorAll('.loc-method-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.method === method);
+  });
+}
+
+function setSightingLocMethod(method) {
+  document.getElementById('sighting-loc-manual').style.display = method === 'manual' ? 'block' : 'none';
+
+  if (method === 'click') {
+    _sightingPickMode = true;
+    setActiveLocMethodBtn('click');
+    updateSightingLocStatus();
+    document.getElementById('sighting-dialog-bg').style.display = 'none';
+    document.getElementById('sighting-dialog').style.display    = 'none';
+    showCloudToast('Click the map to place your sighting');
+    return;
+  }
+
+  _sightingPickMode = false;
+  setActiveLocMethodBtn(method);
+
+  if (method === 'geo') {
+    if (!navigator.geolocation) { alert('Location is not available in this browser.'); return; }
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      _sightingLat = pos.coords.latitude; _sightingLon = pos.coords.longitude;
+      document.getElementById('sighting-lat-input').value = _sightingLat.toFixed(6);
+      document.getElementById('sighting-lon-input').value = _sightingLon.toFixed(6);
+      updateSightingLocStatus();
+    }, function() { alert('Could not get your location.'); });
+  } else if (method === 'home') {
+    if (!homeLocation) {
+      alert('No home location saved yet. Use "Click map" or "My location" to set a pin, then tap "Set current pin as Home".');
+      setActiveLocMethodBtn(null);
+      return;
+    }
+    _sightingLat = homeLocation.lat; _sightingLon = homeLocation.lon;
+    document.getElementById('sighting-lat-input').value = _sightingLat;
+    document.getElementById('sighting-lon-input').value = _sightingLon;
+    updateSightingLocStatus();
+  } else {
+    updateSightingLocStatus();
+  }
+}
+
+function onSightingMapClick(e) {
+  if (!_sightingPickMode) return;
+  _sightingPickMode = false;
+  _sightingLat = e.latlng.lat;
+  _sightingLon = e.latlng.lng;
+  document.getElementById('sighting-lat-input').value = _sightingLat.toFixed(6);
+  document.getElementById('sighting-lon-input').value = _sightingLon.toFixed(6);
+  setActiveLocMethodBtn('click');
+  updateSightingLocStatus();
+  document.getElementById('sighting-dialog-bg').style.display = 'block';
+  document.getElementById('sighting-dialog').style.display    = 'block';
+}
+
+function onSightingLatLonInput() {
+  var lat = parseFloat(document.getElementById('sighting-lat-input').value);
+  var lon = parseFloat(document.getElementById('sighting-lon-input').value);
+  _sightingLat = isFinite(lat) ? lat : null;
+  _sightingLon = isFinite(lon) ? lon : null;
+  updateSightingLocStatus();
+}
+
+function setCurrentAsHome() {
+  if (_sightingLat == null || _sightingLon == null) return;
+  homeLocation = { lat: _sightingLat, lon: _sightingLon };
+  saveHomeLocation();
+  showCloudToast('🏠 Home location saved');
+}
+
+// Nominatim (OpenStreetMap) geocoding — only fires on an explicit button
+// click, never per-keystroke, to stay well within its usage policy for a
+// low-volume, personal-use lookup.
+function geocodeSightingAddress(e) {
+  var q = document.getElementById('sighting-address-input').value.trim();
+  if (!q) return;
+  var btn = e && e.target;
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q))
+    .then(function(r) { return r.json(); })
+    .then(function(results) {
+      if (btn) { btn.textContent = 'Find'; btn.disabled = false; }
+      if (!results || !results.length) { alert('No location found for "' + q + '".'); return; }
+      _sightingLat = parseFloat(results[0].lat);
+      _sightingLon = parseFloat(results[0].lon);
+      document.getElementById('sighting-lat-input').value = _sightingLat;
+      document.getElementById('sighting-lon-input').value = _sightingLon;
+      setActiveLocMethodBtn('manual');
+      updateSightingLocStatus();
+    })
+    .catch(function() {
+      if (btn) { btn.textContent = 'Find'; btn.disabled = false; }
+      alert('Address lookup failed.');
+    });
+}
+
+function buildSightingAutocomplete() {
+  var inp = document.getElementById('sighting-species-input');
+  var dd  = document.getElementById('sighting-species-dropdown');
+  inp.addEventListener('input', function() {
+    inp.dataset.sci = '';
+    var q = this.value.toLowerCase().trim();
+    dd.innerHTML = '';
+    if (!q || !_speciesTaxonomy) { dd.style.display = 'none'; return; }
+    var hits = _speciesTaxonomy.filter(function(s) {
+      return s[0].toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 20);
+    if (!hits.length) { dd.style.display = 'none'; return; }
+    hits.forEach(function(s) {
+      var div = document.createElement('div');
+      div.innerHTML = s[0] + '<span class="sp-sci">' + s[1] + '</span>';
+      div.onclick = function() {
+        inp.value = s[0];
+        inp.dataset.sci = s[1];
+        dd.style.display = 'none';
+      };
+      dd.appendChild(div);
+    });
+    dd.style.display = 'block';
+  });
+  document.addEventListener('click', function(e) {
+    if (e.target !== inp) dd.style.display = 'none';
+  });
+}
+
+function saveSighting() {
+  var nameInp = document.getElementById('sighting-species-input');
+  var name = nameInp.value.trim();
+  var date = document.getElementById('sighting-date').value;
+  if (!name) { nameInp.focus(); return; }
+  if (!date) { document.getElementById('sighting-date').focus(); return; }
+  if (_sightingLat == null || _sightingLon == null || !isFinite(_sightingLat) || !isFinite(_sightingLon)) {
+    alert('Pick a location for this sighting.');
+    return;
+  }
+
+  var rec = {
+    id: _sightingEditId || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+    name: name, sci: nameInp.dataset.sci || '',
+    lat: _sightingLat, lon: _sightingLon, date: date,
+    count: document.getElementById('sighting-count').value.trim(),
+    notes: document.getElementById('sighting-notes').value.trim(),
+  };
+
+  if (_sightingEditId) {
+    manualObs = manualObs.map(function(o) { return o.id === _sightingEditId ? rec : o; });
+  } else {
+    manualObs.push(rec);
+  }
+  saveManualObs();
+
+  var firstLoad = document.getElementById('app-screen').style.display !== 'block';
+  _finalizeLoad(firstLoad);
+  closeSightingDialog();
+  showCloudToast('✓ Sighting saved');
+}
+
+function deleteSighting(id) {
+  if (!confirm('Delete this sighting?')) return;
+  manualObs = manualObs.filter(function(o) { return o.id !== id; });
+  saveManualObs();
+  _finalizeLoad(false);
+  renderSightingList();
+}
+
+function renderSightingList() {
+  var el = document.getElementById('sighting-list');
+  if (!manualObs.length) {
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:0.65rem;color:var(--warm-gray)">None yet.</div>';
+    return;
+  }
+  var sorted = manualObs.slice().sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+  el.innerHTML = sorted.map(function(o) {
+    var esc = o.name.replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    return '<div class="sighting-row">'
+      + '<span class="sighting-row-main">' + esc + ' — ' + o.date + '</span>'
+      + '<span class="sighting-row-actions">'
+      + '<button onclick="openSightingDialog(\'' + o.id + '\')">Edit</button>'
+      + '<button class="danger" onclick="deleteSighting(\'' + o.id + '\')">Delete</button>'
+      + '</span></div>';
+  }).join('');
+}
+
 // ── Trip sharing ──────────────────────────────────────────
 function _tripLocationOptionsHTML() {
   var seen = {}, opts = [];
@@ -2488,6 +2988,7 @@ function _toggleWDPA(on) {
 }
 
 function _finalizeLoad(firstLoad) {
+  if (!_tripViewMode) mergeManualIntoRecords();
   computeLifers(allRecords);
   computeGlobalFreq(allRecords);
   speciesList = uniqueSpecies(allRecords);
@@ -2678,6 +3179,7 @@ function initMap() {
   stateLayer  = L.layerGroup();
 
   map.on('zoomend', handleZoom);
+  map.on('click', onSightingMapClick);
 
   // When a popup opens, move its species to the front of the photo queue
   map.on('popupopen', function(e) {
@@ -4739,7 +5241,7 @@ function syncFromCloud() {
       try { localStorage.setItem('obn_pins', JSON.stringify(locationPins)); } catch(e) {}
     }
   });
-  _sb.from('profiles').select('display_name,bio,avatar_url').eq('id', currentUser.id).single().then(function(res) {
+  _sb.from('profiles').select('display_name,bio,avatar_url,home_lat,home_lon').eq('id', currentUser.id).single().then(function(res) {
     if (res.data) {
       if (res.data.display_name) profileData.name   = res.data.display_name;
       if (res.data.bio)          profileData.bio    = res.data.bio;
@@ -4747,7 +5249,37 @@ function syncFromCloud() {
       localStorage.setItem('obn_profile', JSON.stringify(profileData));
       loadProfileUI();
       updateAuthUI();
+      if (res.data.home_lat != null && res.data.home_lon != null) {
+        homeLocation = { lat: res.data.home_lat, lon: res.data.home_lon };
+        try { localStorage.setItem('obn_home_location', JSON.stringify(homeLocation)); } catch(e) {}
+      } else if (homeLocation) {
+        // First sign-in with a home location already set locally — push it up.
+        saveHomeLocation();
+      }
     }
+  });
+  // Manual sightings: cloud is authoritative once it has rows (mirrors the
+  // delete-all-then-insert convention saveManualObs() uses). If the cloud is
+  // empty but sightings already exist locally, this is a first sign-in after
+  // logging some by hand — push them up instead of letting an empty cloud
+  // read wipe them.
+  _sb.from('manual_observations').select('id,name,sci,lat,lon,date,count,notes').eq('user_id', currentUser.id).then(function(res) {
+    var cloudRows = res.data || [];
+    if (cloudRows.length) {
+      manualObs = cloudRows.map(function(row) {
+        return {
+          id: row.id, name: row.name, sci: row.sci || '', lat: row.lat, lon: row.lon,
+          date: row.date, count: row.count || '', notes: row.notes || '',
+        };
+      });
+      try { localStorage.setItem('obn_manual_obs', JSON.stringify(manualObs)); } catch(e) {}
+    } else if (manualObs.length) {
+      saveManualObs();
+    }
+    mergeManualIntoRecords();
+    computeLifers(allRecords); computeGlobalFreq(allRecords); buildStateCountyMap(allRecords);
+    currentStats = computeStats(allRecords);
+    if (typeof map !== 'undefined' && map) updateMap();
   });
   loadUserTrips();
   // Load overrides FIRST, then fetch CSV so markers are built with correct photos
@@ -4819,6 +5351,7 @@ document.getElementById('profile-btn').addEventListener('click', function() {
 });
 document.getElementById('share-trip-btn').addEventListener('click', openTripDialog);
 document.getElementById('map-action-share').addEventListener('click', openTripDialog);
+document.getElementById('map-action-add-sighting').addEventListener('click', function() { openSightingDialog(); });
 
 // ─────────────────────────────────────────
 // MOBILE PANEL
@@ -5146,6 +5679,8 @@ function loadSharedTrip(id) {
 // ─────────────────────────────────────────
 loadOverrides();
 loadPins();
+loadManualObs();
+buildSightingAutocomplete();
 
 
 // Shared trip view mode — load trip from URL param
