@@ -22,18 +22,24 @@ create index if not exists manual_observations_user_id_idx on manual_observation
 
 alter table manual_observations enable row level security;
 
+-- create policy has no "if not exists" — drop-then-create makes the whole
+-- file safe to re-run (e.g. after a later addition below).
+drop policy if exists "Users can view own manual observations" on manual_observations;
 create policy "Users can view own manual observations"
   on manual_observations for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own manual observations" on manual_observations;
 create policy "Users can insert own manual observations"
   on manual_observations for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own manual observations" on manual_observations;
 create policy "Users can update own manual observations"
   on manual_observations for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own manual observations" on manual_observations;
 create policy "Users can delete own manual observations"
   on manual_observations for delete
   using (auth.uid() = user_id);
@@ -42,3 +48,8 @@ create policy "Users can delete own manual observations"
 -- require re-pinning a location every time.
 alter table profiles add column if not exists home_lat double precision;
 alter table profiles add column if not exists home_lon double precision;
+
+-- Whether manual sightings count toward life list / quests / stats (a
+-- global per-user preference, not per-sighting). Null = not yet set;
+-- the client computes and pushes up a sensible default on first use.
+alter table profiles add column if not exists manual_counts_toward_stats boolean;

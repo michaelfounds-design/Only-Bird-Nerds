@@ -773,6 +773,15 @@
       border: 1px solid rgba(74,124,89,0.25); background: #fff; color: var(--forest);
     }
     .sighting-table td.sighting-actions button.danger { color: #d4622a; border-color: rgba(212,98,42,0.3); }
+    .sighting-stats-toggle {
+      display: flex; align-items: center; gap: 0.45rem;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      color: var(--forest); cursor: pointer; margin-top: 0.2rem;
+    }
+    .sighting-note {
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.02em; color: var(--warm-gray); line-height: 1.5;
+    }
     .manual-tag {
       display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.55rem;
       letter-spacing: 0.04em; text-transform: uppercase;
@@ -2000,6 +2009,13 @@
   <!-- List view: your manually-added sightings, as a table you can edit/delete from -->
   <div id="sighting-list-view">
     <h3>Your Sightings</h3>
+    <label class="sighting-stats-toggle">
+      <input type="checkbox" id="sighting-counts-toggle" onchange="setManualCountsPref(this.checked)" />
+      Count these toward my life list, quests &amp; stats
+    </label>
+    <p class="sighting-note">
+      Sightings always show on your map — this only affects your species counts, quests, and life list.
+    </p>
     <div id="sighting-list"></div>
     <div class="dlg-footer">
       <button class="dlg-btn ghost" onclick="closeSightingDialog()">Close</button>
@@ -2282,6 +2298,48 @@ function saveHomeLocation() {
   _sb.from('profiles').upsert({ id: currentUser.id, home_lat: homeLocation.lat, home_lon: homeLocation.lon });
 }
 
+// Whether manual sightings count toward life list / quests / stats, or are
+// map-only pins layered on top of an eBird-derived record. A global
+// preference, not per-sighting. First run picks a sensible default: ON if
+// there's no eBird data yet (a pure manual-entry user needs this to build
+// any list at all), OFF if eBird data already exists (protects an avid
+// birder's real stats — they opt in explicitly if they want to blend in a
+// few manual sightings).
+var manualCountsTowardStats = true;
+
+function loadManualCountsPref() {
+  var stored = localStorage.getItem('obn_manual_counts_toward_stats');
+  if (stored !== null) { manualCountsTowardStats = stored === 'true'; return; }
+  var hasEbirdData = false;
+  try {
+    var cached = JSON.parse(localStorage.getItem('obn_records') || '[]');
+    hasEbirdData = Array.isArray(cached) && cached.some(function(r) { return r.source !== 'manual'; });
+  } catch(e) {}
+  manualCountsTowardStats = !hasEbirdData;
+  saveManualCountsPref();
+}
+
+function saveManualCountsPref() {
+  try { localStorage.setItem('obn_manual_counts_toward_stats', String(manualCountsTowardStats)); } catch(e) {}
+  if (!currentUser) return;
+  _sb.from('profiles').upsert({ id: currentUser.id, manual_counts_toward_stats: manualCountsTowardStats });
+}
+
+function setManualCountsPref(checked) {
+  manualCountsTowardStats = !!checked;
+  saveManualCountsPref();
+  _finalizeLoad(false);
+}
+
+// Records used for life list / quests / stats — the full set if the
+// preference is on, eBird-only otherwise. The map itself always uses the
+// full allRecords (manual pins always render); this is only for the
+// aggregate numbers.
+function statsRecords() {
+  if (manualCountsTowardStats) return allRecords;
+  return allRecords.filter(function(r) { return r.source !== 'manual'; });
+}
+
 function manualObsToRecords(obs) {
   return (obs || []).reduce(function(out, o) {
     var lat = parseFloat(o.lat), lon = parseFloat(o.lon);
@@ -2336,6 +2394,7 @@ function showSightingListView() {
   _sightingPickMode = false;
   document.getElementById('sighting-list-view').classList.add('active');
   document.getElementById('sighting-form-view').classList.remove('active');
+  document.getElementById('sighting-counts-toggle').checked = manualCountsTowardStats;
   renderSightingList();
 }
 
@@ -3104,13 +3163,17 @@ function _toggleWDPA(on) {
 
 function _finalizeLoad(firstLoad) {
   if (!_tripViewMode) mergeManualIntoRecords();
-  computeLifers(allRecords);
-  computeGlobalFreq(allRecords);
-  speciesList = uniqueSpecies(allRecords);
+  // Map rendering always uses the full allRecords (manual pins always show);
+  // these derived numbers use statsRecords() so the "count toward stats"
+  // preference can exclude manual sightings from them without hiding pins.
+  var statsRecs = statsRecords();
+  computeLifers(statsRecs);
+  computeGlobalFreq(statsRecs);
+  speciesList = uniqueSpecies(statsRecs);
   sciNameMap = {};
   allRecords.forEach(function(r) { if (r.sci && !sciNameMap[r.name]) sciNameMap[r.name] = r.sci; });
-  buildStateCountyMap(allRecords);
-  currentStats = computeStats(allRecords);
+  buildStateCountyMap(statsRecs);
+  currentStats = computeStats(statsRecs);
   _saveToStorage();
   updateDataMeta();
   if (firstLoad) showApp();
@@ -5356,7 +5419,7 @@ function syncFromCloud() {
       try { localStorage.setItem('obn_pins', JSON.stringify(locationPins)); } catch(e) {}
     }
   });
-  _sb.from('profiles').select('display_name,bio,avatar_url,home_lat,home_lon').eq('id', currentUser.id).single().then(function(res) {
+  _sb.from('profiles').select('display_name,bio,avatar_url,home_lat,home_lon,manual_counts_toward_stats').eq('id', currentUser.id).single().then(function(res) {
     if (res.data) {
       if (res.data.display_name) profileData.name   = res.data.display_name;
       if (res.data.bio)          profileData.bio    = res.data.bio;
@@ -5370,6 +5433,13 @@ function syncFromCloud() {
       } else if (homeLocation) {
         // First sign-in with a home location already set locally — push it up.
         saveHomeLocation();
+      }
+      if (res.data.manual_counts_toward_stats != null) {
+        manualCountsTowardStats = res.data.manual_counts_toward_stats;
+        try { localStorage.setItem('obn_manual_counts_toward_stats', String(manualCountsTowardStats)); } catch(e) {}
+      } else {
+        // First sign-in — push the locally-computed default up.
+        saveManualCountsPref();
       }
     }
   });
@@ -5392,8 +5462,9 @@ function syncFromCloud() {
       saveManualObs();
     }
     mergeManualIntoRecords();
-    computeLifers(allRecords); computeGlobalFreq(allRecords); buildStateCountyMap(allRecords);
-    currentStats = computeStats(allRecords);
+    var statsRecs = statsRecords();
+    computeLifers(statsRecs); computeGlobalFreq(statsRecs); buildStateCountyMap(statsRecs);
+    currentStats = computeStats(statsRecs);
     if (typeof map !== 'undefined' && map) updateMap();
   });
   loadUserTrips();
@@ -5795,6 +5866,7 @@ function loadSharedTrip(id) {
 loadOverrides();
 loadPins();
 loadManualObs();
+loadManualCountsPref();
 buildSightingAutocomplete();
 
 
