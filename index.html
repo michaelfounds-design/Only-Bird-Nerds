@@ -797,17 +797,29 @@
       display: flex; flex-direction: column; align-items: center;
       gap: 0.9rem; text-align: center;
     }
-    .hero-split-sub {
-      font-family: 'Lora', serif; font-size: 0.85rem; line-height: 1.55;
-      color: rgba(200,221,208,0.55); max-width: 300px; margin: 0;
-    }
     .hero-split .hero-box { width: 100%; }
-    /* Static single-image box (not part of the slideshow's own class/JS,
+    /* Static text+image box (not part of the slideshow's own class/JS,
        so it never gets swept into the .hero-slide rotation) */
-    .hero-box-img {
+    .hero-box-content {
       position: absolute; inset: 0;
-      width: 100%; height: 100%;
+      display: flex; align-items: center; gap: 1.1rem;
+      padding: 1.4rem 1.2rem; box-sizing: border-box;
+    }
+    .hero-box-text {
+      flex: 1 1 38%;
+      font-family: 'Lora', serif; font-size: 0.85rem; line-height: 1.55;
+      color: rgba(200,221,208,0.7); text-align: left; margin: 0;
+    }
+    .hero-box-img {
+      flex: 1 1 58%;
+      max-width: 58%; max-height: 90%;
       object-fit: contain;
+      border-radius: 6px;
+    }
+    @media (max-width: 560px) {
+      .hero-box-content { flex-direction: column; padding: 1rem; gap: 0.6rem; }
+      .hero-box-text { flex: 0 0 auto; text-align: center; font-size: 0.78rem; }
+      .hero-box-img { flex: 1 1 auto; max-width: 90%; }
     }
 
     .fstrip-item {
@@ -969,9 +981,11 @@
       <a href="app.html?start=manual" class="btn-primary hero-split-btn">Build Your Aviary</a>
       <div class="hero-box">
         <p class="slide-caption">Yard List</p>
-        <img class="hero-box-img" src="hero-slides/yardlist.png" alt="Example yard list" />
+        <div class="hero-box-content">
+          <p class="hero-box-text">Casual backyard birder? Log sightings by hand — no eBird account needed. No eBird reviewers will question the validity of your ivory billed woodpecker sighting in Palm Springs.</p>
+          <img class="hero-box-img" src="hero-slides/yardlist.png" alt="Example yard list" />
+        </div>
       </div>
-      <p class="hero-split-sub">Casual backyard birder? Log sightings by hand — no eBird account needed.</p>
     </div>
 
     <!-- Lister / eBird path -->

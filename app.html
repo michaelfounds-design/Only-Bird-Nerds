@@ -726,12 +726,13 @@
       color: var(--warm-gray); font-style: italic; font-size: 0.6rem; margin-left: 0.3rem;
     }
     #sighting-loc-methods {
-      display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.2rem 0 0.6rem;
+      display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.2rem 0 0.6rem;
     }
     .loc-method-btn {
-      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      font-family: 'DM Mono', monospace; font-size: 0.65rem;
       letter-spacing: 0.02em;
-      padding: 0.32rem 0.55rem; border-radius: 100px; cursor: pointer;
+      padding: 0.6rem 0.85rem; min-height: 40px; box-sizing: border-box;
+      border-radius: 100px; cursor: pointer;
       border: 1px solid rgba(74,124,89,0.3);
       background: rgba(74,124,89,0.06); color: var(--forest);
       transition: all 0.15s; white-space: nowrap;
@@ -774,9 +775,14 @@
     }
     .sighting-table td.sighting-actions button.danger { color: #d4622a; border-color: rgba(212,98,42,0.3); }
     .sighting-stats-toggle {
-      display: flex; align-items: center; gap: 0.45rem;
+      display: flex; align-items: center; gap: 0.5rem;
       font-family: 'DM Mono', monospace; font-size: 0.68rem;
       color: var(--forest); cursor: pointer; margin-top: 0.2rem;
+      padding: 0.3rem 0; /* taller tap area without changing visual size */
+    }
+    .sighting-stats-toggle input[type="checkbox"] {
+      width: 16px; height: 16px; flex-shrink: 0;
+      accent-color: var(--fern); cursor: pointer;
     }
     .sighting-note {
       font-family: 'DM Mono', monospace; font-size: 0.58rem;
@@ -1523,11 +1529,10 @@
       .upload-hero { padding: 2rem 1.25rem; max-width: 100%; }
       .upload-hero h1 { font-size: clamp(1.7rem, 7vw, 2.4rem); }
       .upload-hero p { font-size: 0.88rem; margin-bottom: 1.6rem; }
-      .drop-zone { padding: 1.8rem 1.5rem; }
-      .drop-icon img { width: 80px; height: 80px; }
+      .drop-zone { padding: 1.4rem 1.2rem; }
       .drop-label { font-size: 0.7rem; }
-      .drop-sub::before { content: "Tap to select"; }
-      .drop-sub span { display: none; }
+      .drop-sub { font-size: 0; }
+      .drop-sub::before { content: "Tap this screenshot to select"; font-size: 0.85rem; }
 
       /* Side panel → bottom sheet */
       #side-panel {
@@ -2081,6 +2086,14 @@
       <textarea id="sighting-notes" placeholder="Anything worth remembering?" style="height:52px"></textarea>
     </div>
 
+    <label class="sighting-stats-toggle">
+      <input type="checkbox" id="sighting-counts-toggle-form" onchange="setManualCountsPref(this.checked)" />
+      Count these toward my life list, quests &amp; stats
+    </label>
+    <p class="sighting-note">
+      Sightings always show on your map — this only affects your species counts, quests, and life list.
+    </p>
+
     <div class="dlg-footer">
       <button class="dlg-btn ghost" id="sighting-cancel-edit-btn" onclick="cancelSightingForm()">Cancel</button>
       <button class="dlg-btn" id="sighting-save-btn" onclick="saveSighting()">Save Sighting</button>
@@ -2328,6 +2341,10 @@ function saveManualCountsPref() {
 function setManualCountsPref(checked) {
   manualCountsTowardStats = !!checked;
   saveManualCountsPref();
+  var listToggle = document.getElementById('sighting-counts-toggle');
+  var formToggle  = document.getElementById('sighting-counts-toggle-form');
+  if (listToggle) listToggle.checked = manualCountsTowardStats;
+  if (formToggle) formToggle.checked = manualCountsTowardStats;
   _finalizeLoad(false);
 }
 
@@ -2418,6 +2435,8 @@ function showSightingForm(editId) {
   document.getElementById('sighting-lon-input').value     = existing ? existing.lon : '';
   document.getElementById('sighting-address-input').value = '';
   document.getElementById('sighting-save-btn').textContent = existing ? 'Save Changes' : 'Save Sighting';
+
+  document.getElementById('sighting-counts-toggle-form').checked = manualCountsTowardStats;
 
   _sightingLat = existing ? existing.lat : null;
   _sightingLon = existing ? existing.lon : null;
