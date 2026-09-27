@@ -83,9 +83,57 @@
     .upload-hero {
       text-align: center;
       padding: 2rem 1.5rem;
-      max-width: 520px;
+      max-width: 940px;
       position: relative;
       z-index: 1;
+    }
+
+    .upload-choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+      text-align: left;
+      align-items: stretch;
+    }
+    @media (max-width: 760px) {
+      .upload-choice-grid { grid-template-columns: 1fr; }
+    }
+    .upload-choice-panel {
+      background: rgba(74,124,89,0.07);
+      border: 1px solid rgba(122,171,136,0.18);
+      border-radius: 16px;
+      padding: 1.6rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .upload-choice-panel h2 {
+      font-family: 'Playfair Display', sans-serif;
+      font-size: 1.1rem; font-weight: 800;
+      color: var(--cream); margin-bottom: 0.5rem;
+    }
+    .upload-choice-tagline {
+      font-family: 'Lora', serif; font-style: italic;
+      color: var(--sage); font-size: 0.92rem;
+      margin-bottom: 0.8rem !important;
+    }
+    .upload-choice-panel > p {
+      font-family: 'Lora', serif;
+      color: rgba(200,221,208,0.65);
+      font-size: 0.85rem; line-height: 1.65;
+      margin-bottom: 1rem;
+    }
+    .upload-choice-btn {
+      align-self: flex-start;
+      margin-top: auto;
+    }
+    .ebird-howto-img {
+      display: block; width: 100%; border-radius: 8px;
+      margin-bottom: 0.7rem;
+      border: 1px solid rgba(122,171,136,0.3);
+    }
+    .upload-choice-icon {
+      display: block; width: 72px; height: 72px; border-radius: 50%;
+      margin-bottom: 0.9rem;
     }
 
     .upload-eyebrow {
@@ -700,21 +748,31 @@
     }
     #sighting-loc-status.set { color: var(--fern); }
     #sighting-home-actions { margin: -0.3rem 0 0.5rem; }
-    #sighting-list { max-height: 180px; overflow-y: auto; }
-    .sighting-row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 0.5rem; padding: 0.4rem 0.1rem;
-      border-bottom: 1px solid rgba(74,124,89,0.12);
-      font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--ink);
+    #sighting-list-view, #sighting-form-view { display: none; }
+    #sighting-list-view.active, #sighting-form-view.active { display: block; }
+    #sighting-list { max-height: 50vh; overflow-y: auto; margin-bottom: 0.6rem; }
+    #sighting-list-empty {
+      font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--warm-gray);
+      padding: 1rem 0.2rem;
     }
-    .sighting-row-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sighting-row-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
-    .sighting-row-actions button {
+    .sighting-table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; }
+    .sighting-table th {
+      text-align: left; font-size: 0.55rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--warm-gray); font-weight: 600; padding: 0 0.3rem 0.35rem;
+      border-bottom: 1px solid rgba(74,124,89,0.25);
+    }
+    .sighting-table td {
+      font-size: 0.68rem; color: var(--ink); padding: 0.4rem 0.3rem;
+      border-bottom: 1px solid rgba(74,124,89,0.12); vertical-align: middle;
+    }
+    .sighting-table td.sighting-name { max-width: 0; width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sighting-table td.sighting-actions { text-align: right; white-space: nowrap; }
+    .sighting-table td.sighting-actions button {
       font-family: 'DM Mono', monospace; font-size: 0.58rem;
-      padding: 0.15rem 0.4rem; border-radius: 4px; cursor: pointer;
+      padding: 0.2rem 0.45rem; border-radius: 4px; cursor: pointer; margin-left: 0.3rem;
       border: 1px solid rgba(74,124,89,0.25); background: #fff; color: var(--forest);
     }
-    .sighting-row-actions button.danger { color: #d4622a; border-color: rgba(212,98,42,0.3); }
+    .sighting-table td.sighting-actions button.danger { color: #d4622a; border-color: rgba(212,98,42,0.3); }
     .manual-tag {
       display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.55rem;
       letter-spacing: 0.04em; text-transform: uppercase;
@@ -1582,25 +1640,40 @@
 
   <div class="upload-hero">
     <p class="upload-eyebrow">Your personal map</p>
-    <h1>Upload your data.<br/><em>Watch it come alive.</em></h1>
-    <p>Drop your <code style="font-family:'DM Mono',monospace;color:var(--mist)">MyEBirdData.csv</code> below.
-       It never leaves your device — everything runs in your browser.</p>
+    <h1>Two ways to build it.</h1>
 
-    <div class="drop-zone" id="drop-zone">
-      <div class="drop-icon"><img src="onlybirdnerds-logo-v4.svg" alt="Only Bird Nerds" /></div>
-      <div class="drop-label">Drop your CSV here</div>
-      <div class="drop-sub">or click to browse</div>
+    <div class="upload-choice-grid">
+
+      <!-- For the listers: eBird CSV import -->
+      <div class="upload-choice-panel">
+        <h2>For the Listers</h2>
+        <p>Drop your <code style="font-family:'DM Mono',monospace;color:var(--mist)">MyEBirdData.csv</code> below.
+           It never leaves your device — everything runs in your browser.</p>
+
+        <div class="drop-zone" id="drop-zone">
+          <img class="ebird-howto-img" src="Gif/1Ebird_download.png"
+               alt="In eBird: My eBird sidebar → Download My Data" />
+          <div class="drop-label">Drop your CSV here</div>
+          <div class="drop-sub">or click this screenshot to browse</div>
+        </div>
+
+        <input type="file" id="csv-input" accept=".csv" />
+        <p class="upload-note">In eBird: My eBird → Download My Data → MyEBirdData.csv</p>
+      </div>
+
+      <!-- Build Your Aviary: manual entry, no eBird required -->
+      <div class="upload-choice-panel">
+        <img class="upload-choice-icon" src="onlybirdnerds-logo-v4.svg" alt="Only Bird Nerds" />
+        <h2>Build Your Aviary</h2>
+        <p class="upload-choice-tagline">Track your yard list, or life list.</p>
+        <p>Log sightings by hand, right on the map — no eBird account or CSV required.</p>
+        <button type="button" class="dlg-btn upload-choice-btn" onclick="startManualEntry()">+ Add Your First Sighting</button>
+        <p class="upload-note" style="margin-top:1rem">
+          (This option is intended for the casual birder not recording lists in eBird.)
+        </p>
+      </div>
+
     </div>
-
-    <input type="file" id="csv-input" accept=".csv" />
-    <p class="upload-note">In eBird: My eBird → Download My Data → MyEBirdData.csv</p>
-
-    <p class="upload-note" style="margin-top:1.1rem">
-      Don't use eBird?
-      <a href="#" onclick="startManualEntry(); return false;" style="color:var(--sage);text-decoration:underline">
-        Add sightings by hand instead →
-      </a>
-    </p>
 
     <div id="csv-loading" style="display:none; margin-top:2rem; text-align:center;">
       <p style="font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--sage); letter-spacing:0.08em;">
@@ -1923,69 +1996,80 @@
 <!-- ── Add / manage sighting dialog ── -->
 <div id="sighting-dialog-bg" onclick="closeSightingDialog()"></div>
 <div id="sighting-dialog">
-  <h3 id="sighting-dialog-title">Add a Sighting</h3>
 
-  <div class="profile-field">
-    <label>Species</label>
-    <div class="search-wrap">
-      <input id="sighting-species-input" type="text" placeholder="Type to search…" autocomplete="off" />
-      <div id="sighting-species-dropdown"></div>
+  <!-- List view: your manually-added sightings, as a table you can edit/delete from -->
+  <div id="sighting-list-view">
+    <h3>Your Sightings</h3>
+    <div id="sighting-list"></div>
+    <div class="dlg-footer">
+      <button class="dlg-btn ghost" onclick="closeSightingDialog()">Close</button>
+      <button class="dlg-btn" onclick="showSightingForm()">+ Add New Sighting</button>
     </div>
   </div>
 
-  <div class="trip-date-row">
+  <!-- Form view: add or edit one sighting -->
+  <div id="sighting-form-view">
+    <h3 id="sighting-dialog-title">Add a Sighting</h3>
+
     <div class="profile-field">
-      <label>Date</label>
-      <input id="sighting-date" type="date" />
-    </div>
-    <div class="profile-field">
-      <label>Count (optional)</label>
-      <input id="sighting-count" type="text" placeholder="e.g. 2 or X" />
-    </div>
-  </div>
-
-  <div class="dlg-label">Location</div>
-  <div id="sighting-loc-methods">
-    <button type="button" class="loc-method-btn" data-method="click" onclick="setSightingLocMethod('click')">📍 Click map</button>
-    <button type="button" class="loc-method-btn" data-method="geo" onclick="setSightingLocMethod('geo')">🎯 My location</button>
-    <button type="button" class="loc-method-btn" data-method="home" onclick="setSightingLocMethod('home')">🏠 Home</button>
-    <button type="button" class="loc-method-btn" data-method="manual" onclick="setSightingLocMethod('manual')">✎ Address / coords</button>
-  </div>
-
-  <div id="sighting-loc-manual" style="display:none">
-    <div class="dlg-row">
-      <input class="dlg-input" id="sighting-address-input" type="text" placeholder="Search an address or place…" />
-      <button class="dlg-btn" type="button" onclick="geocodeSightingAddress(event)">Find</button>
-    </div>
-    <div class="trip-date-row" style="margin-top:0.4rem">
-      <div class="profile-field">
-        <label>Latitude</label>
-        <input id="sighting-lat-input" type="number" step="any" oninput="onSightingLatLonInput()" />
-      </div>
-      <div class="profile-field">
-        <label>Longitude</label>
-        <input id="sighting-lon-input" type="number" step="any" oninput="onSightingLatLonInput()" />
+      <label>Species</label>
+      <div class="search-wrap">
+        <input id="sighting-species-input" type="text" placeholder="Type to search…" autocomplete="off" />
+        <div id="sighting-species-dropdown"></div>
       </div>
     </div>
-  </div>
 
-  <div id="sighting-loc-status">No location set — pick a method above.</div>
-  <div id="sighting-home-actions" style="display:none">
-    <button type="button" class="dlg-btn ghost" onclick="setCurrentAsHome()">📌 Set current pin as Home</button>
-  </div>
+    <div class="trip-date-row">
+      <div class="profile-field">
+        <label>Date</label>
+        <input id="sighting-date" type="date" />
+      </div>
+      <div class="profile-field">
+        <label>Count (optional)</label>
+        <input id="sighting-count" type="text" placeholder="e.g. 2 or X" />
+      </div>
+    </div>
 
-  <div class="profile-field" style="margin-top:0.2rem">
-    <label>Notes (optional)</label>
-    <textarea id="sighting-notes" placeholder="Anything worth remembering?" style="height:52px"></textarea>
-  </div>
+    <div class="dlg-label">Location</div>
+    <div id="sighting-loc-methods">
+      <button type="button" class="loc-method-btn" data-method="click" onclick="setSightingLocMethod('click')">📍 Click map</button>
+      <button type="button" class="loc-method-btn" data-method="geo" onclick="setSightingLocMethod('geo')">🎯 My location</button>
+      <button type="button" class="loc-method-btn" data-method="home" onclick="setSightingLocMethod('home')">🏠 Home</button>
+      <button type="button" class="loc-method-btn" data-method="manual" onclick="setSightingLocMethod('manual')">✎ Address / coords</button>
+    </div>
 
-  <div class="dlg-footer">
-    <button class="dlg-btn ghost" id="sighting-cancel-edit-btn" onclick="closeSightingDialog()">Cancel</button>
-    <button class="dlg-btn" id="sighting-save-btn" onclick="saveSighting()">Save Sighting</button>
-  </div>
+    <div id="sighting-loc-manual" style="display:none">
+      <div class="dlg-row">
+        <input class="dlg-input" id="sighting-address-input" type="text" placeholder="Search an address or place…" />
+        <button class="dlg-btn" type="button" onclick="geocodeSightingAddress(event)">Find</button>
+      </div>
+      <div class="trip-date-row" style="margin-top:0.4rem">
+        <div class="profile-field">
+          <label>Latitude</label>
+          <input id="sighting-lat-input" type="number" step="any" oninput="onSightingLatLonInput()" />
+        </div>
+        <div class="profile-field">
+          <label>Longitude</label>
+          <input id="sighting-lon-input" type="number" step="any" oninput="onSightingLatLonInput()" />
+        </div>
+      </div>
+    </div>
 
-  <div class="dlg-label" style="margin-top:1rem">Your manual sightings</div>
-  <div id="sighting-list"><div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--warm-gray)">None yet.</div></div>
+    <div id="sighting-loc-status">No location set — pick a method above.</div>
+    <div id="sighting-home-actions" style="display:none">
+      <button type="button" class="dlg-btn ghost" onclick="setCurrentAsHome()">📌 Set current pin as Home</button>
+    </div>
+
+    <div class="profile-field" style="margin-top:0.2rem">
+      <label>Notes (optional)</label>
+      <textarea id="sighting-notes" placeholder="Anything worth remembering?" style="height:52px"></textarea>
+    </div>
+
+    <div class="dlg-footer">
+      <button class="dlg-btn ghost" id="sighting-cancel-edit-btn" onclick="cancelSightingForm()">Cancel</button>
+      <button class="dlg-btn" id="sighting-save-btn" onclick="saveSighting()">Save Sighting</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Photo override dialog ── -->
@@ -2237,7 +2321,25 @@ function startManualEntry() {
   openSightingDialog();
 }
 
+// Entry point (the "+ Add Sighting" button and the landing-screen link both
+// call this with no args): jump straight to the form the first time there's
+// nothing to manage yet, otherwise open on the table of existing sightings
+// so "tracked separately, editable in a table" is the thing you actually see.
 function openSightingDialog(editId) {
+  document.getElementById('sighting-dialog-bg').style.display = 'block';
+  document.getElementById('sighting-dialog').style.display    = 'block';
+  if (editId || !manualObs.length) showSightingForm(editId);
+  else showSightingListView();
+}
+
+function showSightingListView() {
+  _sightingPickMode = false;
+  document.getElementById('sighting-list-view').classList.add('active');
+  document.getElementById('sighting-form-view').classList.remove('active');
+  renderSightingList();
+}
+
+function showSightingForm(editId) {
   if (!_speciesTaxonomy) {
     fetch('species-list.json').then(function(r) { return r.json(); })
       .then(function(list) { _speciesTaxonomy = list; })
@@ -2265,9 +2367,17 @@ function openSightingDialog(editId) {
   setActiveLocMethodBtn(existing ? 'manual' : null);
   updateSightingLocStatus();
 
-  renderSightingList();
   document.getElementById('sighting-dialog-bg').style.display = 'block';
   document.getElementById('sighting-dialog').style.display    = 'block';
+  document.getElementById('sighting-form-view').classList.add('active');
+  document.getElementById('sighting-list-view').classList.remove('active');
+}
+
+// Cancel from the form: back to the table if there's something to show,
+// otherwise there's nothing to manage yet — just close.
+function cancelSightingForm() {
+  if (manualObs.length) showSightingListView();
+  else closeSightingDialog();
 }
 
 function closeSightingDialog() {
@@ -2448,7 +2558,7 @@ function saveSighting() {
 
   var firstLoad = document.getElementById('app-screen').style.display !== 'block';
   _finalizeLoad(firstLoad);
-  closeSightingDialog();
+  showSightingListView();
   showCloudToast('✓ Sighting saved');
 }
 
@@ -2463,19 +2573,24 @@ function deleteSighting(id) {
 function renderSightingList() {
   var el = document.getElementById('sighting-list');
   if (!manualObs.length) {
-    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:0.65rem;color:var(--warm-gray)">None yet.</div>';
+    el.innerHTML = '<div id="sighting-list-empty">No manual sightings yet — add your first one below.</div>';
     return;
   }
   var sorted = manualObs.slice().sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
-  el.innerHTML = sorted.map(function(o) {
+  var rows = sorted.map(function(o) {
     var esc = o.name.replace(/"/g,'&quot;').replace(/</g,'&lt;');
-    return '<div class="sighting-row">'
-      + '<span class="sighting-row-main">' + esc + ' — ' + o.date + '</span>'
-      + '<span class="sighting-row-actions">'
-      + '<button onclick="openSightingDialog(\'' + o.id + '\')">Edit</button>'
+    return '<tr>'
+      + '<td class="sighting-name" title="' + esc + '">' + esc + '</td>'
+      + '<td>' + o.date + '</td>'
+      + '<td>' + (o.count || '—') + '</td>'
+      + '<td class="sighting-actions">'
+      + '<button onclick="showSightingForm(\'' + o.id + '\')">Edit</button>'
       + '<button class="danger" onclick="deleteSighting(\'' + o.id + '\')">Delete</button>'
-      + '</span></div>';
+      + '</td></tr>';
   }).join('');
+  el.innerHTML = '<table class="sighting-table"><thead><tr>'
+    + '<th>Species</th><th>Date</th><th>Count</th><th></th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 // ── Trip sharing ──────────────────────────────────────────
@@ -5696,6 +5811,12 @@ buildSightingAutocomplete();
   if (pending) {
     Papa.parse(pending, { header: true, skipEmptyLines: true, complete: onCSVParsed });
   }
+})();
+
+// Deep link from the homepage's "Build Your Aviary" button — jump straight
+// into manual entry instead of showing the upload screen.
+(function() {
+  if (new URLSearchParams(location.search).get('start') === 'manual') startManualEntry();
 })();
 </script>
 </body>

@@ -775,6 +775,44 @@
       justify-content: center;
     }
 
+    /* ─── Two-path split (listers vs. casual/aviary) ─── */
+    .hero-split-banner {
+      width: 80vw; max-width: 800px;
+      text-align: center;
+      font-family: 'Lora', serif;
+      font-size: 1rem; line-height: 1.75;
+      color: rgba(200,221,208,0.7);
+    }
+    .hero-split {
+      width: 80vw;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.75rem;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .hero-split { grid-template-columns: 1fr; }
+    }
+    .hero-split-col {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.9rem; text-align: center;
+    }
+    .hero-split-panel {
+      width: 100%; aspect-ratio: 16 / 10;
+      background: #0a100b;
+      border-radius: 10px;
+      border: 1px solid rgba(122,171,136,0.12);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 1rem; padding: 1.5rem; box-sizing: border-box;
+    }
+    .hero-split-icon { width: 64px; height: 64px; border-radius: 50%; }
+    .hero-split-sub {
+      font-family: 'Lora', serif; font-size: 0.85rem; line-height: 1.55;
+      color: rgba(200,221,208,0.55); max-width: 300px; margin: 0;
+    }
+    .hero-split .hero-box { width: 100%; }
+
     .fstrip-item {
       position: relative;
       overflow: hidden;
@@ -921,22 +959,40 @@
     </div>
   </nav>
 
-  <div class="hero-box">
-    <p class="slide-caption" id="slide-caption">Create your Only Bird Nerds interactive map!</p>
-    <div class="hero-slides">
-      <div class="hero-slide active" style="background-image:url('hero-slides/slide0.jpg')"></div>
-      <div class="hero-slide"        style="background-image:url('hero-slides/slide1.jpg')"></div>
-      <div class="hero-slide"        style="background-image:url('hero-slides/slide2.jpg')"></div>
-      <div class="hero-slide"        style="background-image:url('hero-slides/slide3.jpg')"></div>
-      <div class="hero-slide"        style="background-image:url('hero-slides/slide4.jpg')"></div>
-      <div class="hero-slide"        style="background-image:url('hero-slides/slide5.jpg')"></div>
-      <div class="hero-slide"        style="background-image:url('hero-slides/slide6.jpg')"></div>
-    </div>
-  </div>
+  <p class="hero-split-banner">
+    Only Bird Nerds is an interactive platform for every kind of birder —
+    build your aviary with simple lists if you're a casual backyard birder,
+    or dive into your full eBird data if you're a dedicated lister.
+  </p>
 
-  <div class="hero-cta-row">
-    <a href="app.html" class="btn-primary">Try your map &rarr;</a>
-    <a href="about.html" class="btn-ghost">Learn more</a>
+  <div class="hero-split">
+
+    <!-- Casual / backyard birder path -->
+    <div class="hero-split-col">
+      <div class="hero-split-panel">
+        <img src="onlybirdnerds-logo-v4.svg" class="hero-split-icon" alt="Only Bird Nerds" />
+        <a href="app.html?start=manual" class="btn-primary hero-split-btn">Build Your Aviary</a>
+        <p class="hero-split-sub">Casual backyard birder? Log sightings by hand — no eBird account needed.</p>
+      </div>
+    </div>
+
+    <!-- Lister / eBird path -->
+    <div class="hero-split-col">
+      <a href="app.html" class="btn-primary hero-split-btn">For the Listers</a>
+      <div class="hero-box">
+        <p class="slide-caption" id="slide-caption">Create your Only Bird Nerds interactive map!</p>
+        <div class="hero-slides">
+          <div class="hero-slide active" style="background-image:url('hero-slides/slide0.jpg')"></div>
+          <div class="hero-slide"        style="background-image:url('hero-slides/slide1.jpg')"></div>
+          <div class="hero-slide"        style="background-image:url('hero-slides/slide2.jpg')"></div>
+          <div class="hero-slide"        style="background-image:url('hero-slides/slide3.jpg')"></div>
+          <div class="hero-slide"        style="background-image:url('hero-slides/slide4.jpg')"></div>
+          <div class="hero-slide"        style="background-image:url('hero-slides/slide5.jpg')"></div>
+          <div class="hero-slide"        style="background-image:url('hero-slides/slide6.jpg')"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </section>
